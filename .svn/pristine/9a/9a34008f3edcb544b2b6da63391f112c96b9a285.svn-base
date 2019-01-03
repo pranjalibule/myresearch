@@ -1,0 +1,85 @@
+﻿using Newtonsoft.Json;
+using SQS.nTier.TTM.GenericFramework;
+using System;
+
+namespace SQS.nTier.TTM.DTO
+{
+    public partial class TSOServiceDeliveryChainTaskPlannedDTO : IBaseDTO
+    {
+        #region Properties
+
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("WeekNumber")]
+        public int WeekNumber { get; set; }
+
+        [JsonProperty("Year")]
+        public int Year { get; set; }
+
+        [JsonProperty("PlannedEffort")]
+        public double? PlannedEffort { get; set; }
+
+        [JsonProperty("PlannedProductivity")]
+        public double? PlannedProductivity { get; set; }
+
+        [JsonProperty("PlannedOutcome")]
+        public int PlannedOutcome { get; set; }
+
+        [JsonProperty("PlannedReviewRounds")]
+        public int PlannedReviewRounds { get; set; }
+
+        [JsonProperty("PlannedInput")]
+        public int PlannedInput { get; set; }
+
+        [JsonProperty("PlannedProcessingTime")]
+        public double PlannedProcessingTime { get; set; }
+
+        [JsonProperty("PlannedOutcomeTestSteps")]
+        public int PlannedOutcomeTestSteps { get; set; }
+
+
+        //Planned Productivity(Input Based)
+        [JsonProperty("PlannedOutcomeRatio")]
+        public double PlannedOutcomeRatio { get; set; }
+
+        //Planned Productivity(Time Based):
+        [JsonProperty("PlannedThroughput")]
+        public double PlannedThroughput { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChainTaskId")]
+        public int TSOServiceDeliveryChainTaskId { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChainTask")]
+        public virtual TSOServiceDeliveryChainDTO TSOServiceDeliveryChainTask { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+
+        #endregion
+              
+
+        public void CalculateFields()
+        {
+            PlannedOutcomeRatio = PlannedInput != 0 ? PlannedOutcome / PlannedInput : 0;            
+            PlannedThroughput = PlannedProcessingTime != 0 ? PlannedOutcome / PlannedProcessingTime : 0;            
+            PlannedProductivity = PlannedEffort != 0 ? PlannedOutcome / PlannedEffort : 0;            
+        }
+    }
+}

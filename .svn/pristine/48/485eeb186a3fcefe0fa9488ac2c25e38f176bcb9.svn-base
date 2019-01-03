@@ -1,0 +1,183 @@
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DTO
+{
+    using GenericFramework;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+
+    public partial class TSOServiceDeliveryChainDTO : IBaseDTO
+    {
+        public TSOServiceDeliveryChainDTO()
+        {
+            TSOServiceDeliveryChainActualTasks = new HashSet<TSOServiceDeliveryChainTaskActualDTO>();
+            TSOServiceDeliveryChainPlannedTasks = new HashSet<TSOServiceDeliveryChainTaskPlannedDTO>();
+
+            TSOProductivityInputActuals = new HashSet<TSOProductivityInputActualDTO>();
+
+            TSOProductivityInputPlanneds = new HashSet<TSOProductivityInputPlannedDTO>();
+
+            TSOProductivityOutcomeActuals = new HashSet<TSOProductivityOutcomeActualDTO>();
+
+            TSOProductivityOutcomePlanneds = new HashSet<TSOProductivityOutcomePlannedDTO>();
+
+            TSOServiceDeliveryChainActualRisks = new HashSet<TSOServiceDeliveryChainActualRiskDTO>();
+
+            TSOServiceDeliveryChainPlannedRisks = new HashSet<TSOServiceDeliveryChainPlannedRiskDTO>();
+        }
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("TSOId")]
+        public int TSOId { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainId")]
+        public int ServiceDeliveryChainId { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethodId")]
+        public int? ServiceDeliveryChainMethodId { get; set; }
+
+        [JsonProperty("Notes")]
+        public string Notes { get; set; }
+
+        [JsonProperty("TaskStatusId")]
+        public int TaskStatusId { get; set; }
+
+        [JsonProperty("PlannedStartDate")]
+        public DateTime PlannedStartDate { get; set; }
+
+        [JsonProperty("PlannedCompletionDate")]
+        public DateTime PlannedCompletionDate { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonProperty("ServiceDeliveryChain")]
+        public virtual ServiceDeliveryChainDTO ServiceDeliveryChain { get; set; }
+
+
+        [JsonProperty("TSOServiceDeliveryChainActualTasks")]
+        public virtual ICollection<TSOServiceDeliveryChainTaskActualDTO> TSOServiceDeliveryChainActualTasks { get; set; }
+
+
+        [JsonProperty("TSOServiceDeliveryChainPlannedTasks")]
+        public virtual ICollection<TSOServiceDeliveryChainTaskPlannedDTO> TSOServiceDeliveryChainPlannedTasks { get; set; }
+
+        [JsonProperty("TSOProductivityInputActuals")]
+        public virtual ICollection<TSOProductivityInputActualDTO> TSOProductivityInputActuals { get; set; }
+
+        [JsonProperty("TSOProductivityInputPlanneds")]
+        public virtual ICollection<TSOProductivityInputPlannedDTO> TSOProductivityInputPlanneds { get; set; }
+
+        [JsonProperty("TSOProductivityOutcomeActuals")]
+        public virtual ICollection<TSOProductivityOutcomeActualDTO> TSOProductivityOutcomeActuals { get; set; }
+
+        [JsonProperty("TSOProductivityOutcomePlanneds")]
+        public virtual ICollection<TSOProductivityOutcomePlannedDTO> TSOProductivityOutcomePlanneds { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChainActualRisks")]
+        public virtual ICollection<TSOServiceDeliveryChainActualRiskDTO> TSOServiceDeliveryChainActualRisks { get; set; }
+        [JsonProperty("TSOServiceDeliveryChainPlannedRisks")]
+        public virtual ICollection<TSOServiceDeliveryChainPlannedRiskDTO> TSOServiceDeliveryChainPlannedRisks { get; set; }
+
+        [JsonProperty("InputOutcome")]
+        public virtual ICollection<InputOutcomeDTO> InputOutcome { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethod")]
+        public virtual ServiceDeliveryChainMethodDTO ServiceDeliveryChainMethod { get; set; }
+
+        #region
+        [JsonProperty("ResponsiblePersonId")]
+        public int? ResponsiblePersonId { get; set; }
+        [JsonProperty("DueDate")]
+        public DateTime? DueDate { get; set; }
+        [JsonProperty("ResponsiblePerson")]
+        public virtual UserDTO ResponsiblePerson { get; set; }
+
+        #endregion
+
+        [JsonProperty("TaskStatuss")]
+        public virtual TaskStatusDTO TaskStatuss { get; set; }
+
+        [JsonProperty("TSO")]
+        public virtual TSODTO TSO { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+        [JsonProperty("TaskStatus")]
+        public string TaskStatus { get; set; }
+
+        #region Cummalative
+
+        [JsonProperty("ActualEffortCumulative")]
+        public double ActualEffortCumulative { get; set; }
+
+        [JsonProperty("ActualOutcomeCumulative")]
+        public double? ActualOutcomeCumulative { get; set; }
+
+        [JsonProperty("ActualOutcomeTestStepsCumulative")]
+        public int ActualOutcomeTestStepsCumulative { get; set; }
+
+        [JsonProperty("ActualProcessingTimeCumulative")]
+        public double ActualProcessingTimeCumulative { get; set; }
+
+        [JsonProperty("ActualInputCumulative")]
+        public double? ActualInputCumulative { get; set; }
+
+        [JsonProperty("DefectRaisedCumulative")]
+        public int DefectRaisedCumulative { get; set; }
+
+        [JsonProperty("DefectRejectedCumulative")]
+        public int DefectRejectedCumulative { get; set; }
+
+
+        [JsonProperty("PlannedEffortCumulative")]
+        public double PlannedEffortCumulative { get; set; }
+
+        [JsonProperty("PlannedOutcomeCumulative")]
+        public double? PlannedOutcomeCumulative { get; set; }
+
+        [JsonProperty("PlannedOutcomeTestStepsCumulative")]
+        public int PlannedOutcomeTestStepsCumulative { get; set; }
+
+        [JsonProperty("PlannedProcessingTimeCumulative")]
+        public double PlannedProcessingTimeCumulative { get; set; }
+
+        [JsonProperty("PlannedInputCumulative")]
+        public double PlannedInputCumulative { get; set; }
+
+        [JsonProperty("CurrentWeek")]
+        public int CurrentWeek { get; set; }
+
+        [JsonProperty("CurrentDate")]
+        public DateTime CurrentDate { get; set; }
+
+        [JsonProperty("InputOutcomeCumulative")]
+        public virtual ICollection<InputOutcomeCumulativeDTO> InputOutcomeCumulative { get; set; }
+
+        #endregion
+    }
+}

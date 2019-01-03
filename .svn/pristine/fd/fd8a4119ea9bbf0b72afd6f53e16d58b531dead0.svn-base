@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Home.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest")
+                $(".GuestClass").hide();
+            else
+                $(".GuestClass").show();
+        });
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:32px; padding-bottom:0px;">
+        <div>
+
+        </div>        
+        <div class="topRightLogo UserLogo" >
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>        
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallselectPortal">
+                    <a href="#">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSRDashboard();">TSR Dashboard</a>
+                </td>
+            </tr>           
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                </td>
+            </tr>           
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#">Export Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="MasterData()">Master Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="Wiki.html" target="_blank">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv information">
+        <div class="header" style="height:250px;">
+            <div class="headerClass">
+                Welcome to the TSR/TSO Management
+            </div>
+            <div class="imsLogo" style="float:right;width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; fill;float:left;">
+            The TSR/TSO management portal is designed to manage all tasks in a solution Centre that is operated in iMS mode and delivers services to customers.
+            The whole service execution process starts with creating the TSR as a break down structure of the corresponding SoW (SoW; the contract),
+            breaking down the TSRs into TSOs, executing the requested services, delivering the results to the customer and triggering the invoicing.
+            Therefore, it bridges the operational gap between a statement of work incoming from a customer and planned in SQS ERP system and the invoicing for
+            such a SoW.
+            <br /> <br />
+            Please click on the buttons shown left to navigate  to the relevant lists , Export Data is restricted to admin ,may you require any details on exporting data.
+            Please contact TTM support team (<a href="mailto:ttm-support@sqs.com" target="_top" style="font-size:20px;">ttm-support@sqs.com</a>).
+        </div>
+    </div>
+
+</body>
+</html>

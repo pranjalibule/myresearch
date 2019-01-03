@@ -1,0 +1,23 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Common
+{
+    using GenericFramework;
+    using System.Collections.Generic;
+
+    public class DataCollection
+    {
+        public int TotalRecords { get; set; }
+        public string Message { get; set; }
+        public IList<IBaseObject> EntitySummary { get; set; }
+    }
+}

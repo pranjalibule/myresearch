@@ -1,0 +1,431 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// RoleController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class RoleController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetRoleById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>Role</returns>
+        private RolesDTO GetRoleById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            RolesDTO objRoleDTO = null;
+
+            try
+            {
+                Roles objRole = objBusinessLayer.RoleRepository.GetByID(id);
+                if (null != objRole)
+                {
+                    objRoleDTO = new RolesDTO();
+                    objRoleDTO = Conversions.ToDTO<RolesDTO, Roles>(objRole);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objRoleDTO;
+        }
+
+        /// <summary>
+        /// GetRoles
+        /// </summary>
+        /// <returns>IList<Roles>></returns>
+        private IList<RolesDTO> GetAllRoles(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<RolesDTO> objRoleDTOList = null;
+            try
+            {
+                IList<Roles> objRolesList = objBusinessLayer.RoleRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objRolesList != null && objRolesList.Count > 0)
+                {
+                    objRoleDTOList = new List<RolesDTO>();
+
+                    foreach (Roles objRole in objRolesList)
+                    {
+                        RolesDTO objRoleDTO = new RolesDTO();
+                        objRoleDTO = Conversions.ToDTO<RolesDTO, Roles>(objRole);
+
+                        objRoleDTOList.Add(objRoleDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objRoleDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new Role 
+        /// </summary>
+        /// <param name="objRole"></param>
+        /// <returns></returns>
+        private string AddNewRole(RolesDTO objRoleDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                Roles objRole = Conversions.ToEntity<RolesDTO, Roles>(objRoleDTO);
+                objBusinessLayer.RoleRepository.Add(objRole);
+                returnMessage = "Role added successfully.";
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// Function to update Role 
+        /// </summary>
+        /// <param name="objRole"></param>
+        /// <returns>string</returns>
+        private string ModifyRole(int ID, RolesDTO objRoleDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                RolesDTO objRoleDTOById = this.GetRoleById(ID);
+
+                if (objRoleDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    objRoleDTOById.Name = objRoleDTO.Name;
+                    objRoleDTOById.Description = objRoleDTO.Description;
+
+                    Roles objRole = Conversions.ToEntity<RolesDTO, Roles>(objRoleDTOById);
+
+                    objBusinessLayer.RoleRepository.Update(objRole);
+                    returnMessage = "Role updated successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Role do not exists.";
+                    TTMLogger.Logger.LogInfo(returnMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// DeleteRole
+        /// </summary>
+        /// <param name="objRoleDTO">RoleDTO</param>
+        private string RemoveRole(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                RolesDTO objRoleDTOById = this.GetRoleById(ID);
+
+                if (objRoleDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    Roles objRole = Conversions.ToEntity<RolesDTO, Roles>(objRoleDTOById);
+                    objBusinessLayer.RoleRepository.Delete(objRole);
+                    returnMessage = "Role deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Role do not exists.";
+                    TTMLogger.Logger.LogInfo(returnMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified role mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetRolegIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetRolesIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objRolesList = null;
+            try
+            {
+                objRolesList = objBusinessLayer.RoleRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Name });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objRolesList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/Role/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objRolesList = null;
+
+            try
+            {
+                objRolesList = this.GetRolesIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objRolesList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/Role/GetById/{id}")]
+        [ResponseType(typeof(Roles))]
+        public JsonResult<RolesDTO> GetById(int id)
+        {
+            JsonResult<RolesDTO> result = null;
+            RolesDTO objRolesDTO;
+
+            try
+            {
+                objRolesDTO = this.GetRoleById(id);
+
+                result = Json(objRolesDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/Role/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<RolesDTO> objRoleDTOList = this.GetAllRoles(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objRoleDTOList)
+                {
+                    foreach (RolesDTO objRole in objRoleDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objRole);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreateRole
+        /// </summary>
+        /// <param name="rolDTO">RoleDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/Role/CreateRole")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreateRole([FromBody]RolesDTO roleDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewRole(roleDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateRole
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="userTypeDTO">UserTypeDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/Role/UpdateRole/{ID}")]
+        public JsonResult<string> UpdateRole(int ID, [FromBody]RolesDTO roleDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyRole(ID, roleDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteRole
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpDelete, Route("v1/Role/DeleteRole/{ID}")]
+        public JsonResult<string> DeleteRole(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveRole(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}

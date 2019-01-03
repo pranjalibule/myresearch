@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9A78DE3F-20F5-45B6-BE47-8C6800745768}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SQS.nTier.TTM.DAL</RootNamespace>
+    <AssemblyName>SQS.nTier.TTM.DAL</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Engagement.cs" />
+    <Compile Include="Client.cs" />
+    <Compile Include="OperationalRiskIndicator.cs" />
+    <Compile Include="PricingModel.cs" />
+    <Compile Include="ProductivityInput.cs" />
+    <Compile Include="ProductivityOutcome.cs" />
+    <Compile Include="Roles.cs" />
+    <Compile Include="ServiceDeliveryChainMethod.cs" />
+    <Compile Include="RiskStatus.cs" />
+    <Compile Include="TaskStatus.cs" />
+    <Compile Include="ProjectModel.cs" />
+    <Compile Include="ServiceDeliveryChain.cs" />
+    <Compile Include="QGPassed.cs" />
+    <Compile Include="TSO.cs" />
+    <Compile Include="TSOProductivityOutcomePlanned.cs" />
+    <Compile Include="TSOProductivityOutcomeActual.cs" />
+    <Compile Include="TSOProductivityInputPlanned.cs" />
+    <Compile Include="TSOProductivityInputActual.cs" />
+    <Compile Include="TSOProductivityOutcome.cs" />
+    <Compile Include="TSOProductivityInput.cs" />
+    <Compile Include="TSOServiceDeliveryChain.cs" />
+    <Compile Include="TSOServiceDeliveryChainActualRisk.cs" />
+    <Compile Include="TSOServiceDeliveryChainTaskActual.cs" />
+    <Compile Include="TSOServiceDeliveryChainTaskPlanned.cs" />
+    <Compile Include="TSOStatus.cs" />
+    <Compile Include="TSR.cs" />
+    <Compile Include="TSRCoreService.cs" />
+    <Compile Include="TSRFileUpload.cs" />
+    <Compile Include="TSRStatus.cs" />
+    <Compile Include="RelevantRepository.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Practice.cs" />
+    <Compile Include="SolutionCentre.cs" />
+    <Compile Include="ClientRegion.cs" />
+    <Compile Include="MarketOffering.cs" />
+    <Compile Include="OperationalRisk.cs" />
+    <Compile Include="CoreService.cs" />
+    <Compile Include="TSRTMOUser.cs" />
+    <Compile Include="TSTReleventRepository.cs" />
+    <Compile Include="TTMContext.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="UserType.cs" />
+    <Compile Include="Vertical.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SQS.nTier.TTM.GenericFramework\SQS.nTier.TTM.GenericFramework.csproj">
+      <Project>{07eb885e-9e71-4454-a210-dc50da4a2159}</Project>
+      <Name>SQS.nTier.TTM.GenericFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

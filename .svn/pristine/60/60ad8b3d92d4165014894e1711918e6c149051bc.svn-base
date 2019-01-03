@@ -1,0 +1,464 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// PracticeController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class PracticeController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetPracticeById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>Practice</returns>
+        private PracticeDTO GetPracticeById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            PracticeDTO objPracticeDTO = null;
+
+            try
+            {
+                Practice objPractice = objBusinessLayer.PracticeRepository.GetByID(id);
+                if (null != objPractice)
+                {
+                    objPracticeDTO = new PracticeDTO();
+                    objPracticeDTO = Conversions.ToDTO<PracticeDTO, Practice>(objPractice);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objPracticeDTO;
+        }
+
+        /// <summary>
+        /// GetAllPractice
+        /// </summary>
+        /// <returns>IList<Practice>></returns>
+        private IList<PracticeDTO> GetAllPractice(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<PracticeDTO> objPracticeDTOList = null;
+            try
+            {
+                IList<Practice> objPracticeList = objBusinessLayer.PracticeRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objPracticeList != null && objPracticeList.Count > 0)
+                {
+                    objPracticeDTOList = new List<PracticeDTO>();
+
+                    foreach (Practice objPractice in objPracticeList)
+                    {
+                        PracticeDTO objPracticeDTO = new PracticeDTO();
+                        objPracticeDTO = Conversions.ToDTO<PracticeDTO, Practice>(objPractice);
+
+                        objPracticeDTOList.Add(objPracticeDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objPracticeDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new Practice 
+        /// </summary>
+        /// <param name="objPractice"></param>
+        /// <returns></returns>
+        private string AddNewPractice(PracticeDTO objPracticeDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = objPracticeDTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                bool result = CheckNameExists(objPracticeDTO.Name);
+                if (result == true)
+                {
+                    Practice objPractice = Conversions.ToEntity<PracticeDTO, Practice>(objPracticeDTO);
+                    objBusinessLayer.PracticeRepository.Add(objPractice);
+                    returnMessage = "Practice added successfully.";
+                }
+                else
+                {
+                    objPracticeDTO.Description = objPracticeDTO.Description;
+                    returnMessage = "This " + objPracticeDTO.Name + " record already exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+        private bool CheckNameExists(string Name)
+        {
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            var CheckNameExists = objBusinessLayer.PracticeRepository.GetSingle(x => x.Name == Name);
+            if (CheckNameExists == null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        /// <summary>
+        /// Function to update Practice 
+        /// </summary>
+        /// <param name="objPractice"></param>
+        /// <returns></returns>
+        private string ModifyPractice(int ID, PracticeDTO objPracticeDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                PracticeDTO objPracticeDTOById = this.GetPracticeById(ID);
+
+                if (objPracticeDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = objPracticeDTO.CreatedBy;
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    bool result = CheckNameExists(objPracticeDTO.Name);
+                    if (result == true)
+                    {
+                        objPracticeDTOById.Name = objPracticeDTO.Name;
+                        objPracticeDTOById.Description = objPracticeDTO.Description;
+                        returnMessage = "Practice updated successfully.";
+                    }
+                    else
+                    {
+                        objPracticeDTOById.Description = objPracticeDTO.Description;
+                        returnMessage = "This " + objPracticeDTO.Name + " record already exists.";
+                    }
+                    Practice objPractice = Conversions.ToEntity<PracticeDTO, Practice>(objPracticeDTOById);
+
+                    objBusinessLayer.PracticeRepository.Update(objPractice);
+
+
+                }
+                else
+                {
+                    returnMessage = "Practice do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemovePractice
+        /// </summary>
+        /// <param name="ID">int</param>
+        private string RemovePractice(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                PracticeDTO objPracticeDTOById = this.GetPracticeById(ID);
+
+                if (objPracticeDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    Practice objPractice = Conversions.ToEntity<PracticeDTO, Practice>(objPracticeDTOById);
+                    objBusinessLayer.PracticeRepository.Delete(objPractice);
+                    returnMessage = "Practice deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Practice do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.InnerException.InnerException.Message));
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified practice mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetPracticeIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetPracticeIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objPracticeList = null;
+            try
+            {
+                objPracticeList = objBusinessLayer.PracticeRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Name });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objPracticeList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/Practice/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objPracticeList = null;
+
+            try
+            {
+                objPracticeList = this.GetPracticeIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objPracticeList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/Practice/GetById/{id}")]
+        [ResponseType(typeof(Practice))]
+        public JsonResult<PracticeDTO> GetById(int id)
+        {
+            JsonResult<PracticeDTO> result = null;
+            PracticeDTO objPracticeDTO;
+
+            try
+            {
+                objPracticeDTO = this.GetPracticeById(id);
+
+                result = Json(objPracticeDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/Practice/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<PracticeDTO> objPracticeDTOList = this.GetAllPractice(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objPracticeDTOList)
+                {
+                    foreach (PracticeDTO objPractice in objPracticeDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objPractice);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreatePractice
+        /// </summary>
+        /// <param name="practiceDTO">PracticeDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/Practice/CreatePractice")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreatePractice([FromBody]PracticeDTO practiceDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewPractice(practiceDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdatePractice
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="practiceDTO">PracticeDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/Practice/UpdatePractice/{ID}")]
+        public JsonResult<string> UpdatePractice(int ID, [FromBody]PracticeDTO practiceDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyPractice(ID, practiceDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeletePractice
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpDelete, Route("v1/Practice/DeletePractice/{ID}")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> DeletePractice(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemovePractice(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}

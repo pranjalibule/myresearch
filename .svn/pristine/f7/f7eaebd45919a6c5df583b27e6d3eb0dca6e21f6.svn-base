@@ -1,0 +1,156 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 25Oct2017 Created the class
+ *******************************************************************************/
+namespace SQS.nTier.TTM.DTO
+{
+    using Newtonsoft.Json;
+    using SQS.nTier.TTM.GenericFramework;
+    using System;
+    using System.Collections.Generic;
+
+    public class TSRDTO : IBaseDTO
+    {
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("Title")]
+        public string Title { get; set; }
+
+        [JsonProperty("DeliveryManagerId")]
+        public int DeliveryManagerId { get; set; }
+
+        [JsonProperty("Description")]
+        public string Description { get; set; }
+
+        [JsonProperty("TestManagerId")]
+        public int TestManagerId { get; set; }
+
+        [JsonProperty("VerticalId")]
+        public int VerticalId { get; set; }
+
+        [JsonProperty("PracticeId")]
+        public int PracticeId { get; set; }
+
+        [JsonProperty("SolutionCentreId")]
+        public int SolutionCentreId { get; set; }
+
+        [JsonProperty("ClientRegionId")]
+        public int ClientRegionId { get; set; }
+
+        [JsonProperty("Client")]
+        public string Client { get; set; }
+
+        [JsonProperty("Account")]
+        public string Account { get; set; }
+
+        [JsonProperty("Engagement")]
+        public string Engagement { get; set; }
+
+        [JsonProperty("AccountManagerId")]
+        public int AccountManagerId { get; set; }
+
+        [JsonProperty("ERPordernumber")]
+        public string ERPordernumber { get; set; }
+
+        [JsonProperty("MarketOfferingId")]
+        public int? MarketOfferingId { get; set; }
+
+        [JsonProperty("StartDate")]
+        public DateTime StartDate { get; set; }
+
+        [JsonProperty("TargetCompletionDate")]
+        public DateTime TargetCompletionDate { get; set; }
+
+        [JsonProperty("Estimatedeffort")]
+        public float Estimatedeffort { get; set; }
+
+        [JsonProperty("Plannedeffort")]
+        public float Plannedeffort { get; set; }
+
+        [JsonProperty("OperationalRiskId")]
+        public int? OperationalRiskId { get; set; }
+
+        [JsonProperty("TSRStatusID")]
+        public int TSRStatusID { get; set; }
+
+        public string TSRCoreServicesArr { get; set; }
+
+        public string TSTRelevantRepositoriesArr { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+        [JsonProperty("Vertical")]
+        public virtual VerticalDTO Vertical { get; set; }
+
+        [JsonProperty("ClientRegion")]
+        public virtual ClientRegionDTO ClientRegion { get; set; }
+
+        [JsonProperty("MarketOffering")]
+        public virtual MarketOfferingDTO MarketOffering { get; set; }
+
+        [JsonProperty("OperationalRisk")]
+        public virtual OperationalRiskDTO OperationalRisk { get; set; }
+
+        [JsonProperty("TSRStatus")]
+        public virtual TSRStatusDTO TSRStatus { get; set; }
+
+        [JsonProperty("Practice")]
+        public virtual PracticeDTO Practice { get; set; }
+
+        [JsonProperty("SolutionCentre")]
+        public virtual SolutionCentreDTO SolutionCentre { get; set; }
+
+        [JsonProperty("TSOes")]
+        public virtual ICollection<TSODTO> TSOes { get; set; }
+
+        [JsonProperty("DeliveryManager")]
+        public virtual UserDTO DeliveryManager { get; set; }
+
+        [JsonProperty("TestManager")]
+        public virtual UserDTO TestManager { get; set; }
+
+        [JsonProperty("AccountManager")]
+        public virtual UserDTO AccountManager { get; set; }
+
+        [JsonProperty("TSRCoreServices")]
+        public virtual ICollection<TSRCoreServiceDTO> TSRCoreServices { get; set; }
+
+        [JsonProperty("TSRReleventRepositories")]
+        public virtual ICollection<TSRRelevantRepositoryDTO> TSRReleventRepositories { get; set; }
+
+        [JsonProperty("TSRFiles")]
+        public virtual ICollection<TSRFileUploadDTO> TSRFiles { get; set; }
+
+        [JsonProperty("FilePath")]
+        public virtual List<string> FilePaths { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainArr")]
+        public string ServiceDeliveryChainArr { get; set; }
+
+        [JsonProperty("ActualEffort")]
+        public double ActualEffort { get; set; }
+    }
+}

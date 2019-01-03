@@ -1,0 +1,179 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Common
+{
+    public static class ServiceWebConstants
+    {
+        public const string WelcomeMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to SQS the leading global specialist in end-to-end software quality !!
+                                                        </TD>
+                                                    </TR>                                                   
+                                                    <TR>
+                                                        <TD>
+                                                            You have been successfully registered for 'TTM Portal'.
+                                                        </TD>
+                                                    </TR>  
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Thank you.
+                                                        </TD>
+                                                    </TR>  
+                                                    <TR>
+                                                        <TD>
+                                                            This is an automatically generated email. Please do not reply to it.
+                                                        </TD>
+                                                    </TR>                                                   
+                                                </Table>";
+
+        public const string ForgotMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to SQS the leading global specialist in end-to-end software quality !!
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Kindly click on the following link : <a href='{1}/ResetPassword.html?user={2}' title='Reset'>Reset Password</a> for resetting your account password.
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            <br>
+                                                            Note: If for some reason the above link does not work, please copy and paste this URL into your web browser: <br/>
+                                                            <Span>
+                                                                {3}/ResetPassword.html?user={4}
+                                                            </Span>
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            SQS India<br/>
+                                                            Transforming the World Through Quality !!
+                                                        </TD>
+                                                    </TR>
+                                                </Table>";
+
+        public const string PasswordResetMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to SQS the leading global specialist in end-to-end software quality !!
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            <b>Your password has been reset successfully!</b>
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            SQS India<br/>
+                                                            Transforming the World Through Quality !!
+                                                        </TD>
+                                                    </TR>
+                                                </Table>";
+
+        public const string ActivationEmailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear Admin,
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Following user '{0}' requested for TTM portal access.
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Kindly grant the access.
+                                                        </TD>
+                                                    </TR>  
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>                                                
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            SQS India<br/>
+                                                            Transforming the World Through Quality !!
+                                                        </TD>
+                                                    </TR>
+                                                </Table>";
+
+    }
+}

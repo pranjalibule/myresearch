@@ -1,0 +1,4 @@
+﻿<div>
+    <p>API page for TTM portal - please use
+        <a href="/api/ttm">/api/ttm</a> to access data</p>
+</div>

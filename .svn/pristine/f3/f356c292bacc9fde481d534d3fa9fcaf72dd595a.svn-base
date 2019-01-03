@@ -1,0 +1,487 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Users</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link href="/styles/Master.css" rel="stylesheet" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "Login.html?page=Users.html";
+        }
+        else {
+            userId = getUrlVars()["user"];
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + userId;
+        }
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+        .scrollDiv {
+            height: 780px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>Manage Users</div>
+    </div>
+    <div class="leftDiv" style="height:820px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('index.html')">Home</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('ClientRegion.html')">Client Regions</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('CoreService.html')">Core Services</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('MarketOffering.html')">Market Offering</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('OperationalRisk.html')">Operational Risk</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('Practice.html')">Practice</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('ProjectModel.html')">Project Model</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('QGPassed.html')">QGPassed</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('RelevantRepository.html')">Relevant Repositories</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('ServiceDeliveryChain.html')">Service Delivery Chain</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('SolutionCentre.html')">Solution Centre</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('TaskStatus.html')">Task Status</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('TSOStatus.html')">TSO Status</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('TSRStatus.html')">TSR Status</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('UserType.html')">User Type</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallselect">
+                    <a href="#">Users</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="#" onclick="NavigateTo('Vertical.html')">Vertical</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmall">
+                    <a href="Login.html">Logout</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <table cellpadding="0" cellspacing="0" class="tsotop">
+            <tr>
+                <td class="smallTiletd">
+                    <input type="text" id="txtSearch" maxlength="70" style="margin-top:5px; padding:4.5px 2px; width:190px;" />
+                </td>
+                <td class="field">
+                    <input type="button" value="Search" onclick="Search();" />
+                    <input type="button" id="btnInActiveUsers" title="Get inactive or active users" value="InActive Users" onclick="GetInActiveUsers();" />
+                    <input type="button" id="btnLockedUsers" title="Get locked or unlocked users" value="Locked Users" onclick="GetLockedUsers();" />
+                    <input type="button" value="Clear Search" onclick="ClearSearch();" />
+                    <div id="txtOutput"></div>
+                </td>
+            </tr>
+        </table>
+        <div class="scrollDiv">
+            <table id="UserTypeTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">Name</th>
+                        <th style="width:200px;" align="left">User Id</th>
+                        <th style="width:200px;" align="left">EmailId</th>
+                        <th style="width:120px" align="center">User Type</th>
+                        <th style="width:90px" align="center">Active</th>
+                        <th style="width:90px" align="center">Locked</th>
+                        <th style="width:80px" align="left">CreatedBy</th>
+                        <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                        <th style="width:80px" align="left">UpdatedBy</th>
+                        <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                    </tr>
+                </thead>
+                <tbody id="userDetails"></tbody>
+            </table>
+            <div id="pager" class="pager" style="display:none">
+                <table border="0">
+                    <tr>
+                        <td valign="middle"><img src="images/first.png" class="first" /></td>
+                        <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                        <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                        <td valign="middle"><img src="images/next.png" class="next" /></td>
+                        <td valign="middle"><img src="images/last.png" class="last" /></td>
+                        <td valign="middle">
+                            <select id="pagesize">
+                                <option selected="selected" value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        </div>
+    <script type="text/javascript">
+
+        userId = decodeURIComponent(getUrlVars()["user"]);
+
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        var active = false;
+        var locked = true;
+        var userTypeResult;
+
+        function GetLoadUrl() {
+            try {
+                var urlGetAll = urlPrefix + "User/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+                LoadData(urlGetAll);
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+        }
+
+        function ClearSearch() {
+            $("#btnInActiveUsers").val("InActive Users");
+            $("#btnLockedUsers").val("Locked Users");
+
+            active = false;
+            locked = true;
+
+            GetLoadUrl();
+        }
+
+        $(document).on("keypress", "#txtSearch", function (e) {
+            if (e.which == 13) {
+                Search();                
+            }
+        });
+
+        $(document).ready(function () {
+            GetUserTypes();
+        });
+
+        function GetUserTypes() {
+            var url = urlPrefix + "UserType/GetAllIDName";
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    if (null != result) {
+                        userTypeResult = result;
+                        GetLoadUrl();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                        //window.location = "Index.html";
+                    }
+                }
+            });
+        }
+
+        function LoadData(url) {
+            clearTable();
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                        //window.location = "Index.html";
+                    }
+                }
+            });
+        }
+
+        function clearTable() {
+            var i = $('#userDetails').empty();
+            $("#txtSearch").val("");
+        }
+
+        function Search() {
+            var txtSearchVal = $("#txtSearch").val();
+            if (txtSearchVal != "") {
+                $("#txtOutput").html("");
+                var urlGetAll = urlPrefix + "User/SearchByNameOrEmail/" + startingRecordNumber + "/" + pageSize + "/" + txtSearchVal;
+                LoadData(urlGetAll);
+                $("#txtSearch").val(txtSearchVal);
+            }
+            else {
+                showMessageBox("Please enter first name or last name or email to search.", "red");
+            }
+        }
+
+        function GetInActiveUsers() {
+            var urlGetAll = urlPrefix + "User/SearchActiveUsers/" + startingRecordNumber + "/" + pageSize + "/" + active;
+            LoadData(urlGetAll);
+
+            if (!active) {
+                $("#btnInActiveUsers").val("Active Users");
+            }
+            else {
+                $("#btnInActiveUsers").val("InActive Users");
+            }
+
+            active = !active;
+        }
+
+        function GetLockedUsers() {
+            var urlGetAll = urlPrefix + "User/SearchLockedUsers/" + startingRecordNumber + "/" + pageSize + "/" + locked;
+            LoadData(urlGetAll);
+
+            if (locked) {
+                $("#btnLockedUsers").val("Unlocked Users");
+            }
+            else {
+                $("#btnLockedUsers").val("Locked Users");
+            }
+
+            locked = !locked;
+        }
+
+        var isAdmin = false;
+
+        function populateTable(EntitySummary) {
+            var tbody = $('#userDetails');
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+                var getUserTypeDropDown = GetUserTypeDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["UserTypeID"]);
+
+                var isDisabled = "";
+
+                if (isAdmin) {
+                    isDisabled = "disabled";
+                }
+
+                tbody.append("<tr id='tr" + totalrecords + "'" + isDisabled + "><td align='center'>" + EntitySummary[totalrecords]["ID"] +
+                    "</td><td class='leftalign'>" + EntitySummary[totalrecords]["Name"] + "</td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["UserId"] + "</td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["EmailID"] + "</td>" +
+                    "<td align='center'>" + getUserTypeDropDown + "</td>" +
+                    "<td align='center'>" + GetActiveDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["Activated"]) + "</td>" +
+                    "<td align='center'>" + GetLockedDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["Locked"]) + "</td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["CreatedBy"] + "</td>" +
+                    //"<td align='center'><font size='2px'>" + dateFormat(EntitySummary[totalrecords]["CreatedOn"], "dd-mmm-yyyy hh:MM TT") + "</font></td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td></tr>");
+                //"<td align='center'><font size='2px'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy hh:MM TT") + "</font></td></tr>");
+            }
+        }
+
+        function GetUserTypeDropDown(userID, UserTypeID) {
+            var optionSelected = "";
+
+            if (UserTypeID == null) {
+                UserTypeID = -1;
+            }
+            else if (UserTypeID == "") {
+                UserTypeID = -1;
+            }
+
+            if (UserTypeID == -1) {
+                optionSelected = "<option value='-1' selected='selected'>Select</option>"
+            }
+            else {
+                optionSelected = "<option value='-1'>Select</option>"
+            }
+
+            var userTypeDropDown = "<select onchange='ChangeUserType(this," + userID + ")' id=UserType" + userID + "')'>";
+
+            userTypeDropDown += optionSelected;
+
+            if (null != userTypeResult) {
+                for (var userTypeCount = 0; userTypeCount < userTypeResult.length; userTypeCount++) {
+                    if (UserTypeID == userTypeResult[userTypeCount].ID) {
+                        if (userTypeResult[userTypeCount].Name == "Admin") {
+                            isAdmin = true;
+                        }
+                        else {
+                            isAdmin = false;
+                        }
+                        userTypeDropDown += "<option value='" + userTypeResult[userTypeCount].ID + "' selected='selected'>" + userTypeResult[userTypeCount].Name + "</option>"
+                    }
+                    else {
+                        userTypeDropDown += "<option value='" + userTypeResult[userTypeCount].ID + "'>" + userTypeResult[userTypeCount].Name + "</option>"
+                    }
+                }
+            }
+
+            userTypeDropDown += "</select>";
+
+            return userTypeDropDown;
+        }
+
+        function GetActiveDropDown(userID, selectValue) {
+            var trueOption = "<option value='True'>True</option>";
+            var falseOption = "<option value='False'>False</option>";
+
+            if (selectValue) {
+                trueOption = "<option value='True' selected='selected'>True</option>";
+            }
+            else {
+                falseOption = "<option value='False' selected='selected'>False</option>";
+            }
+            var activeDropDown = "<select onchange='ChangeActiveUser(this," + userID + ")' id=Active" + userID + "')'>" + trueOption + falseOption + "</select>";
+
+            return activeDropDown;
+
+        }
+
+        function GetLockedDropDown(userID, selectValue) {
+            var trueOption = "<option value='True'>True</option>";
+            var falseOption = "<option value='False'>False</option>";
+
+            if (selectValue) {
+                trueOption = "<option value='True' selected='selected'>True</option>";
+            }
+            else {
+                falseOption = "<option value='False' selected='selected'>False</option>";
+            }
+            var lockedDropDown = "<select onchange='ChangeLockedUser(this," + userID + ")' id='Locked" + userID + "')'>" + trueOption + falseOption + "</select>";
+
+            return lockedDropDown;
+
+        }
+
+        function ChangeActiveUser(ddlActive, userId) {
+            var url = urlPrefix + "User/SetActiveOrInactive/" + userId + "/" + ddlActive.value;
+            ChangeUser(url);
+        }
+
+        function ChangeUserType(ddlUserType, userId) {
+            var url = urlPrefix + "User/SetUserType/" + userId + "/" + ddlUserType.value;
+            ChangeUser(url);
+        }
+
+        function ChangeLockedUser(ddlLocked, userId) {
+            var url = urlPrefix + "User/SetLockedOrUnlocked/" + userId + "/" + ddlLocked.value;
+
+            ChangeUser(url);
+        }
+
+        function ChangeUser(url) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    $("#txtOutput").html("<b>" + result + "</b>");
+                    if (result.indexOf("Error") == 0) {
+                        $("#txtOutput").css("color", "red");
+                    }
+                    else {
+                        $("#txtOutput").css("color", "green");
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                    }
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

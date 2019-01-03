@@ -1,0 +1,5 @@
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Release\SQS.nTier.TTM.Encryption.dll.config
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Release\SQS.nTier.TTM.Encryption.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Release\SQS.nTier.TTM.Encryption.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\obj\Release\SQS.nTier.TTM.Encryption.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\obj\Release\SQS.nTier.TTM.Encryption.pdb

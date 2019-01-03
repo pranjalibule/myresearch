@@ -1,0 +1,687 @@
+﻿
+function LoadVertical() {
+    var url = urlPrefix + "Vertical/GetAllIDName";
+    LoadData(url, 'ddlVertical');
+}
+function LoadPractice() {
+    var url = urlPrefix + "Practice/GetAllIDName";
+    LoadData(url, 'ddlPractice');
+}
+function LoadSolutionCentre() {
+    var url = urlPrefix + "SolutionCentre/GetAllIDName";
+    LoadData(url, 'ddlSolutioncentre');
+}
+function LoadClientRegion() {
+    var url = urlPrefix + "ClientRegion/GetAllIDName";
+    LoadData(url, 'ddlClientRegion');
+}
+function LoadMarketOffering() {
+    var url = urlPrefix + "MarketOffering/GetAllIDName";
+    LoadData(url, 'ddlMarketOffering');
+}
+function LoadOperationalRisk() {
+    var url = urlPrefix + "OperationalRisk/GetAllIDName";
+    LoadData(url, 'ddlOperationalrisk');
+}
+function LoadCoreServices() {
+    var url = urlPrefix + "CoreService/GetAllIDName";
+    LoadData(url, 'listCoreServices');
+}
+function LoadReliventRepositories() {
+    var url = urlPrefix + "RelevantRepository/GetAllIDName";
+    LoadData(url, 'listRelevantRepositories');
+}
+function LoadData(url, dropdown) {
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        async: false,
+        success: function (result) {
+            var totalRecords = result.length;
+
+            if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                PopulateDropdown(result, dropdown);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function LoadTSR(tsrId) {
+    var url = urlPrefix + "TSR/GetById/" + tsrId;
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        success: function (result) {
+            if (null !== result) {
+                PopulateTSR(result);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function PopulateTSR(result) {
+    $("#txtID").val(result.ID);
+    $("#txtTitle").val(result.Title);
+    $("#txtDeliveryManager").val(result.DeliveryManager.Name)
+    $("#lblDeliveryManagerMail").val(result.DeliveryManager.EmailID)
+    $("#lblDeliveryManagerId").val(result.DeliveryManagerId);
+    $("#txtDescription").val(result.Description);
+    $("#txtTestManager").val(result.TestManager.Name)
+    $("#lblTestManagerMail").val(result.TestManager.EmailID)
+    $("#lblTestManagerId").val(result.TestManagerId);
+    $("#ddlVertical").val(result.VerticalId);
+    $("#ddlPractice").val(result.PracticeId);
+    $("#ddlSolutioncentre").val(result.SolutionCentreId);
+    $("#ddlClientRegion").val(result.ClientRegionId);
+    $("#txtClient").val(result.Client);
+    $("#txtAccount").val(result.Account);
+    $("#txtEngagement").val(result.Engagement);
+    $("#txtAccountManager").val(result.AccountManager.Name)
+    $("#lblAccountManagerMail").val(result.AccountManager.EmailID)
+    $("#lblAccountManagerId").val(result.AccountManagerId);
+    $("#txtERPOrderNumber").val(result.ERPordernumber);
+    $("#ddlMarketOffering").val(result.MarketOfferingId);
+
+    var startDate = $.datepicker.parseDate('yy-m-dd', result.StartDate.replace("T00:00:00", ""));
+
+    $("#txtStartDate").val(dateFormat(startDate, "isoDateddMonyyyy"));
+
+    var targetCompletionDate = $.datepicker.parseDate('yy-m-dd', result.TargetCompletionDate.replace("T00:00:00", ""));
+
+    $("#txtTargetCompletionDate").val(dateFormat(targetCompletionDate, "isoDateddMonyyyy"));
+    $("#txtEstimatedEffort").val(result.Estimatedeffort);
+    $("#txtPlannedEffort").val(result.Plannedeffort);
+    $("#ddlOperationalrisk").val(result.OperationalRiskId);
+
+    if (null !== result.TSRReleventRepositories && result.TSRCoreServices.length > 0) {
+        for (var iReleventRepositoriesCount = 0; iReleventRepositoriesCount < result.TSRCoreServices.length; iReleventRepositoriesCount++) {
+            $('#listCoreServices option').each(function () {
+                if (parseInt(this.value) == parseInt(result.TSRCoreServices[iReleventRepositoriesCount].CoreServiceId)) {
+                    $("#listCoreServices option[value='" + result.TSRCoreServices[iReleventRepositoriesCount].CoreServiceId + "']").prop("selected", true);
+                    return;
+                }
+            });
+        }
+    }
+
+    moveItems('#listCoreServices', '#listCoreServicesSelected');
+
+    if (null !== result.TSRReleventRepositories && result.TSRReleventRepositories.length > 0) {
+        for (var iCoreServices = 0; iCoreServices < result.TSRReleventRepositories.length; iCoreServices++) {
+            $('#listRelevantRepositories option').each(function () {
+                if (parseInt(this.value) == parseInt(result.TSRReleventRepositories[iCoreServices].RelevantRepositoryId)) {
+                    $("#listRelevantRepositories option[value='" + result.TSRReleventRepositories[iCoreServices].RelevantRepositoryId + "']").prop("selected", true);
+                    return;
+                }
+            });
+        }
+    }
+
+    moveItems('#listRelevantRepositories', '#listRelevantRepositoriesSelected');
+    $("#TSRStartDate").val(dateFormat(startDate, "isoDateddMonyyyy"));
+
+    var tbody = $('#tsrfiledetails');
+    var number = 0;
+    for (var totalrecords = 0; totalrecords < result.TSRFiles.length; totalrecords++) {
+        number++;
+        var FileName = result.TSRFiles[totalrecords]["Path"];
+        var extention = FileName.substr(FileName.indexOf("."), FileName.length);
+        var guid = result.TSRFiles[totalrecords]["GUID"];
+        var url = result.FilePath[totalrecords];
+        var className = "";
+        if (number == result.TSRFiles.length) {
+            className = "class=lastRow";
+        }
+
+        tbody.append("<tr id='tr_" + number + "' style='min-height:20px;' " + className + " data-name='" + guid + "' data-path=>" +
+            "<td align='center' style='width:11%;' id='tdIndex'>" + number + "</td>" +
+            "<td  class='leftalign' style='width:72%;'>" + FileName + "</td>" +
+            "<td align='center' style='width:6%;'><a class='download' href='" + url + "' target='_blank' download='" + FileName + "'>Show</a></td>" +
+            "<td align='center' style='width:5%;'><a class='remove' onclick='RemoveFile(" + number + ")'><img style='width:12px;' src='/images/cross.png'/></a></td></tr>");
+    }
+}
+
+function PopulateDropdown(result, dropdown) {
+    $.each(result, function (i, item) {
+        $('#' + dropdown).append($('<option>', {
+            value: item.ID,
+            text: item.Name
+        }));
+    });
+}
+
+function Save() {
+
+    if (CheckTSRData()) {
+        var txtID = $("#txtID").val();
+        var txtTitle = $("#txtTitle").val();
+        var txtDeliveryManager = $("#lblDeliveryManagerId").val();
+        var txtDescription = $("#txtDescription").val();
+        var txtTestManager = $("#lblTestManagerId").val();
+        var ddlVertical = $("#ddlVertical").val();
+        var ddlPractice = $("#ddlPractice").val();
+        var ddlSolutioncentre = $("#ddlSolutioncentre").val();
+        var ddlClientRegion = $("#ddlClientRegion").val();
+        var txtClient = $("#txtClient").val();
+        var txtAccount = $("#txtAccount").val();
+        var txtEngagement = $("#txtEngagement").val();
+        var txtAccountManager = $("#lblAccountManagerId").val();
+        var txtERPOrderNumber = $("#txtERPOrderNumber").val();
+        var ddlMarketOffering = $("#ddlMarketOffering").val();
+        var txtStartDate = $("#txtStartDate").val();
+        var txtTargetCompletionDate = $("#txtTargetCompletionDate").val();
+        var txtEstimatedEffort = $("#txtEstimatedEffort").val();
+        var txtPlannedEffort = $("#txtPlannedEffort").val();
+        var ddlOperationalrisk = $("#ddlOperationalrisk").val();
+
+        //Get all core services
+        var listCoreServicesSelected = "";
+        $('#listCoreServicesSelected').find('option').each(function () {
+            listCoreServicesSelected += $(this).val();
+            listCoreServicesSelected += ",";
+        });
+
+        listCoreServicesSelected = listCoreServicesSelected.substring(0, listCoreServicesSelected.length - 1);
+
+        var listRelevantRepositoriesSelected = "";
+
+        $('#listRelevantRepositoriesSelected').find('option').each(function () {
+            listRelevantRepositoriesSelected += $(this).val();
+            listRelevantRepositoriesSelected += ",";
+        });
+
+        listRelevantRepositoriesSelected = listRelevantRepositoriesSelected.substring(0, listRelevantRepositoriesSelected.length - 1);
+
+        var data = JSON.stringify({ Title: txtTitle, DeliveryManagerId: txtDeliveryManager, Description: txtDescription, TestManagerId: txtTestManager, VerticalId: ddlVertical, PracticeId: ddlPractice, SolutionCentreId: ddlSolutioncentre, ClientRegionId: ddlClientRegion, Client: txtClient, Account: txtAccount, Engagement: txtEngagement, AccountManagerId: txtAccountManager, ERPordernumber: txtERPOrderNumber, MarketOfferingId: ddlMarketOffering, StartDate: txtStartDate, TargetCompletionDate: txtTargetCompletionDate, Estimatedeffort: txtEstimatedEffort, Plannedeffort: txtPlannedEffort, OperationalRiskId: ddlOperationalrisk, TSRCoreServicesArr: listCoreServicesSelected, TSTRelevantRepositoriesArr: listRelevantRepositoriesSelected, CreatedBy: userName, UpdatedBy: userName });
+
+        var urlAddUpdate = urlPrefix + "TSR";
+
+        var method = "POST";
+        var message = "";
+        var tsrId = getUrlVars()["tsrid"];
+        if (tsrId != "") {
+            method = "PUT";
+            urlAddUpdate = urlAddUpdate + "/UpdateTSR/" + tsrId;
+            message = "TSR updated successfully.";
+        }
+        else {
+            urlAddUpdate = urlAddUpdate + "/CreateTSR";
+            message = "TSR created successfully.";
+        }
+        $.ajax({
+            url: urlAddUpdate,
+            data: data,
+            type: method,
+            contentType: 'application/json; charset=UTF-8',
+            success: function (response) {
+                //$("#txtOutput").html("<b>" + response + "</b>");
+                if (response.indexOf("Error") == 0) {
+                    showMessageBox(response, "red");
+                    // $("#txtOutput").css('color', 'red');
+                }
+                else {
+                    if ($("#fileUpload").get(0).files.length > 0) {
+                        sendFile(response, message);
+                    }
+                    else {
+                        showMessageBox(message, "green", "TSRDashboard.html?user=" + userId);
+                    }
+                }
+
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                showMessageBox(textStatus + "--" + errorThrown, "red");
+            }
+        });
+    }
+}
+
+function Download(fileSequence) {
+    var rows = $('#tsrfiledetails > tr');
+    var Number = 0;
+    for (var rowindex = 0; rowindex < rows.length; rowindex++) {
+        var td = rows[rowindex].children(0);
+        if (typeof td != "undefined") {
+            if (rows[rowindex].id == "tr_" + fileSequence) {
+                var guid = rows[rowindex].attributes["data-name"].value;
+                if (guid.length > 5) {
+                    var url = urlPrefix + "/TSR/DownloadFile/" + guid;
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        contentType: 'application/json; charset=UTF-8',
+                        success: function (response) {
+                        },
+                        error: function (er) { showMessageBox(er.responseText, "red"); return false; }
+                    });
+                }
+            }
+            else {
+                Number++;
+                $(td).text(Number);
+            }
+        }
+    }
+}
+
+var formdata = new FormData();
+function sendFile(tsrID, message) {
+    var tsrId = getUrlVars()["tsrid"];
+    if (tsrID != "") {
+        tsrId = tsrID;
+    }
+    
+    if (formdata == null) {
+        showMessageBox(tsrID, "green", "TSRDashboard.html?user=" + userId);
+    }
+    
+    formdata.append("id", tsrId);
+    
+    $.ajax({
+        url: urlPrefix + "TSR/TSRFileUpload/", type: "POST", processData: false,
+        data: formdata, dataType: 'json',
+        contentType: false,
+        success: function (response) {
+            $("#fileUpload").val('');
+            showMessageBox(message, "green", "TSRDashboard.html?user=" + userId);
+        },
+        error: function (er) { }
+
+    });
+    return false;
+}
+
+function Cancel() {
+    window.location = "TSRDashboard.html?user=" + userId;
+}
+
+
+function callSuccess(message) {
+    window.location = "TSRDashboard.html?user=" + userId;
+}
+
+function CheckTSRData() {
+    if ($("#txtStartDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtStartDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid start date.", "red");
+            //$("#txtStartDate").focus();
+            return false;
+        }
+    }
+
+    if ($("#txtTargetCompletionDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtTargetCompletionDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid target completion date.", "red");
+            //$("#txtTargetCompletionDate").focus();
+            return false;
+        }
+    }
+
+    if ($("#txtTitle").val() == "") {
+        showMessageBox("Please enter TSR title.", "red");
+        //$("#txtTitle").focus();
+        return false;
+    }
+    else if ($("#lblDeliveryManagerId").val() == "" || $("#txtDeliveryManager").val() == "") {
+        showMessageBox("Please enter Delivery Manager's name or mail id.", "red");
+        //$("#txtDeliveryManager").focus();
+        return false;
+    }
+    else if ($("#lblTestManagerId").val() == "" || $("#txtTestManager").val() == "") {
+        showMessageBox("Please enter Test Manager's name or mail id.", "red");
+        //$("#txtTestManager").focus();
+        return false;
+    }
+    else if ($("#ddlVertical").val() == "") {
+        showMessageBox("Please select vertical.", "red");
+        //$("#ddlVertical").focus();
+        return false;
+    }
+    else if ($("#ddlPractice").val() == "") {
+        showMessageBox("Please select practice.", "red");
+        //$("#ddlPractice").focus();
+        return false;
+    }
+    else if ($("#ddlSolutioncentre").val() == "") {
+        showMessageBox("Please select solution centre.", "red");
+        //$("#ddlSolutioncentre").focus();
+        return false;
+    }
+    else if ($("#ddlClientRegion").val() == "") {
+        showMessageBox("Please select client region.", "red");
+        //$("#ddlClientRegion").focus();
+        return false;
+    }
+    else if ($("#txtClient").val() == "") {
+        showMessageBox("Please enter client name.", "red");
+        //$("#txtClient").focus();
+        return false;
+    }
+    else if ($("#txtAccount").val() == "") {
+        showMessageBox("Please enter account name.", "red");
+        //$("#txtAccount").focus();
+        return false;
+    }
+    else if ($("#txtEngagement").val() == "") {
+        showMessageBox("Please enter engagement details.", "red");
+        //$("#txtEngagement").focus();
+        return false;
+    }
+    else if ($("#lblAccountManagerId").val() == "") {
+        showMessageBox("Please enter Account Manager's name or mail id.", "red");
+        //$("#txtAccountManager").focus();
+        return false;
+    }
+    else if ($("#txtERPOrderNumber").val() == "") {
+        showMessageBox("Please enter ERP order number.", "red");
+        //$("#txtERPOrderNumber").focus();
+        return false;
+    }
+    else if ($("#ddlMarketOffering").val() == "") {
+        showMessageBox("Please select market offering.", "red");
+        //$("#ddlMarketOffering").focus();
+        return false;
+    }
+    else if ($("#txtStartDate").val() == "") {
+        showMessageBox("Please select start date.", "red");
+        //$("#txtStartDate").focus();
+        return false;
+    }
+    else if ($("#txtTargetCompletionDate").val() == "") {
+        showMessageBox("Please select target completion date.", "red");
+        //$("#txtTargetCompletionDate").focus();
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#txtTargetCompletionDate").val()) <= $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox("Target completion date can not be less than or equal to start date.", "red");
+        //$("#txtTargetCompletionDate").focus();
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#TSRStartDate").val()) > $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox("TSR start date can not be less than previously TSR start date.", "red");
+        //$("#txtStartDate").focus();
+        return false;
+    }
+    else if ($("#txtEstimatedEffort").val() == "") {
+        showMessageBox("Please enter estimated efforts.", "red");
+        //$("#txtEstimatedEffort").focus();
+        return false;
+    }
+    else if ($("#txtPlannedEffort").val() == "") {
+        showMessageBox("Please enter planned efforts.", "red");
+        //$("#txtPlannedEffort").focus();
+        return false;
+    }
+        //else if ($("#listCoreServicesSelected").val() == "") {
+        //    showMessageBox("Please select at least one core services.", "red");
+        //    $("#listCoreServicesSelected").focus();
+        //    return false;
+        //}
+        //else if ($("#listRelevantRepositoriesSelected").val() == "") {
+        //    showMessageBox("Please select at least one relevant repositories.", "red");
+        //    $("#listRelevantRepositoriesSelected").focus();
+        //    return false;
+        //}
+    else {
+        return true;
+    }
+}
+
+function NumAndTwoDecimals(e, field) {
+    var val = field.value;
+    var re = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)$/g;
+    var re1 = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)/g;
+    if (re.test(val)) {
+        //do something here
+
+    } else {
+        val = re1.exec(val);
+        if (val) {
+            field.value = val[0];
+        } else {
+            field.value = "";
+        }
+    }
+
+    var max_chars = 8;
+    if (field.value.length > max_chars) {
+        field.value = field.value.substr(0, max_chars);
+    }
+}
+
+function moveItems(origin, dest) {
+    $(origin).find(':selected').appendTo(dest);
+
+    //$(dest).append($(dest + " option").remove().sort(function (a, b) {
+    //    var at = $(a).text(), bt = $(b).text();
+    //    return (at > bt) ? 1 : ((at < bt) ? -1 : 0);
+    //}));
+
+    $(dest).append($(dest + " option").prop('selected', false));
+}
+
+var fis = 0;
+$(function () {
+
+    //--Core services
+    $('#AddCoreServices').click(function () {
+        moveItems('#listCoreServices', '#listCoreServicesSelected');
+    });
+
+    $('#listCoreServices').dblclick(function () {       
+        moveItems('#listCoreServices', '#listCoreServicesSelected');       
+    });
+
+    $('#RemoveCoreServies').on('click', function () {
+        moveItems('#listCoreServicesSelected', '#listCoreServices');
+    });
+
+    $('#listCoreServicesSelected').dblclick(function () {
+        moveItems('#listCoreServicesSelected', '#listCoreServices');
+    });
+
+    //--Relevant repositories --
+
+    $('#AddRelevantRepositories').click(function () {
+        moveItems('#listRelevantRepositories', '#listRelevantRepositoriesSelected');
+    });
+
+    $('#listRelevantRepositories').dblclick(function () {
+        moveItems('#listRelevantRepositories', '#listRelevantRepositoriesSelected');
+    });
+
+    $('#RemoveRelevantRepositories').on('click', function () {
+        moveItems('#listRelevantRepositoriesSelected', '#listRelevantRepositories');
+    });
+
+    $('#listRelevantRepositoriesSelected').dblclick(function () {
+        moveItems('#listRelevantRepositoriesSelected', '#listRelevantRepositories');
+    });
+
+    $("#txtDeliveryManager").focusout(function () {
+        if ($(this).val() != "") {
+            GetDBId("#lblDeliveryManagerMail", "#lblDeliveryManagerId");
+        }
+    });
+
+    $("#txtTestManager").focusout(function () {
+        if ($(this).val() != "") {
+            GetDBId("#lblTestManagerMail", "#lblTestManagerId");
+        }
+    });
+
+    $("#txtAccountManager").focusout(function () {
+        if ($(this).val() != "") {
+            GetDBId("#lblAccountManagerMail", "#lblAccountManagerId");
+        }
+    });
+
+    $('input[type=file]').change(function () {
+        var filePath = $('#fileUpload').val();
+
+        var files = $("#fileUpload").get(0).files;
+
+        if (files.length > 0) {
+            for (var f = 0; f < files.length; f++) {
+                formdata.append("HelpSectionImages" + fis, files[f]);
+                fis++;
+            }
+        }
+
+        showUpload(filePath);
+    });
+});
+
+function SelectFile() {
+    $('#fileUpload').trigger('click');
+}
+
+
+var fileSequence = 0;
+function showUpload(filePath) {
+    var rows = $('#tsrfiledetails > tr');
+    if (rows.length > 0) {
+        fileSequence = rows.length;
+    }
+    //showLoader();
+    var tbody = $('#tsrfiledetails');
+    var array = filePath.split(",");
+    for (var totalrecords = 0; totalrecords < array.length; totalrecords++) {
+        fileSequence++;
+        var FileName = array[totalrecords];
+        FileName = FileName.substr(FileName.lastIndexOf("\\") + 1, FileName.length);
+        var className = "";
+        if (fileSequence == array.length) {
+            className = "class=lastRow";
+        }
+        tbody.append("<tr id='tr_" + fileSequence + "' style='min-height:20px;' " + className + " data-name='" + FileName + "'>" +
+            "<td align='center' style='width:11%;' id='tdIndex'>" + fileSequence + "</td>" +
+            "<td  class='leftalign' style='width:72%;'>" + FileName + "</td>" +
+            "<td align='center' style='width:6%;'>New</td>" +
+            "<td align='center' style='width:5%;'><a href='#' class='remove' onclick='RemoveFile(" + fileSequence + ")'><img style='width:12px;' src='/images/cross.png'/></a></td></tr>");
+    }
+    //hideLoader();
+}
+
+function RemoveFile(fileSequence) {
+    var rows = $('#tsrfiledetails > tr');
+    var Number = 0;
+    for (var rowindex = 0; rowindex < rows.length; rowindex++) {
+        var td = rows[rowindex].children(0);
+        if (typeof td != "undefined") {
+            if (rows[rowindex].id == "tr_" + fileSequence) {
+                var guid = rows[rowindex].attributes["data-name"].value;
+                if (guid.length > 5) {
+                    var url = urlPrefix + "/TSR/RemoveTSRFile/" + guid;
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        contentType: 'application/json; charset=UTF-8',
+                        success: function (response) {
+                            $('#tr_' + fileSequence).remove();
+                        },
+                        error: function (er) { showMessageBox(er.responseText, "red"); return false;}
+                    });
+                }
+            }
+            else {
+                Number++;
+                $(td).text(Number);
+            }
+        }
+    }
+}
+
+function SetAutoCompleteForAD(textboxId, lblId) {
+    var url = urlPrefix + "User/SearchADUser";
+
+    $("#" + textboxId).autocomplete({
+        minLength: 3,
+        source: function (request, response) {
+            var objLoginJSON = JSON.stringify({ userName: $("#" + textboxId).val(), password: '', adUser: false });
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: url,
+                data: objLoginJSON,
+                dataType: "json",
+                success: function (userData) {
+                    // Populate the array that will be passed to the response callback.
+                    var autocompleteObjects = [];
+                    for (var i = 0; i < userData.length; i++) {
+                        var object = {
+                            value: userData[i].Other,
+                            label: userData[i].Name,
+                        };
+
+                        autocompleteObjects.push(object);
+                    }
+
+                    // Invoke the response callback.
+                    response(autocompleteObjects);
+                },
+                error: function (errormsg) {
+                    showMessageBox(errormsg.responseText, "red");
+                }
+            });
+        },
+        select: function (event, ui) {
+            if (ui.item.label.toLowerCase().indexOf("error") < 0) {
+                $("#" + textboxId).val(ui.item.label); // display the selected text
+                $("#" + lblId).val(ui.item.value); // save selected email to hidden input
+            }
+            else {
+                $("#" + textboxId).val(""); // display the selected text
+                $("#" + lblId).val("");
+            }
+
+            return false;
+        },
+    });
+}
+
+function GetDBId(label, labelID) {
+    var lblLabel = $(label);
+
+    if (null != lblLabel && lblLabel.val() != "") {
+        showLoader();
+        var url = urlPrefix + "User/GetUserByEmail/";
+
+        var adUser = true;
+
+        var objLoginJSON = JSON.stringify({ userName: lblLabel.val(), password: '', adUser: adUser });
+        $.ajax({
+            type: "POST",
+            url: url,
+            contentType: 'application/json; charset=UTF-8',
+            data: objLoginJSON,
+            async: false,
+            success: function (result) {
+                if (null !== result) {
+                    $(labelID).val(result.ID);
+                }
+                hideLoader();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                hideLoader();
+                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            }
+        });
+    }
+}

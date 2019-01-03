@@ -1,0 +1,277 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Common
+{
+    public static class ServiceWebConstants
+    {
+        public const string WelcomeMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to TTM portal supporting you in management and governance of your project !
+                                                        </TD>
+                                                    </TR>                                                   
+                                                    <TR>
+                                                        <TD>
+                                                            You have been successfully registered for 'TTM Portal'.
+                                                        </TD>
+                                                    </TR> 
+                                                    <TR>
+                                                        <TD>
+                                                            Kindly wait until admin activates your account.
+                                                        </TD>
+                                                    </TR>  
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            TTM Support  
+                                                        </TD>
+                                                    </TR> 
+                                                                                                    
+                                                </Table>";
+
+        public const string ForgotMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to TTM portal supporting you in management and governance of your project !
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Kindly click on the following link : <a href='{1}/ResetPassword.html?user={2}' title='Reset'>Reset Password</a> for resetting your account password.
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            <br>
+                                                            Note: If for some reason the above link does not work, please copy and paste this URL into your web browser: <br/>
+                                                            <Span>
+                                                                {3}/ResetPassword.html?user={4}
+                                                            </Span>
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            TTM Support  
+                                                        </TD>
+                                                    </TR>                                                   
+                                                </Table>";
+
+        public const string PasswordResetMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to TTM portal supporting you in management and governance of your project !
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            <b>Your password has been reset successfully!</b>
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                           TTM Support  
+                                                        </TD>
+                                                    </TR>
+                                                </Table>";
+
+        public const string ActivationEmailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear Admin,
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Following user '{0}' requested for TTM portal access.
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Kindly grant the access.
+                                                        </TD>
+                                                    </TR>  
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>                                                
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                           TTM Support  
+                                                        </TD>
+                                                    </TR>
+                                                </Table>";
+
+
+        public const string UserAssignmentMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                           Welcome to TTM portal supporting you in management and governance of your project !
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            You have been assigned to {1} :
+                                                        </TD>
+                                                    </TR>
+<TR>
+                                                        <TD>
+                                                            {1} ID: {3}
+                                                        </TD>
+                                                    </TR>
+<TR>
+                                                        <TD>
+                                                            {1} Title : {2}
+                                                        </TD>
+                                                    </TR>
+<TR>
+                                                        <TD>
+                                                            Client : {5}
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Assigned By : {4}
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                            TTM Support  
+                                                        </TD>
+                                                    </TR>                                                   
+                                                </Table>";
+
+        public const string UserActivationMailText = @"<Table>
+                                                    <TR>
+                                                        <TD>
+                                                            Dear {0},
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            This mail is regarding the activation status of your account.
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Welcome to TTM portal supporting you in management and governance of your project !
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                             &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Your account status has been changed to {2}
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            &nbsp;
+                                                        </TD>
+                                                    </TR>
+                                                    <TR>
+                                                        <TD>
+                                                            Regards,<br/>
+                                                           TTM Support  
+                                                        </TD>
+                                                    </TR>                                                   
+                                                </Table>";
+
+    }
+}

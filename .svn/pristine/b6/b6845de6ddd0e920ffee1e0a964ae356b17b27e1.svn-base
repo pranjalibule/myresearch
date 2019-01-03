@@ -1,0 +1,497 @@
+﻿function LoadOperationalRisk() {
+    var url = urlPrefix + "OperationalRisk/GetAllIDName";
+    LoadData(url, 'ddlOperationalrisk');
+}
+
+function LoadCoreServices() {
+    var url = urlPrefix + "CoreService/GetAllIDNameByTSRId/" + tsrId;
+    LoadData(url, 'ddlCoreServices');
+}
+
+function LoadReliventRepositories() {
+    var url = urlPrefix + "RelevantRepository/GetAllIDNameByTSRId/" + tsrId;
+    LoadData(url, 'ddlRelevantRepositories');
+}
+
+function LoadServiceDeliveryChain() {
+    var url = urlPrefix + "ServiceDeliveryChain/GetAllIDName";
+    LoadData(url, 'listServiceDeliveryChain');
+}
+
+function LoadTSOStatus() {
+    var url = urlPrefix + "TSOStatus/GetAllIDName";
+    LoadData(url, 'ddlTSOStatus');
+}
+
+function LoadData(url, dropdown)
+{
+    $.ajax({
+        type: "GET",
+        url: url,
+        beforeSend: function (request) {
+            request.setRequestHeader("User", userId);
+        },
+        dataType: "json",
+        async: false,
+        success: function (result) {
+            var totalRecords = result.length;
+
+            if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                PopulateDropdown(result, dropdown);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function LoadTSR(tsrId)
+{
+    var url = urlPrefix + "TSR/GetById/" + tsrId;
+
+    $.ajax({
+        type: "GET",
+        url: url,
+        beforeSend: function (request) {
+            request.setRequestHeader("User", userId);
+        },
+        dataType: "json",
+        success: function (result) {
+            if (null != result) {
+                $("#lblTSR").html(result.Title);
+                $("#lblTSR").prop("title", "Delivery Manager: " + result.DeliveryManager.Name +
+                    "\nTest Manager: " + result.TestManager.Name +
+                    "\nAccount Manager: " + result.AccountManager.Name +
+                    "\nVertical: " + result.Vertical.Name +
+                    "\nPractice: " + result.Practice.Name +
+                    "\nSolution Centre: " + result.SolutionCentre.Name +
+                    "\nClient Region: " + result.ClientRegion.Name +
+                    "\nClient: " + result.Client +
+                    "\nAccount: " + result.Account +
+                    "\nEngagement: " + result.Engagement +
+                    "\nERPordernumber: " + result.ERPordernumber +
+                    "\nMarketOffering: " + result.MarketOffering.Name +
+                    "\nStartDate: " + dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy") + 
+                    "\nTargetCompletionDate: " + dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy") + 
+                    "\nEstimatedeffort: " + result.Estimatedeffort + " days" + 
+                    "\nPlannedeffort: " + result.Plannedeffort + " days"
+                );
+              
+                $("#txtStartDate").val(dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+                $("#txtTargetCompletionDate").val(dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+
+                //set the start and completion dates in hidden fields for validation
+                $("#TSRStartDate").val(dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+                $("#TSRTargetCompletionDate").val(dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function LoadTSO(tsoId)
+{
+    var url = urlPrefix + "TSO/GetById/" + tsoId;
+
+    $.ajax({
+        type: "GET",
+        beforeSend: function (request) {
+            request.setRequestHeader("User", userId);
+        },
+        url: url,
+        dataType: "json",
+        success: function (result) {            
+            if (null != result) {
+                PopulateTSO(result);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function PopulateTSO(result) {
+    $("#txtID").val(result.ID);
+    $("#txtTitle").val(result.Title);
+    $("#txtDescription").val(result.Description);
+    $("#txtTeamLead").val(result.TeamLead.Name)
+    $("#lblTeamLeadMail").val(result.TeamLead.EmailID)
+    $("#lblTeamLeadId").val(result.TeamLeadId);
+    $("#txtActualEffort").val(result.ActualEffort);
+
+    $("#ddlCoreServices").val(result.CoreServiceId)
+    $("#ddlRelevantRepositories").val(result.RelevantRepositoryId);
+
+    startDate = $.datepicker.parseDate('yy-m-dd', result.StartDate.replace("T00:00:00",""));
+
+    $("#txtStartDate").val(dateFormat(startDate, "isoDateddMonyyyy"));
+
+    targetCompletionDate = $.datepicker.parseDate('yy-m-dd', result.TargetCompletionDate.replace("T00:00:00", ""));
+
+    $("#txtTargetCompletionDate").val(dateFormat(targetCompletionDate, "isoDateddMonyyyy"));
+    $("#txtEstimatedEffort").val(result.EstimatedEffort);
+    $("#txtEstimatedEffort").prop('disabled', 'disabled');
+    $("#txtPlannedEffort").val(result.PlannedEffort);
+    $("#ddlOperationalrisk").val(result.OperationalRiskId);
+    $("#ddlTSOStatus").val(result.TSOStatusID);
+
+    if (null !== result.TSRReleventRepositories && result.TSOServiceDeliveryChains.length > 0) {
+        for (var iTSOServiceDeliveryChainsCount = 0; iTSOServiceDeliveryChainsCount < result.TSOServiceDeliveryChains.length; iTSOServiceDeliveryChainsCount++) {
+            $('#listServiceDeliveryChain option').each(function () {
+                if (parseInt(this.value) == parseInt(result.TSOServiceDeliveryChains[iTSOServiceDeliveryChainsCount].ServiceDeliveryChainId)) {
+                    $("#listServiceDeliveryChain option[value='" + result.TSOServiceDeliveryChains[iTSOServiceDeliveryChainsCount].ServiceDeliveryChainId + "']").prop("selected", true);
+                    return;
+                }
+            });
+        }
+    }
+
+    moveItems('#listServiceDeliveryChain', '#listServiceDeliveryChainSelected');
+}
+
+function PopulateDropdown(result, dropdown)
+{
+    $.each(result, function (i, item) {
+        $('#' + dropdown).append($('<option>', {
+            value: item.ID,
+            text: item.Name
+        }));
+    });
+}
+
+function Save() {
+        
+    if (CheckTSOkData()) {
+        var txtID = $("#txtID").val();
+        var txtTitle = $("#txtTitle").val();
+        
+        var txtDescription = $("#txtDescription").val();
+        var txtTeamLead = $("#lblTeamLeadId").val();
+
+        var ddlCoreServices = $("#ddlCoreServices").val();
+        var ddlRelevantRepositories = $("#ddlRelevantRepositories").val();
+
+        var txtStartDate = $("#txtStartDate").val();
+        var txtTargetCompletionDate = $("#txtTargetCompletionDate").val();
+        var txtEstimatedEffort = $("#txtEstimatedEffort").val();
+        var txtPlannedEffort = $("#txtPlannedEffort").val();
+        var ddlOperationalrisk = $("#ddlOperationalrisk").val();
+        var ddlTSOStatus = $("#ddlTSOStatus").val();
+
+        var listServiceDeliveryChainArr = '';
+
+        $('#listServiceDeliveryChainSelected').find('option').each(function () {
+            listServiceDeliveryChainArr += $(this).val();
+            listServiceDeliveryChainArr += ",";
+        });
+
+        listServiceDeliveryChainArr = listServiceDeliveryChainArr.substring(0, listServiceDeliveryChainArr.length - 1);
+
+        if (listServiceDeliveryChainArr.trim() != "") {
+            var data = JSON.stringify({
+                TSRId: tsrId, Title: txtTitle, Description: txtDescription, TeamLeadId: txtTeamLead,
+                TSOStatusID: ddlTSOStatus, CoreServiceId: ddlCoreServices, RelevantRepositoryId: ddlRelevantRepositories, StartDate: txtStartDate, TargetCompletionDate: txtTargetCompletionDate, Estimatedeffort: txtEstimatedEffort, Plannedeffort: txtPlannedEffort, OperationalRiskId: ddlOperationalrisk, ServiceDeliveryChainArr: listServiceDeliveryChainArr, CreatedBy: userName, UpdatedBy: userName
+            });
+
+            var urlAddUpdate = urlPrefix + "TSO";
+
+            var method = "POST";
+            var message = "";
+            if (!isNaN(txtID) && txtID != "") {
+                method = "PUT";
+                urlAddUpdate = urlAddUpdate + "/UpdateTSO/" + txtID;
+                message = "TSO updated successfully.";
+            }
+            else {
+                urlAddUpdate = urlAddUpdate + "/CreateTSO";
+                message = "TSO created successfully.";
+            }
+
+            $.ajax({
+                url: urlAddUpdate,
+                data: data,
+                type: method,
+                beforeSend: function (request) {
+                    request.setRequestHeader("User", userId);
+                },
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox(message, "green", "TSODashboard.html?user=" + userId + "&tsrid=" + tsrId);
+                        //callSuccess(message);
+                        //$("#txtOutput").css('color', 'green');
+                    }
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+        else
+        {
+            showMessageBox("Please select at least one service delivery chain.", "red");
+        }
+    }
+}
+
+function Cancel() {
+    window.location = "TSODashboard.html?user=" + userId + "&tsrid=" + tsrId;
+}
+
+function callSuccess(message) {
+    window.location = "TSODashboard.html?user=" + userId + "&tsrid=" + tsrId;
+    //alert(message);
+}
+
+function CheckTSOkData()
+{
+    if ($("#txtStartDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtStartDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid start date.", "red");
+            $("#txtStartDate").focus();
+            return false;
+        }
+    }
+
+    if ($("#txtTargetCompletionDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtTargetCompletionDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid target completion date.", "red");
+            $("#txtTargetCompletionDate").focus();
+            return false;
+        }
+    }
+
+    if ($("#txtTitle").val() == "")
+    {
+        showMessageBox("Please enter TSO title.", "red");
+        $("#txtTitle").focus();
+        return false;
+    }
+    else if ($("#txtDescription").val() == "") {
+        showMessageBox("Please enter description.", "red");
+        $("#txtDescription").focus();
+        return false;
+    }
+    else if ($("#ddlCoreServices").val() == "") {
+        showMessageBox("Please select core services.", "red");
+        $("#ddlCoreServices").focus();
+        return false;
+    }
+    else if ($("#lblTeamLeadId").val() == "") {
+        showMessageBox("Please enter Team lead's name or mail id.", "red");
+        $("#txtTeamLead").focus();
+        return false;
+    }
+    else if ($("#txtStartDate").val() == "") {
+        showMessageBox("Please select start date.", "red");
+        $("#txtStartDate").focus();
+        return false;
+    } 
+    else if ($("#txtTargetCompletionDate").val() == "") {
+        showMessageBox("Please select target completion date.", "red");
+        $("#txtTargetCompletionDate").focus();
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#txtTargetCompletionDate").val()) <= $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox("Target completion date can not be less than or equal to start date.", "red");
+        $("#txtTargetCompletionDate").focus();
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#TSRStartDate").val()) > $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox("TSO start date can not be less than TSR start date.", "red");
+        $("#txtStartDate").focus();
+        return false;
+    }
+    else if ($("#txtEstimatedEffort").val() == "") {
+        showMessageBox("Please enter estimated efforts.", "red");
+        $("#txtEstimatedEffort").focus();
+        return false;
+    }
+    else if ($("#txtPlannedEffort").val() == "") {
+        showMessageBox("Please enter planned efforts.", "red");
+        $("#txtPlannedEffort").focus();
+        return false;
+    }
+    else if ($("#ddlOperationalrisk").val() == "") {
+        showMessageBox("Please select operational risk.", "red");
+        $("#ddlOperationalrisk").focus();
+        return false;
+    }
+    else if ($("#ddlRelevantRepositories").val() == "") {
+        showMessageBox("Please select relevant repositories.", "red");
+        $("#ddlRelevantRepositories").focus();
+        return false;
+    }
+    else if ($("#listServiceDeliveryChainSelected").val() == "") {
+        showMessageBox("Please select service delivery chain.", "red");
+        $("#listServiceDeliveryChainSelected").focus();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+function NumAndTwoDecimals(e, field) {
+    var val = field.value;
+    var re = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)$/g;
+    var re1 = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)/g;
+    if (re.test(val)) {
+        //do something here
+
+    } else {
+        val = re1.exec(val);
+        if (val) {
+            field.value = val[0];
+        } else {
+            field.value = "";
+        }
+    }
+
+    var max_chars = 8;
+    if (field.value.length > max_chars) {
+        field.value = field.value.substr(0, max_chars);
+    }
+}
+
+function moveItems(origin, dest) {
+    $(origin).find(':selected').appendTo(dest);
+
+    //$(dest).append($(dest + " option").remove().sort(function (a, b) {
+    //    var at = $(a).text(), bt = $(b).text();
+    //    return (at > bt) ? 1 : ((at < bt) ? -1 : 0);
+    //}));
+}
+
+$(function () {
+
+    //--Service delivery chain
+    $('#AddServiceDeliveryChain').click(function () {
+        moveItems('#listServiceDeliveryChain', '#listServiceDeliveryChainSelected');
+    });
+
+    $('#listServiceDeliveryChain').dblclick(function () {
+        moveItems('#listServiceDeliveryChain', '#listServiceDeliveryChainSelected');
+    });
+
+    $('#RemoveServiceDeliveryChain').on('click', function () {
+        moveItems('#listServiceDeliveryChainSelected', '#listServiceDeliveryChain');
+    });
+
+    $('#listServiceDeliveryChainSelected').dblclick(function () {
+        moveItems('#listServiceDeliveryChainSelected', '#listServiceDeliveryChain');
+    });
+
+    $("#txtTeamLead").focusout(function () {
+        if ($(this).val() != "") {
+            GetDBId("#lblTeamLeadMail", "#lblTeamLeadId");
+        }
+    });
+});
+
+function SetAutoCompleteForAD(textboxId, lblId)
+{
+    var url = urlPrefix + "User/SearchADUser";
+
+    $("#" + textboxId).autocomplete({
+        minLength: 3,
+        source: function (request, response)
+        {
+            var objLoginJSON = JSON.stringify({ userName: $("#" + textboxId).val(), password: '', adUser: false });
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: url,
+                data: objLoginJSON,
+                beforeSend: function (request) {
+                    request.setRequestHeader("User", userId);
+                },
+                dataType: "json",
+                success: function (userData) {
+                     // Populate the array that will be passed to the response callback.
+                    var autocompleteObjects = [];
+                    for (var i = 0; i < userData.length; i++) {
+                        var object = {
+                            value: userData[i].Other,
+                            label: userData[i].Name,
+                        };
+
+                        autocompleteObjects.push(object);
+                    }
+
+                    // Invoke the response callback.
+                    response(autocompleteObjects);
+                },
+                error: function (errormsg) {
+                    showMessageBox(errormsg.responseText, "red");
+                }
+            });
+        },
+        select: function (event, ui) {
+            if (ui.item.label.toLowerCase().indexOf("error") < 0) {
+                $("#" + textboxId).val(ui.item.label); // display the selected text
+                $("#" + lblId).val(ui.item.value); // save selected email to hidden input
+            }
+            else
+            {
+                $("#" + textboxId).val(""); // display the selected text
+                $("#" + lblId).val("");
+            }
+
+            return false;
+        },
+    });
+}
+
+function GetDBId(label, labelID)
+{
+    var lblLabel = $(label);
+
+    if (null != lblLabel && lblLabel.val() != "")
+    {
+        showLoader();
+        var url = urlPrefix + "User/GetUserByEmail/";
+
+        var adUser = true;
+        
+        var objLoginJSON = JSON.stringify({ userName: lblLabel.val(), password: '', adUser: adUser });
+        $.ajax({
+            type: "POST",
+            url: url,
+            beforeSend: function (request) {
+                request.setRequestHeader("User", userId);
+            },
+            contentType: 'application/json; charset=UTF-8',
+            data: objLoginJSON,
+            async:false,
+            success: function (result) {       
+                if (null !== result) {
+                    $(labelID).val(result.ID);
+                }
+                hideLoader();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                hideLoader();
+                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            }
+        });
+    }
+}

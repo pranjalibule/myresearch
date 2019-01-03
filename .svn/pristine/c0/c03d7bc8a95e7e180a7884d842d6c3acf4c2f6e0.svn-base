@@ -1,0 +1,748 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>TSR Dashboard</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script type="text/javascript">
+        var specialKeys = new Array();
+        specialKeys.push(8); //Backspace
+
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        #accordionbody {
+            display: block;
+            border: 1px solid black;
+            border-collapse: separate;
+            border-spacing: 4px;
+            /*background-color: #333;*/
+        }
+
+        .info {
+            /*background: #fff;
+            color: #222;*/
+            width: 100%;
+            height: auto;
+            padding: 1px;
+            /*padding-left: 15px;*/
+            display: block;
+            overflow: hidden;
+            box-sizing: border-box;
+            transition: .1s linear;
+        }
+
+        #divProcessing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: grey;
+            opacity: .8;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:3.5vh; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="Home();">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallselectPortal">
+                    <a href="#">TSR Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr id="trNewTSR">
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="ExportExcelDump('');">Export Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal AdminClass">
+                    <a href="#" onclick="MasterData()">Master Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <!--<a href="Wiki.html" target="_blank">Wiki</a>-->
+                    <a href='#' onclick="this.href='Wiki.html?user='+ encodeURI(userId)" target="_blank">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <div id="breadCrumb">
+            <div class='bTitle'>TSR Dashboard</div>
+            <div class='bChild'>></div>
+        </div>
+        <div id="pager" class="pager" style="width:100%; text-align:center;">
+            Search :
+            <input type="text" id="txtTitle" title="Search Title or Client" placeholder="Search Title or Client" style="float:none;" />
+            <select id="ddlStatus" name="ddlStatus" title="Select Status" style="width:110px;">
+                <option value="">Select Status</option>
+            </select>
+            <input type="button" id="btnSearch" title="Search" value="Search" onclick="Search();" style="margin:0px!important;float:none;" />
+        </div>
+        <div class="scrollDiv" style="height:77vh;">
+            <label class="GuestInfo"> Kindly click on ID to view TSR Details.</label>
+            <table id="TSRTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">Title</th>
+                        <th style="width:100px" align="center">Client</th>
+                        <th style="width:100px" align="center">Solution Center</th>
+                        <th style="width:350px;" align="left">Description</th>
+                        <th style="width:160px" align="center">Status</th>                     <!--<th style="width:170px" align="center">CreatedOn</th>-->
+
+                        <th style="width:100px" align="center">Planned Effort</th>
+                        <th style="width:100px" align="center">Actual Effort</th>
+                        <th style="width:100px" align="center">Updated By</th>
+                        <th style="width:100px" align="center">Timestamp</th>
+                        <th style="width:100px" align="center">TSO</th>
+                        <!--<th style="width:50px" align="center"></th>-->
+                    </tr>
+                </thead>
+                <tbody id="tsrdetails"></tbody>
+            </table>
+        </div>
+        <div id="pager" class="pager" style="width:100%; text-align:center;padding-top:5px;">
+            <input type="button" id="first" value="First" style="width:70px;float:none;" title="Go to first page" onclick="GoFristPage();" />
+            <input type="button" id="prev" value="Prev" style="width:70px;float:none;" title="Go to previous page" onclick="GoPrevPage();" />
+            <input type="text" id="pagedisplay" style="float:none; text-align:center;" size="5" />
+            <label id="totalpage" style="width:70px;float:none;">of 0</label>
+            <input type="button" id="next" value="Next" style="width:70px;float:none;" title="Go to next page" onclick="GoNextPage();" />
+            <input type="button" id="last" value="Last" style="width:70px;float:none;" title="Go to last page" onclick="GoLastPage();" />
+            Show
+            <select id="pagesize" style="float:none;width:50px;" onchange="loadDataByRecord();">
+                <option selected="selected" value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+            </select>
+            records per page
+        </div>
+    </div>
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        showLoader();
+        var startingRecordNumber = 0;
+        var pageSize = $("#pagesize option:selected").text();
+        var allpages;
+        CheckUser();
+        LoadTSRStatus();
+        if (roleId == "Guest" || roleId == "guest") {
+            $(".GuestClass").hide();
+            $(".GuestInfo").show();
+        }
+        else if (roleId.toLowerCase() == "account manager") {
+            $("#trNewTSR").hide();
+            $(".GuestInfo").show();
+        }
+        else {
+            $(".GuestClass").show();
+            $(".GuestInfo").hide();
+            $("#trNewTSR").show();
+        }
+        if (roleId == "Admin" || roleId == "admin") {
+            $(".AdminClass").show();
+        }
+        else
+            $(".AdminClass").hide();
+
+        function loadPagingData(startingRecordNumber, pageSize) {
+            var urlGetAll = urlPrefix + "TSR/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+            LoadData(urlGetAll);
+            showPages(urlPrefix + "TSR/GetTSRCount/");
+        }
+
+
+        $(document).ready(function () {
+            showLoader();
+            showPages(urlPrefix + "TSR/GetTSRCount/");
+            try {
+                var urlGetAll = urlPrefix + "TSR/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+                LoadData(urlGetAll);
+                if (startingRecordNumber == 0) {
+                    $("#pagedisplay").val(1);
+                }
+                $("#lblUser").text(userName);
+            } catch (e) {
+                hideLoader();
+                showMessageBox(e, "red");
+            }
+
+            $(document).on('click', '.accordion-section-title', function () {
+                var id = $(this).attr("id");
+
+                $("#tr_" + id).toggle('fast', 'linear', function () {
+                    if ($(this).css('display') == 'block') {
+                        $(this).css('display', '');
+                    }
+                });
+            });
+        });
+
+        function LoadTSRStatus() {
+            var url = urlPrefix + "TSRStatus/GetAllIDName";
+            LoadTSRData(url, 'ddlStatus');
+        }
+        function LoadTSRData(url, dropdown) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader("userid", userId);
+                },
+                dataType: "json",
+                async: true,
+                success: function (result) {
+                    var totalRecords = result.length;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        PopulateDropdown(result, dropdown);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+        function PopulateDropdown(result, dropdown) {
+            $.each(result, function (i, item) {
+                $('#' + dropdown).append($('<option>', {
+                    value: item.ID,
+                    text: item.Name
+                }));
+            });
+        }
+        function Search() {
+            var strTitleOrClient = $("#txtTitle").val().trim();
+
+            var Status = $("#ddlStatus option:selected").text().trim();
+            var e = document.getElementById("ddlStatus");
+
+            //if (/^\s*$/.test(strTitleOrClient)) {
+            //    // It has only whitespace
+            //    $("#txtTitle").val("");
+            //    return false;
+            //}
+
+            var tsrstatus = e.options[e.selectedIndex].value;
+            if (strTitleOrClient == "") {
+                strTitleOrClient = "none";
+            }
+
+            if (Status == "Select Status") {
+                Status = "All";
+                tsrstatus = 0;
+            }
+
+           //$("#txtTitle").val(strTitleOrClient);
+            var urlGetAll = urlPrefix + "TSR/SearchByTitleOrClient/" + startingRecordNumber + "/" + pageSize + "/" + strTitleOrClient.trim() + "/" + tsrstatus;
+            LoadSearchData(urlGetAll);
+        }
+        function LoadData(url) {
+            clearTable();
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('userid', userId);
+                },
+                async: true,
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+                    
+                    populateTable(EntitySummary);
+
+                    var rowToselect = getUrlVars()["rowToselect"];
+                    if (rowToselect != null || rowToselect != "") {
+                        highLightrow(rowToselect, "TSRTable");
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (errorThrown == " Unauthorized") {
+                        textStatus = "You do not have permission to made any changes in TSR";
+                    }
+                    showMessageBox(textStatus, "red");
+                    //showMessageBox(jqXHR.responseText + "--" + textStatupo's + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function LoadSearchData(url) {
+            clearTable();
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('userid', userId);
+                },
+                async: true,
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+                    if (totalRecords == 0) {
+                        showMessageBox(result.Message, "green");
+                    }
+                    populateTable(EntitySummary);
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (errorThrown == " Unauthorized") {
+                        textStatus = "You do not have permission to made any changes in TSR";
+                    }
+                    showMessageBox(textStatus, "red");
+                    //showMessageBox(jqXHR.responseText + "--" + textStatupo's + "--" + errorThrown, "red");
+                }
+            });
+        }
+        function clearTable() {
+            var i = $('#tsrdetails').empty();
+        }
+
+        function populateTable(EntitySummary) {
+            showLoader();
+            var tbody = $('#tsrdetails');
+            try {
+                for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+                    var description = EntitySummary[totalrecords]["Description"];
+                    var stdate = new Date(EntitySummary[totalrecords]["StartDate"]);
+                    var tcdate = new Date(EntitySummary[totalrecords]["TargetCompletionDate"]);
+                    var sdd = stdate.getDate();
+                    var smm = stdate.getMonth() + 1; //January is 0!
+                    var tcdd = tcdate.getDate();
+                    var tcmm = tcdate.getMonth() + 1;
+                    if (sdd < 10) {
+                        sdd = '0' + sdd
+                    }
+
+                    if (smm < 10) {
+                        smm = '0' + smm
+                    }
+
+                    if (tcdd < 10) {
+                        tcdd = '0' + tcdd
+                    }
+
+                    if (tcmm < 10) {
+                        tcmm = '0' + tcmm
+
+                    }
+                    var Startdate = smm + '/' + sdd + '/' + stdate.getFullYear();
+                    var TargetCompletiondate = tcmm + '/' + tcdd + '/' + tcdate.getFullYear();
+                    if (description == null) {
+                        description = "";
+                    }
+                    var status; var ActualEffort = 0;
+                    if (EntitySummary[totalrecords]["Version"] != 1) {
+                        status = EntitySummary[totalrecords]["TSRStatus"]["Name"]
+                    }
+                    else {
+                        // status = "Created";
+                        status = EntitySummary[totalrecords]["TSRStatus"]["Name"]
+                    }
+                    var timestamp = (dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy HH:mm:ss"));
+                    if ("undefined" != EntitySummary[totalrecords]["ActualEffort"]) {
+                        ActualEffort = EntitySummary[totalrecords]["ActualEffort"];
+                    }
+                    else {
+                        ActualEffort = 0;
+                    }
+
+
+                    if (roleId == "Guest" || roleId == "guest") {
+                        tbody.append("<tr id='tr" + totalrecords + "'><td align='center'><a class='accordion-section-title' href='#' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                            "</a></td><td align='left' class='leftalign ellipsis'>" + EntitySummary[totalrecords]["Title"] + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["Client"]["Name"] + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["SolutionCentre"]["Name"] + "</td>" +
+                            "<td align='left'  class='description ellipsis'>" + description + "</td>" +
+                            "<td align='center'>" + status + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td>" +
+                            "<td align='center'>" + ActualEffort + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                            "<td align='center'>" + timestamp + "</td>" +
+                            "<td align='center'>View</td>" +
+                             "</tr>" +
+                             "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='11'>" +
+                             "<div class='acRow'><div class='actitle'>Title</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + EntitySummary[totalrecords]["Title"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Description</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + description + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Planned Start Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + Startdate + "</div>" +
+                             "<div class='actitle'>Planned Completion Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + TargetCompletiondate + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>ERP Order Number</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["ERPordernumber"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Operational Risk</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</div>" +
+                             "<div class='actitle'>Vertical</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["Vertical"].Name + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Delivery manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</div>" +
+                             "<div class='actitle'>Account manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["AccountManager"].Name + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Test manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["TestManager"].Name + "</div>" +
+                             "<div class='actitle'>Estimated Effort</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</div></div>" +
+                             "</td></tr>");
+                    }
+                    else {
+                        tbody.append("<tr id='tr" + totalrecords + "'><td align='center'><a class='accordion-section-title' href='#' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                            "</a></td><td align='left' class='leftalign ellipsis'><a href='#' onclick=CreateNewTSR('" + EntitySummary[totalrecords]["ID"] + "')>" + EntitySummary[totalrecords]["Title"] + "</a></td>" +
+
+                             "<td align='center'>" + EntitySummary[totalrecords]["Client"]["Name"] + "</td>" +
+                             "<td align='center'>" + EntitySummary[totalrecords]["SolutionCentre"]["Name"] + "</td>" +
+                            "<td align='left'  class='description ellipsis'>" + description + "</td>" +
+                             "<td align='center'>" + status + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td>" +
+                            "<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                            "<td align='center'>" + timestamp + "</td>" +
+                            "<td align='center'><a href=# title='Click View to TSO Dashboard' onclick='ViewTSO(" + EntitySummary[totalrecords]["ID"] + ")'>View</a></td>" +
+                             "</tr>" +
+                             "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='11'>" +
+                             "<div class='acRow'><div class='actitle'>Title</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + EntitySummary[totalrecords]["Title"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Description</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + description + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Planned Start Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + Startdate + "</div>" +
+                             "<div class='actitle'>Planned Completion Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + TargetCompletiondate + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>ERP Order Number</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["ERPordernumber"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Operational Risk</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</div>" +
+                             "<div class='actitle'>Vertical</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["Vertical"].Name + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Delivery manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</div>" +
+                             "<div class='actitle'>Account manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["AccountManager"].Name + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Test manager</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["TestManager"].Name + "</div>" +
+                             "<div class='actitle'>Estimated Effort</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</div></div>" +
+                             "</td></tr>");
+                    }
+                }
+            }
+            catch (e) {
+                alert(e);
+            }
+            hideLoader();
+
+        }
+
+        function Delete(ID) {
+            if (!isNaN(ID) && ID != "") {
+                showDeleteConfirm("Are you sure, you want to delete?", ID);
+            }
+        }
+
+        function RefreshTSRStatus(ID) {
+            alert("RefreshTSRStatus : " + ID);
+        }
+
+        function doDelete(ID) {
+            showLoader();
+            var url = urlPrefix + "/TSR/DeleteTSR/" + ID;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox("TSR deleted successfully.", "green", null, true);
+                        //callSuccess();
+                        //$("#txtOutput").css('color', 'green');
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function ExportExcelDump() {
+            $("#ExportExcel").dialog({
+                dialogClass: "no-close block",
+                width: "500px",
+                hight: "250px",
+                modal: true,
+                open: $.proxy(function () {
+                    $(".ui-dialog-titlebar-close").remove();
+                    $(".ui-dialog-titlebar").css("width", "93%");
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                    $(".ui-widget-overlay").css("opacity", "1");
+                }),
+                buttons: [
+                        {
+                            text: "Export to csv",
+                            click: function () {
+                                var url;
+                                showLoader();
+                                var elt = document.getElementById("TypeOfExport");
+                                if (elt.value === "TSR") {
+                                    var url = urlPrefix + "TSR/GetTSRDump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSR Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "TSO") {
+                                    url = urlPrefix + "TSO/GetTSODump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSO Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "Tasks") {
+                                    var txtStartDate = $('#txtStartDate').val()
+                                    var txtEndDate = $('#txtEndDate').val()
+                                    url = urlPrefix + "TSO/GetServiceDeliveryChainTasks/";
+                                    tdata = { startDate: txtStartDate, endDate: txtEndDate };
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        data: tdata,
+                                        success: function (result) {
+                                            var filename = "iMS TASK Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        {
+                            text: "Cancel",
+                            click: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+
+                ]
+            });
+        }
+
+
+       
+       
+          
+      
+
+    </script>
+</body>
+</html>

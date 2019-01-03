@@ -1,0 +1,283 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using Encryption;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using SessionManagement;
+    using System;
+    using System.DirectoryServices.AccountManagement;
+    using System.Net.Http;
+    using System.Web;
+    using System.Web.Http;
+    using System.Web.Http.Results;
+   
+    [RoutePrefix("api")]
+    public class LoginController : ApiController
+    {
+        /// <summary>
+        /// ValidateLogin
+        /// </summary>
+        /// <returns>IHttpActionResult></returns>
+        [HttpPost, Route("v1/Login/ValidateLogin")]
+        public JsonResult<IDName> ValidateLogin([FromBody]LoginDTO loginDTO)
+        {
+            IDName objIDName = null;
+
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            UserDTO objUserDTO = null;
+            try
+            {
+                loginDTO.UserName = loginDTO.UserName.Replace("%40", "@");
+                CryptorEngine objCryptorEngine = new CryptorEngine();
+
+                loginDTO.Password = objCryptorEngine.Encrypt(loginDTO.Password, true);
+
+                User objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower() && x.Password == loginDTO.Password,x=>x.Role);
+
+                if (objUser != null)
+                {
+                    if (objUser.Activated && !objUser.Locked)
+                    {
+                        string strUserType = "Demo";
+                       //objUserDTO = Conversions.ToDTO<UserDTO, User>(objUser);
+
+                        //UserSession objUserSession = new UserSession() { User = objUserDTO };
+                        // Session["FirstName"] = objUserSession;
+                       
+
+                        if (null != objUser.UserTypeID)
+                        {
+                            objBusinessLayer = new BusinessLayer(ls);
+                            UserType objUserType = objBusinessLayer.UserTypeRepository.GetByID(objUser.UserTypeID);
+                            if (null != objUserType)
+                            {
+                                strUserType = objUserType.Name;
+                            }
+
+                            objUserType = null;
+                        }
+
+                        string strConcantenated = String.Format("{0}#{1}#{2}#{3}#{4}#{5}", objUser.Name, objUser.EmailID, DateTime.Now, objUser.UserId, strUserType, objUser.ID);
+
+                        objIDName = new IDName
+                        {
+                            //Name = objCryptorEngine.Encrypt(strConcantenated, true).Replace("=", "~").Replace("+", "!"),
+                            Name = objUser.Name,
+                            ID = objUser.ID,
+                        };
+                    }
+                    else if (!objUser.Activated)
+                    {
+                        objIDName = new IDName
+                        {
+                            Name = String.Format("Error: {0}", "User is not activated."),
+                        };
+                    }
+                    else if (objUser.Locked)
+                    {
+                        objIDName = new IDName
+                        {
+                            Name = String.Format("Error: {0}", "User account is locked."),
+                        };
+                    }
+                }
+                else
+                {
+                    objIDName = new IDName
+                    {
+                        Name = String.Format("Error: {0}", "Login failed, Please enter valid credentials."),
+                    };
+                }
+
+                objCryptorEngine = null;
+            }
+            catch (Exception ex)
+            {
+                objIDName = new IDName
+                {
+                    Name = String.Format("Error: {0}", ex.Message),
+                };
+            }
+            finally
+            {
+                objBusinessLayer.Dispose();
+                ls = null;
+            }
+            //var response = Request.CreateResponse();
+            //response.Headers.Add("Role", objUserDTO.Role.Name);
+
+            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// RequestAccess
+        /// </summary>
+        /// <returns>IHttpActionResult></returns>
+        [HttpPost, Route("v1/Login/RequestAccess")]
+        public JsonResult<IDName> RequestAccess([FromBody]LoginDTO loginDTO)
+        {
+            IDName objIDName = null;
+
+            string adPath = "sqs.group.intl";
+
+            bool chkCredentials = false;
+            try
+            {
+                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, adPath, adPath))
+                {
+                    if (pc.ValidateCredentials(loginDTO.UserName, loginDTO.Password))
+                    {
+                        chkCredentials = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+            }
+
+            if (!chkCredentials)
+                objIDName = new IDName { Name = "Error: UserName/Password incorrect" };
+            else
+            {
+                try
+                {
+                    LoginSession ls = new LoginSession();
+
+                    IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+                    //Check if user already exists
+                    User objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower());
+
+                    //If user do not exits then create a new user and set the Locked = true
+                    if (objUser != null)
+                    {
+                        objIDName = new IDName { Name = "Error: User details exits already." };
+                    }
+                    else
+                    {
+                        CryptorEngine objCryptorEngine = new CryptorEngine();
+
+                        System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry(String.Format("LDAP://{0}", adPath));
+                        System.DirectoryServices.DirectorySearcher searcher = new System.DirectoryServices.DirectorySearcher(entry);
+                        searcher.Filter = string.Format("(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(sAMAccountName={0}))", loginDTO.UserName);
+
+                        searcher.PropertiesToLoad.Add("mail");
+                        searcher.PropertiesToLoad.Add("samaccountname");
+                        searcher.PropertiesToLoad.Add("cn");
+                        searcher.PropertiesToLoad.Add("userAccountControl");
+
+                        System.DirectoryServices.SearchResultCollection results = null;
+                        int RecordFound = 0;
+                        try
+                        {
+                            results = searcher.FindAll();
+                            RecordFound = results.Count;
+                        }
+
+                        catch (Exception ex)
+                        {
+                            objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                        }
+
+                        bool IsActive = false;
+
+                        if (null != results && RecordFound > 0)
+                        {
+                            foreach (System.DirectoryServices.SearchResult p in results)
+                            {
+                                int flags = (int)p.Properties["userAccountControl"][0];
+                                IsActive = !Convert.ToBoolean(flags & 0x0002);
+                            }
+
+                            if (IsActive == true)
+                            {
+                                var strName = "";
+                                var strMail = "";
+
+                                foreach (System.DirectoryServices.SearchResult p in results)
+                                {
+                                    if (p.Properties.Contains("cn"))
+                                    {
+                                        strName = p.Properties["cn"] == null ? "" : Convert.ToString(p.Properties["cn"][0]);
+                                    }
+
+                                    if (p.Properties.Contains("mail"))
+                                    {
+                                        strMail = p.Properties["mail"] == null ? "" : Convert.ToString(p.Properties["mail"][0]);
+                                    }
+                                }
+
+                                ls.LoginName = "Admin";
+                                //Create a new user
+                                objBusinessLayer = new BusinessLayer(ls);
+                                UserType objUserType = objBusinessLayer.UserTypeRepository.GetSingle(x => x.Name.ToLower() == "internal");
+
+                                if (null != objUserType)
+                                {
+                                    objUser = new User { UserTypeID = objUserType.ID, UserId = loginDTO.UserName, EmailID = strMail, Name = strName, Password = loginDTO.Password };
+
+                                    objBusinessLayer = new BusinessLayer(ls);
+                                    objBusinessLayer.UserRepository.Add(objUser);
+
+                                    if (objUser.ID > 0)
+                                    {
+                                        string strConcantenated = String.Format("{0}#{1}#{2}#{3}#{4}#{5}", strName, strMail, DateTime.Now, objUser.UserId, objUserType.Name, objUser.ID);
+
+                                        objIDName = new IDName
+                                        {
+                                            Name = objCryptorEngine.Encrypt(strConcantenated, true),
+                                            ID = objUser.ID
+                                        };
+
+                                        Utility objUtility = new Utility();
+                                        objUtility.SendMail(strName, objUser.EmailID, objUser.ActivationKey, MailType.Welcome);
+
+                                    }
+                                }
+                                else
+                                {
+                                    objIDName = new IDName { Name = "Error: Internal user type not found." };
+                                }
+                            }
+                        }
+                        else
+                        {
+                            objIDName = new IDName { Name = "Error: User details not found." };
+                        }
+
+                        objCryptorEngine = null;
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                }
+            }
+
+            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+       
+    }
+}

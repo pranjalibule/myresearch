@@ -1,0 +1,145 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 31Oct2017 Created the class
+ *******************************************************************************/
+namespace SQS.nTier.TTM.DTO
+{
+    using GenericFramework;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+
+    public class TSODTO : IBaseDTO
+    {
+        public TSODTO()
+        {
+            TSOServiceDeliveryChains = new HashSet<TSOServiceDeliveryChainDTO>();
+            TSOProductivityInputs = new HashSet<TSOProductivityInputDTO>();
+            TSOProductivityOutcomes = new HashSet<TSOProductivityOutcomeDTO>();
+        }
+
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("TSRId")]
+        public int TSRId { get; set; }
+
+        [JsonProperty("Title")]
+        public string Title { get; set; }
+
+        [JsonProperty("Description")]
+        public string Description { get; set; }
+
+        [JsonProperty("TeamLeadId")]
+        public int TeamLeadId { get; set; }
+
+        [JsonProperty("CoreServiceId")]
+        public int? CoreServiceId { get; set; }
+
+        [JsonProperty("RelevantRepositoryId")]
+        public int? RelevantRepositoryId { get; set; }
+
+        [JsonProperty("OperationalRiskId")]
+        public int OperationalRiskId { get; set; }
+
+        [JsonProperty("TSOStatusID")]
+        public int TSOStatusID { get; set; }
+
+        [JsonProperty("StartDate")]
+        public DateTime StartDate { get; set; }
+
+        [JsonProperty("TargetCompletionDate")]
+        public DateTime TargetCompletionDate { get; set; }
+
+        [JsonProperty("EstimatedEffort")]
+        public float EstimatedEffort { get; set; }
+
+        [JsonProperty("PlannedOutcome")]
+        public double? PlannedOutcome { get; set; }
+
+        [JsonProperty("PlannedEffort")]
+        public float PlannedEffort { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonProperty("SP_Id")]
+        public int SP_Id { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+        [JsonProperty("CoreService")]
+        public virtual CoreServiceDTO CoreService { get; set; }
+
+        [JsonProperty("OperationalRisk")]
+        public virtual OperationalRiskDTO OperationalRisk { get; set; }
+
+        [JsonProperty("TSOStatus")]
+        public virtual TSOStatusDTO TSOStatus { get; set; }
+
+        [JsonProperty("RelevantRepository")]
+        public virtual RelevantRepositoryDTO RelevantRepository { get; set; }
+
+        [JsonProperty("TSR")]
+        public virtual TSRDTO TSR { get; set; }
+
+        [JsonProperty("TeamLead")]
+        public virtual UserDTO TeamLead { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChains")]
+        public virtual ICollection<TSOServiceDeliveryChainDTO> TSOServiceDeliveryChains { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainArr")]
+        public string TSOServiceDeliveryChainArr { get; set; }
+
+        [JsonProperty("ActualEffort")]
+        public double? ActualEffort { get; set; }
+
+        [JsonProperty("CanClose")]
+        public virtual bool CanClose { get; set; }
+
+        [JsonProperty("CloseTaskIds")]
+        public virtual string CloseTaskIds { get; set; }
+
+        [JsonProperty("ChildTaskPlannedEffortSum")]
+        public virtual double ChildTaskPlannedEffortSum { get; set; }
+
+
+        [JsonProperty("OutomeCompletion")]
+        public virtual double? OutomeCompletion { get; set; }
+
+        [JsonProperty("ActualOutcome")]
+        public virtual double? ActualOutcome { get; set; }
+
+        [JsonProperty("TSOProductivityInputs")]
+        public virtual ICollection<TSOProductivityInputDTO> TSOProductivityInputs { get; set; }
+
+        [JsonProperty("ProductivityInputsArr")]
+        public string TSOProductivityInputsArr { get; set; }
+
+        [JsonProperty("TSOProductivityOutcomes")]
+        public virtual ICollection<TSOProductivityOutcomeDTO> TSOProductivityOutcomes { get; set; }
+
+        [JsonProperty("ProductivityOutcomesArr")]
+        public string TSOProductivityOutcomesArr { get; set; }
+    }
+}

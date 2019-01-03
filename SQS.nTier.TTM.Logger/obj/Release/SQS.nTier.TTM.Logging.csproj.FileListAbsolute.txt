@@ -1,0 +1,6 @@
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Release\SQS.nTier.TTM.Logger.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Release\SQS.nTier.TTM.Logger.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Release\NLog.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Release\NLog.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\obj\Release\SQS.nTier.TTM.Logger.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\obj\Release\SQS.nTier.TTM.Logger.pdb

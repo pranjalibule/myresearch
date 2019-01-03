@@ -1,0 +1,12 @@
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\SQS.nTier.TTM.DTO.dll.config
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\SQS.nTier.TTM.DTO.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\SQS.nTier.TTM.DTO.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\Newtonsoft.Json.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\SQS.nTier.TTM.GenericFramework.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\EntityFramework.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\SQS.nTier.TTM.GenericFramework.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\Newtonsoft.Json.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\bin\Release\EntityFramework.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\obj\Release\SQS.nTier.TTM.DTO.csprojResolveAssemblyReference.cache
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\obj\Release\SQS.nTier.TTM.DTO.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DTO\obj\Release\SQS.nTier.TTM.DTO.pdb

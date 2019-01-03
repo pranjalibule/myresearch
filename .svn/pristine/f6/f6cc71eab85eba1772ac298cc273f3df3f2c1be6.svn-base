@@ -1,0 +1,612 @@
+﻿var taskName;
+function LoadServiceDeliveryChain() {
+    var url = urlPrefix + "ServiceDeliveryChain/GetById/" + serviceDeliveryChainId;
+    $.ajax({
+        type: "GET",
+        url: url,
+        beforeSend: function (request) {
+            request.setRequestHeader('userid', userId);
+        },
+        dataType: "json",
+        async: false,
+        success: function (result) {
+            if (null != result) {
+                taskName = result.Name + "(" + result.Description + ")";
+                $("#lblTask").html(result.Name + "(" + result.Description + ")");
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            //showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            if (errorThrown == "Unauthorized") {
+                textStatus = "You'r not authorized to do the current operation."
+            }
+            showMessageBox(textStatus, "red");
+        }
+    });
+}
+
+function LoadLastTSOServiceDeliveryChainTask() {
+    var url = urlPrefix + "TSO/GetLastTask/" + tsoServiceDeliveryChainId;
+    $.ajax({
+        type: "GET",
+        url: url,
+        beforeSend: function (request) {
+            request.setRequestHeader('userid', userId);
+        },
+        dataType: "json",
+        async: false,
+        success: function (result) {
+            if (null != result && result.ID > 0) {
+                PopulateTask(result);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            //showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            if (errorThrown == "Unauthorized") {
+                textStatus = "You'r not authorized to do the current operation."
+            }
+            showMessageBox(textStatus, "red");
+        }
+    });
+}
+
+function LoadTSO(tsoId) {
+    var url = urlPrefix + "TSO/GetById/" + tsoId;
+
+    $.ajax({
+        type: "GET",
+        beforeSend: function (request) {
+            request.setRequestHeader('userid', userId);
+        },
+        url: url,
+        dataType: "json",
+        success: function (result) {
+            if (null != result) {
+                PopulateTSO(result);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            // showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            if (errorThrown == "Unauthorized") {
+                textStatus = "You'r not authorized to do the current operation."
+            }
+            showMessageBox(textStatus, "red");
+        }
+    });
+}
+
+function LoadTaskStatus() {
+    var url = urlPrefix + "TaskStatus/GetAllIDName";
+    LoadData(url, 'ddlTaskStatus');
+}
+
+function LoadData(url, dropdown) {
+    $.ajax({
+        type: "GET",
+        beforeSend: function (request) {
+            request.setRequestHeader('userid', userId);
+        },
+        url: url,
+        dataType: "json",
+        async: false,
+        success: function (result) {
+            var totalRecords = result.length;
+
+            if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                PopulateDropdown(result, dropdown);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+           // showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+            if (errorThrown == "Unauthorized") {
+                textStatus = "You'r not authorized to do the current operation."
+            }
+            showMessageBox(textStatus, "red");
+        }
+    });
+}
+
+function PopulateDropdown(result, dropdown) {
+    $.each(result, function (i, item) {
+        $('#' + dropdown).append($('<option>', {
+            value: item.ID,
+            text: item.Name
+        }));
+    });
+}
+
+function PopulateTSO(result) {
+    appendTObreadcrumb(result.TSR.Title);
+    appendTObreadcrumb(result.Title);
+    appendTObreadcrumb(taskName);
+    $("#lblTSO").html(result.Title);
+    $("#lblTSO").prop("title", "Description: " + result.Description +
+        "\nTSR: " + result.TSR.Title +
+        "\nTeam Lead: " + result.TeamLead.Name +
+        "\nStartDate: " + dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+        "\nTargetCompletionDate: " + dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+        "\nEstimated Effort: " + result.EstimatedEffort + " days" +
+        "\nPlanned Effort: " + result.PlannedEffort + " days"
+    );
+    $("#lblProjectModel").html(result.TSR.ProjectModelName);
+    $("#hiddennEstimatedEffort").val(result.EstimatedEffort);
+    $("#hiddentsoPlannedEffort").val(result.PlannedEffort);
+
+    startDate = $.datepicker.parseDate('yy-m-dd', result.StartDate.replace("T00:00:00", ""));
+
+    $("#TSOStartDate").val(dateFormat(startDate, "isoDateddMonyyyy"));
+
+    startDate = $.datepicker.parseDate('yy-m-dd', result.TargetCompletionDate.replace("T00:00:00", ""));
+
+    $("#TSOTargetCompletionDate").val(dateFormat(startDate, "isoDateddMonyyyy"));
+}
+
+function PopulateTask(result) {
+    $("#ddlTaskStatus").val(result.TaskStatusId);
+    $("#txtPercentageComplete").val(result.PercentageComplete);
+    $("#txtStartDate").val(dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+    $("#txtTargetCompletionDate").val(dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+    $("#txtPlannedEffort").val(result.PlannedEffort);
+    $("#txtActualStartDate").val(dateFormat(result.ActualStartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"))
+    if (null != result.ActualCompletionDate) {
+        $("#txtActualCompletionDate").val(dateFormat(result.ActualCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"))
+    }
+    $("#txtActualEffort").val(result.ActualEffort);
+
+    $("#txtEffortsEnteredUntil").val(dateFormat(result.EffortsEnteredUntil.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+    $("#hiddenEffortsEnteredUntil").val(dateFormat(result.EffortsEnteredUntil.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+
+    $("#txtPlannedProductivityTB").val(result.PlannedProductivity);
+    $("#txtActualProductivityTB").val(result.ActualProductivity);
+    $("#txtNotes").val(result.Notes);
+
+    if (null != result.PlannedOutcome && result.PlannedOutcome != "0") {
+        $("#txtPlannedOutcome").val(result.PlannedOutcome);
+    }
+
+    if (null != result.ActualOutcome && result.ActualOutcome != "0") {
+        $("#txtActualOutcome").val(result.ActualOutcome);
+    }
+
+    if (null != result.PlannedOutcome && result.PlannedOutcome != "0") {
+        $("#txtIdleTimeDu").val(result.IdleTimeDuration);
+    }
+
+    if (null != result.ActualOutcome && result.ActualOutcome != "0") {
+        $("#txtIdleTimeEf").val(result.IdleTimeEffort);
+    }
+
+    if (null != result.PlannedServiceQuality && result.PlannedServiceQuality != "0") {
+        $("#txtPlannedServiceQuality").val(result.PlannedServiceQuality);
+    }
+
+    if (null != result.ActualServiceQuality && result.ActualServiceQuality != "0") {
+        $("#txtActualServiceQuality").val(result.ActualServiceQuality);
+    }
+    if ($('#txtPercentageComplete').val() == "Y") {
+        $("#txtActualStartDate,#txtActualCompletionDate").attr("disabled", "disabled");
+        $("#txtActualEffort,#txtActualProductivityEB,#txtActualProductivityTB,#txtActualProductivityIB").attr("disabled", "disabled");
+        $("#txtActualOutcome,#txtActualServiceQuality,#txtDefectsRaised,#txtDefectsRejected").attr("disabled", "disabled");
+        $("#txtPercentageComplete,#txtNotes,#SubmitTask").attr("disabled", "disabled");//#txtEffortsEnteredUntil,
+        $("#txtActualProcessingTime,#txtActualInput,#ddlTaskStatus").attr("disabled", "disabled");
+        $("#SubmitTask").hide();
+    }
+    $("#txtStartDate,#txtTargetCompletionDate").attr("disabled", "disabled");
+    $("#txtPlannedEffort,#txtPlannedProductivityEB,#txtPlannedProductivityTB,#txtPlannedProductivityIB").attr("disabled", "disabled");
+    $("#txtPlannedOutcome,#txtPlannedServiceQuality").attr("disabled", "disabled");
+    $("#txtPlannedProcessingTime,#txtPlannedInput").attr("disabled", "disabled");
+
+
+
+    $("#txtDefectsRaised").val(result.DefectRaised);
+    $("#txtDefectsRejected").val(result.DefectRejeceted);
+
+    $("#txtPlannedProductivityIB").val(result.PlannedProductivityIB);
+    $("#txtActualProductivityIB").val(result.ActualProductivityIB);
+    $("#txtPlannedProcessingTime").val(result.PlannedProcessingTime);
+    $("#txtActualProcessingTime").val(result.ActualProcessingTime);
+    $("#txtPlannedInput").val(result.PlannedInput);
+    $("#txtActualInput").val(result.ActualInput);
+
+    $("#txtHeadCount").val(result.Headcount);
+    calculation();
+}
+
+function calculation() {
+    PlannedProductivity();
+    ActualProductivity();
+    PlannedProductivityTB();
+    ActualProductivityTB();
+    PlannedProductivityIB();
+    ActualProductivityIB();
+    defectDensity();
+}
+
+function Save() {
+
+    if (CheckTaskData()) {
+        var txtTSOServiceDeliveryChainId = $("#txtTSOServiceDeliveryChainId").val();
+        var txtPercentageComplete = $("#txtPercentageComplete").val();
+        var txtNotes = $("#txtNotes").val();
+        var txtStartDate = $("#txtStartDate").val();
+        var txtTargetCompletionDate = $("#txtTargetCompletionDate").val();
+        var txtPlannedEffort = $("#txtPlannedEffort").val();
+        var txtActualStartDate = $("#txtActualStartDate").val();
+        var txtActualCompletionDate = $("#txtActualCompletionDate").val();
+        var txtActualEffort = $("#txtActualEffort").val();
+        var txtEffortsEnteredUntil = $("#txtEffortsEnteredUntil").val();
+        var txtPlannedProductivity = $("#txtPlannedProductivityTB").val();
+
+        var txtActualProductivity = $("#txtActualProductivityTB").val();
+        var txtPlannedOutcome = $("#txtPlannedOutcome").val();
+        var txtActualOutcome = $("#txtActualOutcome").val();
+        var txtPlannedServiceQuality = $("#txtPlannedServiceQuality").val();
+        var txtActualServiceQuality = $("#txtActualServiceQuality").val();
+        var txtDefectsRaised = $("#txtDefectsRaised").val();
+        var txtDefectsRejected = $("#txtDefectsRejected").val();
+        var txtPlannedProductivityIB = $("#txtPlannedProductivityIB").val();
+        var txtActualProductivityIB = $("#txtActualProductivityIB").val();
+        var txtPlannedProcessingTime = $("#txtPlannedProcessingTime").val();
+        var txtActualProcessingTime = $("#txtActualProcessingTime").val();
+        var txtPlannedInput = $("#txtPlannedInput").val();
+        var txtActualInput = $("#txtActualInput").val();
+        var ddlTaskStatus = $("#ddlTaskStatus").val();
+        var txtIdleTimeDu = $("#txtIdleTimeDu").val();
+        var txtIdleTimeEf = $("#txtIdleTimeEf").val();
+        var txtHeadCount = $("#txtHeadCount").val();
+       
+
+        var data = JSON.stringify({
+            TSOServiceDeliveryChainId: txtTSOServiceDeliveryChainId,
+            PercentageComplete: txtPercentageComplete,
+            Notes: txtNotes,
+            StartDate: txtStartDate,
+            TargetCompletionDate: txtTargetCompletionDate,
+            PlannedEffort: txtPlannedEffort,
+            ActualStartDate: txtActualStartDate,
+            ActualCompletionDate: txtActualCompletionDate,
+            ActualEffort: txtActualEffort,
+            EffortsEnteredUntil: txtEffortsEnteredUntil,
+            PlannedProductivity: txtPlannedProductivity,
+            TaskStatusId:ddlTaskStatus,
+            ActualProductivity: txtActualProductivity,
+            PlannedOutcome: txtPlannedOutcome,
+            ActualOutcome: txtActualOutcome,
+            PlannedServiceQuality: txtPlannedServiceQuality,
+            ActualServiceQuality: txtActualServiceQuality,
+            CreatedBy: userName,
+            DefectRaised: txtDefectsRaised,
+            DefectRejeceted: txtDefectsRejected,
+            PlannedProductivityIB: txtPlannedProductivityIB,
+            ActualProductivityIB: txtActualProductivityIB,
+            PlannedProcessingTime: txtPlannedProcessingTime,
+            ActualProcessingTime: txtActualProcessingTime,
+            PlannedInput: txtPlannedInput,
+            ActualInput: txtActualInput,
+            IdleTimeEffort: txtIdleTimeEf,
+            IdleTimeDuration: txtIdleTimeDu,
+            Headcount: txtHeadCount
+            
+        });
+
+        var urlAddUpdate = urlPrefix + "TSO";
+
+        var method = "POST";
+        var message = "";
+        urlAddUpdate = urlAddUpdate + "/CreateTask";
+        message = "Task created successfully.";
+
+        $.ajax({
+            url: urlAddUpdate,
+            data: data,
+            type: method,
+            beforeSend: function (request) {
+                request.setRequestHeader('userid', userId);
+            },
+            contentType: 'application/json; charset=UTF-8',
+            success: function (response) {
+                //$("#txtOutput").html("<b>" + response + "</b>");
+                if (response.indexOf("Error") == 0) {
+                    showMessageBox(response, "red");
+                    //$("#txtOutput").css('color', 'red');
+                }
+                else {
+                    showMessageBox(response, "green", "TSODashboard.html?user=" + userId + "&tsrid=" + tsrId);
+                    //callSuccess(response);
+                }
+
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (errorThrown == "Unauthorized") {
+                    textStatus = "You'r not authorized to do the current operation."
+                }
+                showMessageBox(textStatus, "red");
+            }
+        });
+    }
+}
+
+function Cancel() {
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+}
+
+function callSuccess(message) {
+    //alert(message);
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+}
+
+function CheckTaskData() {
+    if ($("#txtStartDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtStartDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid start date.", "red", "", false, "txtStartDate");
+            return false;
+        }
+    }
+
+    if ($("#txtTargetCompletionDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtTargetCompletionDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid target completion date.", "red", "", false, "txtTargetCompletionDate");
+            return false;
+        }
+    }
+
+    if ($("#txtActualCompletionDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtActualCompletionDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid actual completion date.", "red", "", false, "txtActualCompletionDate");
+            return false;
+        }
+    }
+
+    if ($("#txtActualStartDate").val() != "") {
+        try {
+            jQuery.datepicker.parseDate("dd-M-yy", $("#txtActualStartDate").val());
+        }
+        catch (e) {
+            showMessageBox("Please select valid actual start date.", "red", "", false, "txtActualStartDate");
+            return false;
+        }
+    }
+
+    //if ($("#txtEffortsEnteredUntil").val() != "") {
+    //    try {
+    //        jQuery.datepicker.parseDate("dd-M-yy", $("#txtEffortsEnteredUntil").val());
+    //    }
+    //    catch (e) {
+    //        showMessageBox("Please select valid efforts entered until date.", "red");
+    //        //$("#txtEffortsEnteredUntil").focus();
+    //        return false;
+    //    }
+    //}
+
+    //if ($("#hiddenEffortsEnteredUntil").val() != "") {        
+    //    if ($.datepicker.parseDate('dd-M-yy', $("#txtEffortsEnteredUntil").val()).getDate() > (new Date()).getDate()) {
+    //        showMessageBox("Actual details updated date can not be greater than today's date.", "red");
+    //        //$("#txtEffortsEnteredUntil").focus();
+    //        return false;
+    //    }
+    //    else if ($.datepicker.parseDate('dd-M-yy', $("#hiddenEffortsEnteredUntil").val()) >= $.datepicker.parseDate('dd-M-yy', $("#txtEffortsEnteredUntil").val())) {
+    //        showMessageBox("Actual details updated date can not be less than or equal to previous updated date (" + $("#hiddenEffortsEnteredUntil").val() + ").", "red");
+    //        //$("#txtEffortsEnteredUntil").focus();
+    //        return false;
+    //    }
+    //}
+
+    if ($("#txtPercentageComplete").val() == "") {
+        showMessageBox("Please enter Percentage complete.", "red", "", false, "txtPercentageComplete");
+        return false;
+    }
+    //else if (parseInt(($("#txtPercentageComplete").val())) > 100) {
+    //    alert("Percentage complete can not be greater than 100.");
+    //    $("#txtPercentageComplete").focus();
+    //    return false;
+    //}
+    else if ($("#txtStartDate").val() == "") {      
+        showMessageBox("Please select start date.", "red", "", false, "txtStartDate");  
+        return false;
+    }
+    else if ($("#txtTargetCompletionDate").val() == "") {
+        showMessageBox("Please select target completion date.", "red", "", false, "txtTargetCompletionDate");
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#txtTargetCompletionDate").val()) < $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox1("Target completion date can not be less than start date.", "red", "", false, "txtTargetCompletionDate");
+        return false;
+    }
+    else if ($.datepicker.parseDate('dd-M-yy', $("#TSOStartDate").val()) > $.datepicker.parseDate('dd-M-yy', $("#txtStartDate").val())) {
+        showMessageBox("Start date can not be less than TSO start date.", "red", "", false, "txtStartDate");
+        return false;
+    }
+    else if ($("#txtPlannedEffort").val() == "") {
+        showMessageBox("Please enter planned efforts.", "red", "", false, "txtPlannedEffort");
+        return false;
+    }
+    else if (parseInt($("#hiddentsoPlannedEffort").val()) < parseInt($("#txtPlannedEffort").val())) {
+        showMessageBox("Planned efforts can not be more than TSO planned efforts.", "red", "", false, "txtPlannedEffort");
+        return false;
+    }
+    else if ($("#txtActualStartDate").val() == "") {
+        showMessageBox("Please select actual start date.", "red", "", false, "txtActualStartDate");
+        return false;
+    }
+    else if ($("#txtActualCompletionDate").val() == "") {
+        showMessageBox("Please select actual completion date.", "red", "", false, "txtActualCompletionDate");
+        return false;
+    }
+    else if ($("#txtActualEffort").val() == "") {
+        showMessageBox("Please enter actual efforts.", "red", "", false, "txtActualEffort");
+        return false;
+    }
+    else if ($("#txtPlannedOutcome").val() == "") {
+        showMessageBox("Please enter planned outcome.", "red", "", false, "txtPlannedOutcome");
+        return false;
+    }
+    else if ($("#txtActualOutcome").val() == "") {
+        showMessageBox("Please enter actual outcome.", "red", "", false, "txtActualOutcome");
+        return false;
+    }
+    else if ($("#txtEffortsEnteredUntil").val() == "") {
+        showMessageBox("Please select effort entered until date.", "red", "", false, "txtEffortsEnteredUntil");
+        return false;
+    }
+    else if ($("#txtPlannedProductivityIB").val() == "") {
+        showMessageBox("Please enter planned productivity.", "red", "", false, "txtPlannedProductivityIB");
+        return false;
+    }
+    else if ($("#txtPlannedProductivityTB").val() == "") {
+        showMessageBox("Please enter planned productivity.", "red", "", false, "txtPlannedProductivityTB");
+        return false;
+    }
+    else if ($("#txtActualProductivityIB").val() == "") {
+        showMessageBox("Please enter actual productivity.", "red", "", false, "txtActualProductivityIB");
+        return false;
+    }
+    else if ($("#txtActualProductivityTB").val() == "") {
+        showMessageBox("Please enter actual productivity.", "red", "", false, "txtStartDatetxtActualProductivityTB");
+        return false;
+    }
+    else if ($("#txtDefectsRaised").val() == "") {
+        showMessageBox("Please enter defect raised.", "red", "", false, "txtDefectsRaised");
+        return false;
+    }
+    else if ($("#txtDefectsRejected").val() == "") {
+        showMessageBox("Please enter defect rejected.", "red", "", false, "txtDefectsRejected");
+        return false;
+    }
+    else if ($("#txtDefectsRaised").val() < $("#txtDefectsRejected").val()) {
+        showMessageBox("Defect rejected should not be greater than defect raised.", "red", "", false, "txtDefectsRejected");
+        return false;
+    }
+    else if ($("#txtPlannedProcessingTime").val() == "") {
+        showMessageBox("Please enter planned processing time.", "red", "", false, "txtPlannedProcessingTime");
+        return false;
+    }
+    else if ($("#txtActualProcessingTime").val() == "") {
+        showMessageBox("Please enter actual processing time.", "red", "", false, "txtActualProcessingTime");
+        return false;
+    }
+    else {
+        return true;
+    }   
+}
+
+function NumAndTwoDecimals(e, field) {
+    var val = field.value;
+    var re = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)$/g;
+    var re1 = /^([0-9]+[\.]?[0-9]?[0-9]?|[0-9]+)/g;
+    if (re.test(val)) {
+        //do something here
+
+    } else {
+        val = re1.exec(val);
+        if (val) {
+            field.value = val[0];
+        } else {
+            field.value = "";
+        }
+    }
+
+    var max_chars = 8;
+    if (field.value.length > max_chars) {
+        field.value = field.value.substr(0, max_chars);
+    }
+}
+
+function intNumber(e, field) {
+    var val = field.value;
+    var re = /^([0-9]|[0-9]+)$/g;
+    var re1 = /^([0-9]|[0-9]+)/g;
+    if (re.test(val)) {
+        //do something here
+
+    } else {
+        val = re1.exec(val);
+        if (val) {
+            field.value = val[0];
+        } else {
+            field.value = "";
+        }
+    }
+
+    var max_chars = 8;
+    if (field.value.length > max_chars) {
+        field.value = field.value.substr(0, max_chars);
+    }
+}
+
+function defectDensity() {
+    var val = $("#txtDefectsRaised").val();
+    var DefectDensity = (val || 0) / ($("#txtActualOutcome").val() || 0);
+    if (DefectDensity == "Infinity" || isNaN(DefectDensity)) {
+        DefectDensity = 0;
+    }
+    //alert(DefectDensity);
+    $("#lblDefectDensity").html(DefectDensity.toFixed(2));
+    defectRatio();
+}
+
+function defectRatio() {
+    var val = $("#txtDefectsRejected").val();
+    var DefectRejectionRatio = ((val || 0) / ($("#txtDefectsRaised").val() || 0)) * 100;
+    if (DefectRejectionRatio == "Infinity" || isNaN(DefectRejectionRatio)) {
+        DefectRejectionRatio = 0;
+    }
+    $("#lblDefectRejectionRatio").html(DefectRejectionRatio.toFixed(2));
+}
+
+function PlannedProductivity() {
+    var PlannedProductivity = ($("#txtPlannedOutcome").val() || 0) / ($("#txtPlannedEffort").val() || 0);
+    if (PlannedProductivity == "Infinity" || isNaN(PlannedProductivity)) {
+        PlannedProductivity = 0;
+    }
+    $("#txtPlannedProductivityEB").val(PlannedProductivity.toFixed(2));
+}
+
+function ActualProductivity() {
+    var ActualProductivity = ($("#txtActualOutcome").val() || 0) / ($("#txtActualEffort").val() || 0);
+    if (ActualProductivity == "Infinity" || isNaN(ActualProductivity)) {
+        ActualProductivity = 0;
+    }
+    $("#txtActualProductivityEB").val(ActualProductivity.toFixed(2));
+}
+
+function PlannedProductivityTB() {
+    var PlannedProductivityTB = (($("#txtPlannedOutcome").val() || 0) / ($("#txtPlannedProcessingTime").val() || 0));
+    if (PlannedProductivityTB == "Infinity" || isNaN(PlannedProductivityTB)) {
+        PlannedProductivityTB = 0;
+    }
+    $("#txtPlannedProductivityTB").val(PlannedProductivityTB.toFixed(2));
+}
+
+function ActualProductivityTB() {
+    var ActualProductivityTB = (($("#txtActualOutcome").val() || 0) / ($("#txtActualProcessingTime").val() || 0));
+    if (ActualProductivityTB == "Infinity" || isNaN(ActualProductivityTB)) {
+        ActualProductivityTB = 0;
+    }
+    $("#txtActualProductivityTB").val(ActualProductivityTB.toFixed(2));
+}
+
+function PlannedProductivityIB() {
+    var PlannedProductivityIB = (($("#txtPlannedOutcome").val() || 0) / ($("#txtPlannedInput").val() || 0));
+    if (PlannedProductivityIB == "Infinity" || isNaN(PlannedProductivityIB)) {
+        PlannedProductivityIB = 0;
+    }
+    $("#txtPlannedProductivityIB").val(PlannedProductivityIB.toFixed(2));
+}
+
+function ActualProductivityIB() {
+    var ActualProductivityIB = (($("#txtActualOutcome").val() || 0) / ($("#txtActualInput").val() || 0));
+    if (ActualProductivityIB == "Infinity" || isNaN(ActualProductivityIB)) {
+        ActualProductivityIB = 0;
+    }
+    $("#txtActualProductivityIB").val(ActualProductivityIB.toFixed(2));
+}
+

@@ -1,0 +1,263 @@
+﻿namespace SQS.nTier.TTM.DataImport
+{
+    partial class frmTTMDataImport
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            this.label1 = new System.Windows.Forms.Label();
+            this.openFileDialogTTM = new System.Windows.Forms.OpenFileDialog();
+            this.txtSelectFile = new System.Windows.Forms.TextBox();
+            this.btnSelectFile = new System.Windows.Forms.Button();
+            this.toolTipTTM = new System.Windows.Forms.ToolTip(this.components);
+            this.btnStart = new System.Windows.Forms.Button();
+            this.grpReport = new System.Windows.Forms.GroupBox();
+            this.lblTaskCount = new System.Windows.Forms.Label();
+            this.lblTSOCount = new System.Windows.Forms.Label();
+            this.lblTSRCount = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblTaskSkipped = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.grpReport.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(27, 23);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(56, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Select File";
+            // 
+            // openFileDialogTTM
+            // 
+            this.openFileDialogTTM.Filter = "Excel File | *.xls;*.xlsx;";
+            this.openFileDialogTTM.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialogTTM_FileOk);
+            // 
+            // txtSelectFile
+            // 
+            this.txtSelectFile.Enabled = false;
+            this.txtSelectFile.Location = new System.Drawing.Point(90, 21);
+            this.txtSelectFile.Name = "txtSelectFile";
+            this.txtSelectFile.Size = new System.Drawing.Size(493, 20);
+            this.txtSelectFile.TabIndex = 1;
+            // 
+            // btnSelectFile
+            // 
+            this.btnSelectFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSelectFile.Location = new System.Drawing.Point(590, 20);
+            this.btnSelectFile.Name = "btnSelectFile";
+            this.btnSelectFile.Size = new System.Drawing.Size(26, 23);
+            this.btnSelectFile.TabIndex = 2;
+            this.btnSelectFile.Text = "&..";
+            this.toolTipTTM.SetToolTip(this.btnSelectFile, "Select File");
+            this.btnSelectFile.UseVisualStyleBackColor = true;
+            this.btnSelectFile.Click += new System.EventHandler(this.btnSelectFile_Click);
+            // 
+            // btnStart
+            // 
+            this.btnStart.Location = new System.Drawing.Point(508, 47);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(75, 23);
+            this.btnStart.TabIndex = 3;
+            this.btnStart.Text = "&Start";
+            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            // 
+            // grpReport
+            // 
+            this.grpReport.Controls.Add(this.lblTaskSkipped);
+            this.grpReport.Controls.Add(this.label9);
+            this.grpReport.Controls.Add(this.lblTaskCount);
+            this.grpReport.Controls.Add(this.lblTSOCount);
+            this.grpReport.Controls.Add(this.lblTSRCount);
+            this.grpReport.Controls.Add(this.label4);
+            this.grpReport.Controls.Add(this.label3);
+            this.grpReport.Controls.Add(this.label2);
+            this.grpReport.Location = new System.Drawing.Point(10, 76);
+            this.grpReport.Name = "grpReport";
+            this.grpReport.Size = new System.Drawing.Size(605, 94);
+            this.grpReport.TabIndex = 4;
+            this.grpReport.TabStop = false;
+            this.grpReport.Text = "Report (# of #)";
+            // 
+            // lblTaskCount
+            // 
+            this.lblTaskCount.AutoSize = true;
+            this.lblTaskCount.Location = new System.Drawing.Point(115, 76);
+            this.lblTaskCount.Name = "lblTaskCount";
+            this.lblTaskCount.Size = new System.Drawing.Size(14, 13);
+            this.lblTaskCount.TabIndex = 6;
+            this.lblTaskCount.Text = "#";
+            // 
+            // lblTSOCount
+            // 
+            this.lblTSOCount.AutoSize = true;
+            this.lblTSOCount.Location = new System.Drawing.Point(115, 50);
+            this.lblTSOCount.Name = "lblTSOCount";
+            this.lblTSOCount.Size = new System.Drawing.Size(14, 13);
+            this.lblTSOCount.TabIndex = 5;
+            this.lblTSOCount.Text = "#";
+            // 
+            // lblTSRCount
+            // 
+            this.lblTSRCount.AutoSize = true;
+            this.lblTSRCount.Location = new System.Drawing.Point(115, 22);
+            this.lblTSRCount.Name = "lblTSRCount";
+            this.lblTSRCount.Size = new System.Drawing.Size(14, 13);
+            this.lblTSRCount.TabIndex = 4;
+            this.lblTSRCount.Text = "#";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 76);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(110, 13);
+            this.label4.TabIndex = 3;
+            this.label4.Text = "Total Tasks Migrated:";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 50);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(103, 13);
+            this.label3.TabIndex = 2;
+            this.label3.Text = "Total TSO Migrated:";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(6, 22);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(103, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Total TSR Migrated:";
+            // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(427, 47);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(75, 23);
+            this.btnClear.TabIndex = 6;
+            this.btnClear.Text = "C&lear";
+            this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatus});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 171);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(621, 22);
+            this.statusStrip1.TabIndex = 10;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lblStatus
+            // 
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(0, 17);
+            // 
+            // lblTaskSkipped
+            // 
+            this.lblTaskSkipped.AutoSize = true;
+            this.lblTaskSkipped.Location = new System.Drawing.Point(215, 76);
+            this.lblTaskSkipped.Name = "lblTaskSkipped";
+            this.lblTaskSkipped.Size = new System.Drawing.Size(0, 13);
+            this.lblTaskSkipped.TabIndex = 12;
+            this.lblTaskSkipped.DoubleClick += new System.EventHandler(this.lblTaskSkipped_DoubleClick);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(160, 76);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(49, 13);
+            this.label9.TabIndex = 11;
+            this.label9.Text = "Skipped:";
+            // 
+            // frmTTMDataImport
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.ClientSize = new System.Drawing.Size(621, 193);
+            this.Controls.Add(this.statusStrip1);
+            this.Controls.Add(this.btnClear);
+            this.Controls.Add(this.grpReport);
+            this.Controls.Add(this.btnStart);
+            this.Controls.Add(this.btnSelectFile);
+            this.Controls.Add(this.txtSelectFile);
+            this.Controls.Add(this.label1);
+            this.MaximizeBox = false;
+            this.MaximumSize = new System.Drawing.Size(637, 232);
+            this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(637, 232);
+            this.Name = "frmTTMDataImport";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "TTM Data Import";
+            this.grpReport.ResumeLayout(false);
+            this.grpReport.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.OpenFileDialog openFileDialogTTM;
+        private System.Windows.Forms.TextBox txtSelectFile;
+        private System.Windows.Forms.Button btnSelectFile;
+        private System.Windows.Forms.ToolTip toolTipTTM;
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.GroupBox grpReport;
+        private System.Windows.Forms.Label lblTaskCount;
+        private System.Windows.Forms.Label lblTSOCount;
+        private System.Windows.Forms.Label lblTSRCount;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.Label lblTaskSkipped;
+        private System.Windows.Forms.Label label9;
+    }
+}
+

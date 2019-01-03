@@ -1,0 +1,19 @@
+﻿using System.Collections.Generic;
+using System.Web.Http;
+using TTMAPI.Helpers;
+using TTMAPI.Models;
+
+namespace TTMAPI.Controllers {
+
+    public class TTMController : ApiController {
+
+        /// <summary>
+        /// API HttpGet call to return all tasks
+        /// </summary>
+        /// <returns>Collection of <seealso cref="TTMTask"/></returns>
+        public IEnumerable<TTMTask> Get() {
+            return DataHelper.GetAllTasks();
+        }
+
+    }
+}

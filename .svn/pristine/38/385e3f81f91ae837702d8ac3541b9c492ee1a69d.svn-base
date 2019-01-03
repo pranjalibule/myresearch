@@ -1,0 +1,77 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta Http-Equiv="Cache-Control" Content="no-cache" />
+    <meta Http-Equiv="Pragma" Content="no-cache" />
+    <meta Http-Equiv="Expires" Content="0" />
+	<title>TTM Portal login</title>
+	<script src="/scripts/dateformt.js"></script>
+	<script src="/scripts/jquery-3.1.1.min.js"></script>
+	<script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+	<link rel="stylesheet" href="/Styles/css.css" />
+    <script type="text/javascript">
+        window.onload = function () {
+            if (typeof history.pushState === "function") {
+                history.pushState("Back", null, null);
+                window.onpopstate = function () {
+                    history.pushState('newBack', null, null);
+                };
+            }
+            else {
+                var ignoreHashChange = true;
+                window.onhashchange = function () {
+                    if (!ignoreHashChange) {
+                        ignoreHashChange = true;
+                        window.location.hash = Math.random();
+                    }
+                    else {
+                        ignoreHashChange = false;
+                    }
+                };
+            }
+        }
+    </script>
+    
+    <style>
+      
+        #divProcessing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: grey;
+            opacity: .8;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+	<form action="#">
+		<div class="credential">
+			<div style="margin-bottom:25px;width: 96%;text-align:center;"><input type="text" id="username" onkeyup="DoLogin(event)" placeholder="User Name" style="float:none; text-align:center;"></div>
+			<div style="margin-bottom:25px;width: 96%;text-align:center;"><input type="password" id="password" onkeyup="DoLogin(event)"  placeholder="Password" style="float:none; text-align:center;"></div>
+			<div><label id="txtOutput"></label></div>
+			<div class="button" style="width: 100%;text-align:center;"><button type="button" onclick="Login()" class="btn_login" style="float:none;">Login</button></div><br />
+			<!--<div class="username" style="width: 100%;text-align:center; margin-top:15px;"><a href="#" onclick="RequestAccess()">Request for Access</a></div>-->
+		</div>
+		
+	</form>
+	<div id="footer"><div class="footer_text">SQS © 2018 copyright  |  <a href="#">Disclaimer</a></div></div>
+	<script type="text/javascript" src="/scripts/index.js">
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#username').val('');
+            $('#password').val('');
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>TTM login</title>
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link rel="stylesheet" href="/Styles/css.css" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+</head>
+
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <form action="#">
+        <!--<div class="masters">
+            <div class="info">
+                <span style="color:blueviolet;font-size:medium"><b> Note</b></span>
+                <p style="font-size:95%;font-family: Gotham, Helvetica Neue, Helvetica, Arial, sans-serif;">Please clear browser cache using <b>CTRL+SHIFT+Del</b> keyboard keys.</p>
+                <p style="font-size:95%;font-family: Gotham, Helvetica Neue, Helvetica, Arial, sans-serif;">TTM Application supports only Internet Explorer.</p>
+            </div>
+            <div class="tblMain">
+                <div style="margin:10px 0px;width: 100%;text-align:center;"><input type="text" id="username" onkeyup="DoLogin(event)" placeholder="User Name" style="float:none; text-align:center;"></div>
+            </div>
+            <div class="tblMain">
+                <div style="margin-bottom:25px;width: 100%;text-align:center;"><input type="password" id="password" onkeyup="DoLogin(event)" placeholder="Password" style="float:none; text-align:center;"></div>
+            </div>
+            <div class="tblMain">
+                <div><label id="txtOutput"></label></div>
+                <div class="button" style="width: 100%;text-align:center;"><button type="button" onclick="Login()" class="btn_login" style="float:none;">Login</button> </div>
+            </div>
+        </div>-->
+        <div class="masters">
+            <div class="tblMain" style="margin-bottom:10px;">
+                <div style="width: 100%;text-align:center;font-size:xx-large; color:white; font-weight:bold; padding-top:5px;">
+                    TTM Master
+                </div>
+            </div>
+            <div class="info" style="float:left !important;">
+                <span style="color:blueviolet;font-size:medium"><b> Note</b></span>
+                <p style="font-size:95%;font-family: Gotham, Helvetica Neue, Helvetica, Arial, sans-serif;">Please clear browser cache using <b>CTRL+SHIFT+Del</b> keyboard keys.</p>
+                <p style="font-size:95%;font-family: Gotham, Helvetica Neue, Helvetica, Arial, sans-serif;">TTM Application supports only Internet Explorer.</p>
+            </div>
+            <div class="tblMain">
+                <div style="margin:10px 0px;width: 100%;text-align:center;"><input type="text" id="username" onkeyup="DoLogin(event)" placeholder="User Name" style="float:none; text-align:center;"></div>
+            </div>
+            <div class="tblMain">
+                <div style="margin-bottom:25px;width: 100%;text-align:center;"><input type="password" id="password" onkeyup="DoLogin(event)" placeholder="Password" style="float:none; text-align:center;"></div>
+            </div>
+            <div class="tblMain">
+                <div><label id="txtOutput"></label></div>
+                <div class="button" style="width: 100%;text-align:center;">
+                    <button type="button" onclick="Login()" class="btn_login" style="float:none;">Login</button>
+                    <!--<button type="button" onclick="LogOff(true);" class="btn_login" id="SSON" style="float:none;">Single SignOn</button>-->
+                </div>
+            </div>
+        </div>
+    </form>
+    <div id="footer"><div class="footer_text">SQS © 2018 copyright  <!--|  <a href="#">Disclaimer</a>--></div></div>
+    <script type="text/javascript">
+
+        window.onload = function () {
+            if (typeof history.pushState === "function") {
+                history.pushState("Back", null, null);
+                window.onpopstate = function () {
+                    history.pushState('newBack', null, null);
+                };
+            }
+            else {
+                var ignoreHashChange = true;
+                window.onhashchange = function () {
+                    if (!ignoreHashChange) {
+                        ignoreHashChange = true;
+                        window.location.hash = Math.random();
+                    }
+                    else {
+                        ignoreHashChange = false;
+                    }
+                };
+            }
+        }
+
+        $(document).ready(function () {
+
+            $('#username').val('');
+            $('#password').val('');
+        });
+        function DoLogin(event) {
+            if (event.which == 13 || event.keyCode == 13) {
+                Login();
+                return true;
+            }
+        }
+
+        function Login() {
+            var page = decodeURIComponent(getUrlVars()["page"]);
+            var txtUsername = $("#username").val();
+            var txtPassword = $("#password").val();
+            CheckMasterUser(txtUsername, txtPassword);
+            if (masterRoleId != "Admin") {
+                return false;
+            }
+            if (txtUsername == "") {
+                showMessageBox("Enter username", "red", "", false, "username");
+                return false;
+            }
+            else if (txtPassword == "") {
+                showMessageBox("Enter password", "red", "", false, "password");
+                return false;
+            }
+
+            var url = urlPrefix + "Login/ValidateLogin";
+
+            var method = "POST";
+
+            var objLoginJSON = JSON.stringify({ userName: txtUsername, password: txtPassword, adUser: true });
+
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json; charset=UTF-8',
+                data: objLoginJSON,
+                success: function (response) {
+
+                    if (response == null) {
+                        showMessageBox("Invalid Login", "red");
+                        return false;
+                    }
+                    else {
+                        if (response.Name !== null && response.Name.indexOf("Error") >= 0) {
+                            showMessageBox(response.Name, "red");
+                            $('#password').val('');
+                            return false;
+                        }
+                        else if (response.Name !== null && response.Name.indexOf("PendingActivation") >= 0) {
+                            var message1 = response.Name;
+                            //  var message2 = "User is registered in TTM portal but not activated. Please click on <a onclick='ActivationMail();' href ='#''>Activation Link</a> to get TTM portal access.";
+                            var message2 = "Invalid User, Please contact TTM support <a onclick='ActivationMail();' href ='#''>(ttm-support@sqs.com)</a>for access request";
+
+                            var message1 = response.Name.replace("PendingActivation: ", "");
+                            //   var message2 = "User is registered in TTM portal but not activated. Please click on <a onclick='ActivationMail();' href ='#''>Activation Link</a> to get TTM portal access.";
+                            var message2 = "Invalid User, Please contact TTM support <a onclick='ActivationMail();' href ='#''>(ttm-support@sqs.com)</a>for access request";
+                            //var fullmessage = message1 + "<br/>" + message2;
+                            var fullmessage = message2;
+                            showMessageBox(fullmessage, "green");
+                            return false;
+                        }
+                        else if (response.Name !== null && response.Name.indexOf("AddFromLogin") >= 0) {
+                            var message1 = response.Name;
+                            //var message2 = "User is registered in TTM portal but not activated. Please click on <a onclick='ActivationMail();' href ='#''>Activation Link</a> to get TTM portal access.";
+                            var message2 = "Invalid User, Please contact TTM support <a onclick='ActivationMail();' href ='#''>(ttm-support@sqs.com)</a>for access request";
+
+                            var message1 = response.Name.replace("AddFromLogin: ", "");
+                            // var message2 = "User is registered in TTM portal but not activated. Please click on <a onclick='ActivationMail();' href ='#''>Activation Link</a> to get TTM portal access.";
+                            var message2 = "Invalid User, Please contact TTM support <a onclick='ActivationMail();' href ='#''>(ttm-support@sqs.com)</a>for access request";
+
+                            //var fullmessage = message1 + "<br/>" + message2;
+                            var fullmessage = message2;
+                            showMessageBox(fullmessage, "green");
+                            return false;
+                        }
+                        else {
+                            //showMessageBox("Invalid Login", "red");
+                            //$("#txtOutput").html("<b>Redirecting...</b>");
+                            //$("#txtOutput").css('color', 'black');
+                            if (page == null || page == "undefined") {
+                                window.location = "Client.html?user=" + encodeURIComponent(response.Name);
+                            }
+                            else {
+                                window.location = page + "?user=" + encodeURIComponent(response.Name);
+                            }
+
+                            return true;
+                        }
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        var masterRoleId = '';
+        function CheckMasterUser(txtUsername, txtPassword) {
+            var url = urlPrefix + "User/GetUserRole";
+
+            var objUserJSON = JSON.stringify({ userName: txtUsername, password: txtPassword, adUser: true });
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: 'application/json; charset=UTF-8',
+                data: objUserJSON,
+                async: false,
+                success: function (result) {
+                    if (result != null && parseInt(result.id) > 0) {
+                        userName = result.name;
+                        masterRoleId = result.role;
+                        return userName;
+                    }
+                    else {
+                        showMessageBox("Invalid Login", "red");
+                        userName = "";
+                        masterRoleId = "";
+                        return userName;
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

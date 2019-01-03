@@ -1,0 +1,433 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// OperationalRiskController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class OperationalRiskController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetOperationalRiskById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>OperationalRisk</returns>
+        private OperationalRiskDTO GetOperationalRiskById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            OperationalRiskDTO objOperationalRiskDTO = null;
+
+            try
+            {
+                OperationalRisk objOperationalRisk = objBusinessLayer.OperationalRiskRepository.GetByID(id);
+                if (null != objOperationalRisk)
+                {
+                    objOperationalRiskDTO = new OperationalRiskDTO();
+                    objOperationalRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objOperationalRisk);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objOperationalRiskDTO;
+        }
+
+        /// <summary>
+        /// GetAllOperationalRisk
+        /// </summary>
+        /// <returns>IList<OperationalRisk>></returns>
+        private IList<OperationalRiskDTO> GetAllOperationalRisk(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<OperationalRiskDTO> objOperationalRiskDTOList = null;
+            try
+            {
+                IList<OperationalRisk> objOperationalRiskList = objBusinessLayer.OperationalRiskRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objOperationalRiskList != null && objOperationalRiskList.Count > 0)
+                {
+                    objOperationalRiskDTOList = new List<OperationalRiskDTO>();
+
+                    foreach (OperationalRisk objOperationalRisk in objOperationalRiskList)
+                    {
+                        OperationalRiskDTO objOperationalRiskDTO = new OperationalRiskDTO();
+                        objOperationalRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objOperationalRisk);
+
+                        objOperationalRiskDTOList.Add(objOperationalRiskDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objOperationalRiskDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new OperationalRisk 
+        /// </summary>
+        /// <param name="objOperationalRisk"></param>
+        /// <returns></returns>
+        private string AddNewOperationalRisk(OperationalRiskDTO objOperationalRiskDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                OperationalRisk objOperationalRisk = Conversions.ToEntity<OperationalRiskDTO, OperationalRisk>(objOperationalRiskDTO);
+                objBusinessLayer.OperationalRiskRepository.Add(objOperationalRisk);
+                returnMessage = "Operational Risk added successfully.";
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// Function to update OperationalRisk 
+        /// </summary>
+        /// <param name="objOperationalRisk"></param>
+        /// <returns></returns>
+        private string ModifyOperationalRisk(int ID, OperationalRiskDTO objOperationalRiskDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                OperationalRiskDTO objOperationalRiskDTOById = this.GetOperationalRiskById(ID);
+
+                if (objOperationalRiskDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    objOperationalRiskDTOById.RiskNo = objOperationalRiskDTO.RiskNo;
+                    objOperationalRiskDTOById.Description = objOperationalRiskDTO.Description;
+
+                    OperationalRisk objOperationalRisk = Conversions.ToEntity<OperationalRiskDTO, OperationalRisk>(objOperationalRiskDTOById);
+
+                    objBusinessLayer.OperationalRiskRepository.Update(objOperationalRisk);
+                    returnMessage = "Operational Risk updated successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Operational Risk do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveOperationalRisk
+        /// </summary>
+        /// <param name="ID">int</param>
+        private string RemoveOperationalRisk(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                OperationalRiskDTO objOperationalRiskDTOById = this.GetOperationalRiskById(ID);
+
+                if (objOperationalRiskDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    OperationalRisk objOperationalRisk = Conversions.ToEntity<OperationalRiskDTO, OperationalRisk>(objOperationalRiskDTOById);
+                    objBusinessLayer.OperationalRiskRepository.Delete(objOperationalRisk);
+                    returnMessage = "Operational Risk deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Operational Risk do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.InnerException.InnerException.Message));
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified operational risk mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetOperationalRiskIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetOperationalRiskIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objOperationalRiskList = null;
+            try
+            {
+                objOperationalRiskList = objBusinessLayer.OperationalRiskRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.RiskNo.ToString() });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objOperationalRiskList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/OperationalRisk/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objOperationalRiskList = null;
+
+            try
+            {
+                objOperationalRiskList = this.GetOperationalRiskIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objOperationalRiskList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/OperationalRisk/GetById/{id}")]
+        [ResponseType(typeof(OperationalRisk))]
+        public JsonResult<OperationalRiskDTO> GetById(int id)
+        {
+            JsonResult<OperationalRiskDTO> result = null;
+            OperationalRiskDTO objOperationalRiskDTO;
+
+            try
+            {
+                objOperationalRiskDTO = this.GetOperationalRiskById(id);
+
+                result = Json(objOperationalRiskDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/OperationalRisk/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<OperationalRiskDTO> objOperationalRiskDTOList = this.GetAllOperationalRisk(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objOperationalRiskDTOList)
+                {
+                    foreach (OperationalRiskDTO objOperationalRisk in objOperationalRiskDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objOperationalRisk);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreateOperationalRisk
+        /// </summary>
+        /// <param name="operationalRiskDTO">OperationalRiskDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/OperationalRisk/CreateOperationalRisk")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreateOperationalRisk([FromBody]OperationalRiskDTO operationalRiskDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewOperationalRisk(operationalRiskDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateOperationalRisk
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="operationalRiskDTO">OperationalRiskDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/OperationalRisk/UpdateOperationalRisk/{ID}")]
+        public JsonResult<string> UpdateOperationalRisk(int ID, [FromBody]OperationalRiskDTO operationalRiskDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyOperationalRisk(ID, operationalRiskDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteOperationalRisk
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpDelete, Route("v1/OperationalRisk/DeleteOperationalRisk/{ID}")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> DeleteOperationalRisk(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveOperationalRisk(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}

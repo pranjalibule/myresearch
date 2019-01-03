@@ -1,0 +1,168 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.GenericFramework
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq.Expressions;
+
+    /// <summary>
+    /// IGenericDataRepository
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IGenericDataRepository<T> where T : IBaseObject
+    {
+        //IUnitOfWork UnitOfWork { get; set; }
+        /// <summary>
+        /// GetWithRawSql
+        /// </summary>
+        /// <param name="query">string</param>
+        /// <param name="parameters">parameters</param>
+        /// <returns></returns>
+        IList<T> GetWithRawSql(string query, params object[] parameters);
+
+        /// <summary>
+        /// GetAll
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <param name="totalRecords">int</param>
+        /// <param name="orderBy">Expression<Func<T, TOrderBy>></param>
+        /// <param name="navigationProperties">Expression<Func<T, bool>></param>
+        /// <returns>IList<T></returns>
+        IList<T> GetAll<TOrderBy>(int startingRecordNumber, int pageSize, Expression<Func<T, TOrderBy>> orderBy, bool descending, out int totalRecords, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetAll
+        /// </summary>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList</returns>
+        IList<T> GetAll(params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TOrderBy"></typeparam>
+        /// <param name="startingRecordNumber"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="orderBy"></param>
+        /// <param name="descending"></param>
+        /// <param name="totalRecords"></param>
+        /// <param name="where"></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns></returns>
+        IList<T> GetAllWithWhere<TOrderBy>(int startingRecordNumber, int pageSize, Expression<Func<T, TOrderBy>> orderBy, bool descending, out int totalRecords, Expression<Func<T, bool>> where = null, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetBy
+        /// </summary>
+        /// <typeparam name="TResult">Expression<Func<T, TResult>></typeparam>
+        /// <param name="columns"></param>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <returns>List<TResult></returns>
+        IList<TResult> GetPartial<TResult>(Expression<Func<T, TResult>> columns, Expression<Func<T, bool>> where = null);
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="navigationProperties">params Expression<Func<T, object>>[]</param>
+        /// <returns>IList</returns>
+        IList<T> GetList(Expression<Func<T, bool>> where, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="orderBy">Expression</param>
+        /// <param name="navigationProperties">params Expression<Func<T, object>>[]</param>
+        /// <returns>IList</returns>
+        IList<T> GetListWithOrder<TOrderBy>(Expression<Func<T, bool>> where, Expression<Func<T, TOrderBy>> orderBy, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="startingRecordNumber">int</param>
+        /// <param name="pageSize">int</param>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="orderBy">Expression<Func<T, TOrderBy>></param>
+        /// <param name="totalRecords">int</param>
+        /// <param name="navigationProperties">params Expression<Func<T, object>>[]</param>
+        /// <returns>IList</returns>
+        IList<T> GetList<TOrderBy>(int startingRecordNumber, int pageSize, Expression<Func<T, bool>> where, Expression<Func<T, TOrderBy>> orderBy, bool descending, out int totalRecords, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>>></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>T</returns>
+        T GetSingle(Expression<Func<T, bool>> where, params Expression<Func<T, object>>[] navigationProperties);
+
+        /// <summary>
+        /// GetByID
+        /// </summary>
+        /// <param name="id">object</param>
+        /// <returns>T</returns>
+        T GetByID(object id);
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="entity">T</param>
+        void Add(T entityToAdd);
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="entitiesToAdd">params T[] </param>
+        void Add(params T[] entitiesToAdd);
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entity">T</param>
+        void Update(T entityToUpdate);
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entitiesToUpdate">params T[] </param>
+        void Update(params T[] entitiesToUpdate);
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="id">object</param>
+        void Delete(object id);
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="entity">T</param>
+        void Delete(T entity);
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="entitiesToDelete">params T[] </param>
+        void Delete(params T[] entitiesToDelete);
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        void Delete(Expression<Func<T, bool>> where);
+
+
+    }
+}

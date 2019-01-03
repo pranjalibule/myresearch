@@ -1,0 +1,81 @@
+﻿function LoadOperationalRiskIndicatorWith(contId) {
+	var url = urlPrefix + "OperatonalRiskIndicator/GetAllIDName";
+	LoadData(url, contId);
+}
+
+function LoadOperationalRiskWith(contId) {
+	var url = urlPrefix + "OperationalRisk/GetAllIDName";
+	LoadData(url, contId);
+}
+
+function AddNewRISK(tableId) {
+	var lasttr = $('#' + tableId).find('tr[id^="Risk_"]');
+	lasttr = lasttr[lasttr.length - 1].id;
+	var newtr = lasttr.substring(lasttr.indexOf('_')+1, lasttr.length);
+	newtr = parseInt(newtr) + 1;
+
+	$('#' + lasttr).after('<tr id="Risk_' + newtr + '" ><td style="width:99%;" class="bottomBorder"><table cellpadding="0" cellspacing="0" class="tsotop">' +
+                           '<tr><td class="titletd width13imp">Type of Risk</td><td class="seprator">:</td><td class="field" style="width:41% !important;">'+
+						   '<select id="OpRiskPresent_'+newtr+'" style="width:207px;float:left;"></select><div class="waterInfo" title="a. 0- No Risk &#013;b. 1-3 – low risk &#013;c. 4-6 medium risk &#013;d. 7-10 high risk">Hint</div></td>'+
+                           '<td class="field" style="width:42% !important;"><select id="OpRiskFuture_'+newtr+'" style="width:207px;float:left;"></select>'+
+                           '<div class="waterInfo" title="a. 0- No Risk &#013;b. 1-3 – low risk &#013;c. 4-6 medium risk &#013;d. 7-10 high risk">Hint</div></td></tr>'+
+                           '<tr><td class="titletd width13imp" style="text-align:left;">Indicator</td><td class="seprator">:</td><td class="field" style="width:41% !important;">'+
+                           '<select id="IndicatorPresent_'+newtr+'" style="width:207px;"></select></td><td class="field" style="width:42% !important;">'+
+                           '<select id="IndicatorFuture_'+newtr+'" style="width:207px;"></select></td></tr><tr><td class="titletd width13imp" style="text-align:left;">'+
+						   'Description</td><td class="seprator">:</td><td class="field" style="text-align:center;width:41% !important;">'+
+						   '<textarea id="riskDescriptionPresent_'+newtr+'" rows="3" cols="58" maxlength="500"></textarea></td> <td class="field" style="text-align:center;width:42% !important;">'+
+						   '<textarea id="riskDescriptionFuture_'+newtr+'" rows="3" cols="58" maxlength="500"></textarea></td></tr><tr><td class="titletd width13imp" style="text-align:left;">'+
+						   'Mitigation Description</td><td class="seprator">:</td><td class="field" style="text-align:center;width:41% !important;">'+
+						   '<textarea id="riskMitiDescriptionPresent_'+newtr+'" rows="3" cols="58" maxlength="500"></textarea></td><td class="field" style="text-align:center;width:42% !important;">'+
+						   '<textarea id="riskMitiDescriptionFuture_'+newtr+'" rows="3" cols="58" maxlength="500"></textarea></td></tr><tr><td class="titletd width13imp" style="text-align:left;">'+
+						   'Responsible Person</td><td class="seprator">:</td><td class="field" style="width:41% !important;">'+
+						   '<input id="txtResponsiblePerson_'+newtr+'" type="text" size="30" maxlength="100" style="float:none;" />'+
+						   '<input id="lblResponsiblePersonName_'+newtr+'" type="hidden" /><input id="lblResponsiblePersonMail_'+newtr+'" type="hidden" />'+
+						   '<input id="lblResponsiblePersonId_'+newtr+'" type="hidden" /></td><td class="field" style="width:42% !important;">'+
+						   'Due Date : <input id="txtDueDate_'+newtr+'" type="text" size="30" maxlength="100" style="float:none;" /></td></tr></table></td>'+
+						   '</tr>');
+
+	LoadOperationalRiskIndicatorWith('IndicatorPresent_'+ newtr);
+	LoadOperationalRiskIndicatorWith('IndicatorFuture_' + newtr);
+	LoadOperationalRiskWith('OpRiskPresent_' + newtr);
+	LoadOperationalRiskWith('OpRiskFuture_' + newtr);
+
+	SetAutoCompleteForAD("txtResponsiblePerson_" + newtr, "lblResponsiblePersonMail_" + newtr);
+
+	$('#txtDueDate_' + newtr).datepicker({
+		dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, firstDay: 1,
+		buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true, showWeek: true, weekHeader: "W"
+	});
+}
+
+function SaveRisk() {
+	// returns array of values enter in risk discription
+	var data1 = getMultiData('OpRiskPresent_');
+	var data2 = getMultiData('OpRiskFuture_');
+	var data3 = getMultiData('IndicatorPresent_');
+	var data4 = getMultiData('IndicatorFuture_');
+	var data5 = getMultiData('riskDescriptionPresent_');
+	var data6 = getMultiData('riskDescriptionFuture_');
+	var data7 = getMultiData('riskMitiDescriptionPresent_');
+	var data8 = getMultiData('riskMitiDescriptionFuture_');
+	var data9 = getMultiData('txtResponsiblePerson_');
+	var data10 = getMultiData('txtDueDate_');
+	var txtTaskOid = getLocalStorage("taskId");
+}
+
+function getMultiData(controlID) {
+	var valArray = [];
+	$("[id^='" + controlID + "']").each(function () {
+		var $this = $(this);
+		var typeOfControl = $this.prop('type');
+		if (typeOfControl == 'text' || typeOfControl == 'textarea') {
+			var valu = $this[0].value;
+			valArray.push(valu);
+		}
+		else if (typeOfControl == 'select-one') {
+			var valu = $this.val();
+			valArray.push(valu);
+		}
+	});
+	return valArray;
+}

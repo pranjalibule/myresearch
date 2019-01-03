@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Help</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Help.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+        .width25imp {
+            width:26% !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:32px; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="Home();">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSRDashboard();">TSR Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#">Export Data</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="MasterData()">Master Data</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <!--<a href="Wiki.html" target="_blank">Wiki</a>-->
+                    <!--<a href="#" target="_blank" onclick="Wiki();">Wiki</a>-->
+                    <a href='#' onclick="this.href='Wiki.html?user='+ encodeURI(userId)" target="_blank">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <div class="scrollDiv">            
+        </div>        
+    </div>
+    <script type="text/javascript" src="/scripts/tasks.js"></script>
+    <script type="text/javascript">
+        CheckUser();
+        $(document).ready(function () {
+            try {
+                $("#lblUser").text(userName);
+            }
+            catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+    </script>
+
+</body>
+</html>

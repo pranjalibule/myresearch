@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Wiki</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Home.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest")
+                $(".GuestClass").hide();
+            else
+                $(".GuestClass").show();
+
+
+            bindUserPopUp();
+        });
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+
+        .clsheader {
+            float: right;
+            font-size: 20px;
+            color: darkslategrey;
+            font-weight: bold;
+            padding: 13px 45px;
+            float: left;
+            width: 60%;
+            padding: 100px 0px;
+            text-align: left;
+        }
+
+        .adiv {
+            padding: 10px 0px;
+            float: left;
+            width: 99%;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:3.5vh; padding-bottom:0px;">
+        <div></div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <!--<div class="topRightLogo Help" onclick="showHelp();">
+        </div>-->
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="rightDiv information scrollDiv" style="text-align:justify;float:left;border:none;padding-left:5%; width:90%;">
+        <div class="header" style="height:150px;text-align:left;">
+            <div class="headerClass" style="padding-top:58px;">
+                Welcome to the iMS Wiki
+              
+            </div>
+            <div class="imsLogo" style="float:right; width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; fill;float:left;">
+            <p>Glossary and other TTM documentation is currently as per the SP version, and will be updated soon..</p>
+ 
+            <p>The iMS Wiki provides the iMS glossary and other useful documentation and links to support iMS engagements.</p>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <p><b>Links</b></p>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Lists/Glossary/AllItems.aspx" target="_blank">Glossary</a>
+            </div>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://services.sqs.com/SitePages/Services%20and%20PractiQs.aspx" target="_blank">PractiQ</a>
+            </div>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <p><b>Training Videos</b></p>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://media.sqs.com/Videos/Forms/Video/videoplayerpage.aspx?ID=378&FolderCTID=0x0120D520A808006B172A5C9EA154449A975DA0885BE5F3&List=d98d2186-e0fd-4b72-a323-a9e644f6f780&RootFolder=%2FVideos%2FQallisto%20with%20TTMPortal%2FAdditional%20Content&RecSrc=%2FVideos%2FQallisto%20with%20TTMPortal" target="_blank">Learn about TTM portal and Qallisto</a>
+            </div>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <div style="width:55%;">
+                <p><b>Operational handbook & user guides</b></p>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Operational%20Handbook%20for%20TTM%20Portal%20_V1.0.pdf" target="_blank">Operational Handbook for TTM Portal _V1.0.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Qallisto_UserManual.pdf" target="_blank">Qallisto_UserManual.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Guideline%20Qallisto%20Test%20Prep%20and%20Execution.pdf" target="_blank">Guideline Qallisto Test Prep and Execution.pdf</a>
+                </div>
+            </div>
+            <div style="width:45%;">
+                <p><b>iMS documentation</b></p>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/PublishingImages/Wiki/Home/iMS%20control%20loop_V1-0.pdf" target="_blank">iMS control loop_V1-0.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/PublishingImages/Wiki/Home/About%20iMS%20logo%20and%20visuals.pdf" target="_blank">About iMS logo and visuals.pdf</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

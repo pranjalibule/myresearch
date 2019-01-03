@@ -1,0 +1,23 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Common
+{
+    /// <summary>
+    /// Class for getting only ID and Name DTO (Summary object)
+    /// </summary>
+    public class IDName
+    {
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Other { get; set; }
+    }
+}

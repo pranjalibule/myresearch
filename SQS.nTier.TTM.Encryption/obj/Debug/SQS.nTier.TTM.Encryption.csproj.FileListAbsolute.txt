@@ -1,0 +1,12 @@
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.dll.config
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.dll
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.pdb
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.csprojResolveAssemblyReference.cache
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.dll
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.dll.config
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\bin\Debug\SQS.nTier.TTM.Encryption.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.csprojResolveAssemblyReference.cache
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Encryption\obj\Debug\SQS.nTier.TTM.Encryption.pdb

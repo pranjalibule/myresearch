@@ -1,0 +1,199 @@
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 03Nov2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DTO
+{
+    using GenericFramework;
+    using Newtonsoft.Json;
+    using System;
+
+    public partial class TSOServiceDeliveryChainTaskDTO : IBaseDTO
+    {
+        #region Properties
+
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChainId")]
+        public int TSOServiceDeliveryChainId { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethodId")]
+        public int? ServiceDeliveryChainMethodId { get; set; }
+
+        [JsonProperty("Notes")]
+        public string Notes { get; set; }
+
+        [JsonProperty("PlannedStartDate")]
+        public DateTime PlannedStartDate { get; set; }
+
+        [JsonProperty("PlannedCompletionDate")]
+        public DateTime PlannedCompletionDate { get; set; }
+
+        [JsonProperty("PlannedEffort")]
+        public double? PlannedEffort { get; set; }
+
+        //[JsonProperty("ActualStartDate")]
+        //public DateTime ActualStartDate { get; set; }
+
+        //[JsonProperty("ActualCompletionDate")]
+        //public DateTime? ActualCompletionDate { get; set; }
+
+        [JsonProperty("ActualEffort")]
+        public double? ActualEffort { get; set; }
+
+        [JsonProperty("WeekNumber")]
+        public int WeekNumber { get; set; }
+
+        [JsonProperty("PlannedProductivity")]
+        public double? PlannedProductivity { get; set; }
+
+        [JsonProperty("ActualProductivity")]
+        public double ActualProductivity { get; set; }
+
+        [JsonProperty("PlannedOutcome")]
+        public int PlannedOutcome { get; set; }
+
+        [JsonProperty("PlannedOutcomeTestSteps")]
+        public int PlannedOutcomeTestSteps { get; set; }
+
+        [JsonProperty("ActualOutcome")]
+        public int ActualOutcome { get; set; }
+
+        [JsonProperty("ActualOutcomeTestSteps")]
+        public int ActualOutcomeTestSteps { get; set; }
+
+        [JsonProperty("PlannedReviewRounds")]
+        public int PlannedReviewRounds { get; set; }
+
+        [JsonProperty("ActualReviewRounds")]
+        public int ActualReviewRounds { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChain")]
+        public virtual TSOServiceDeliveryChainDTO TSOServiceDeliveryChain { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethod")]
+        public virtual ServiceDeliveryChainMethodDTO ServiceDeliveryChainMethod { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+        [JsonProperty("DefectRaised")]
+        public int DefectRaised { get; set; }
+
+        [JsonProperty("DefectRejected")]
+        public int DefectRejected { get; set; }
+
+        [JsonProperty("PlannedProcessingTime")]
+        public double PlannedProcessingTime { get; set; }
+
+        [JsonProperty("ActualProcessingTime")]
+        public double ActualProcessingTime { get; set; }
+
+        [JsonProperty("PlannedInput")]
+        public int PlannedInput { get; set; }
+
+        [JsonProperty("ActualInput")]
+        public int ActualInput { get; set; }
+
+        [JsonProperty("TaskStatusId")]
+        public int TaskStatusId { get; set; }
+
+        [JsonProperty("IdleTimeEffort")]
+        public float IdleTimeEffort { get; set; }
+
+        [JsonProperty("IdleTimeDuration")]
+        public float IdleTimeDuration { get; set; }
+
+        [JsonProperty("Headcount")]
+        public double Headcount { get; set; }
+
+        //Planned Productivity(Input Based)
+        [JsonProperty("PlannedOutcomeRatio")]
+        public double PlannedOutcomeRatio { get; set; }
+
+        //Actual Productivity (Input based)
+        [JsonProperty("ActualOutcomeRatio")]
+        public double ActualOutcomeRatio { get; set; }
+
+        //Planned Productivity(Time Based):
+        [JsonProperty("PlannedThroughput")]
+        public double PlannedThroughput { get; set; }
+
+        //Actual Productivity(Time Based):
+        [JsonProperty("ActualThroughput")]
+        public double ActualThroughput { get; set; }
+
+        //Defect Density
+        [JsonProperty("DefectDensity")]
+        public double DefectDensity { get; set; }
+
+        //Defect Rejection Ration
+        [JsonProperty("DefectRejectionRatio")]
+        public double DefectRejectionRatio { get; set; }
+
+        #endregion
+
+        #region Cummalative
+
+        [JsonProperty("ActualEffortCumulative")]
+        public double ActualEffortCumulative { get; set; }
+
+        [JsonProperty("ActualOutcomeCumulative")]
+        public int ActualOutcomeCumulative { get; set; }
+
+        [JsonProperty("ActualOutcomeTestStepsCumulative")]
+        public int ActualOutcomeTestStepsCumulative { get; set; }
+
+        [JsonProperty("ActualProcessingTimeCumulative")]
+        public double ActualProcessingTimeCumulative { get; set; }
+
+        [JsonProperty("DefectRaisedCumulative")]
+        public int DefectRaisedCumulative { get; set; }
+
+        [JsonProperty("DefectRejectedCumulative")]
+        public int DefectRejectedCumulative { get; set; }
+
+        [JsonProperty("CurrentWeek")]
+        public int CurrentWeek { get; set; }
+
+        [JsonProperty("CurrentDate")]
+        public DateTime CurrentDate { get; set; }
+
+        #endregion
+
+        public void CalculateFields()
+        {
+            PlannedOutcomeRatio = PlannedInput != 0 ? PlannedOutcome / PlannedInput : 0;
+            ActualOutcomeRatio = ActualInput != 0 ? ActualOutcome / ActualInput : 0;
+            PlannedThroughput = PlannedProcessingTime != 0 ? PlannedOutcome / PlannedProcessingTime : 0;
+            ActualThroughput = ActualProcessingTime != 0 ? ActualOutcome / ActualProcessingTime : 0;
+            PlannedProductivity = PlannedEffort != 0 ? PlannedOutcome / PlannedEffort : 0;
+            ActualProductivity = ActualEffort != 0 ? ActualOutcome / (double)ActualEffort : 0;
+            DefectDensity = ActualOutcome != 0 ? DefectRaised / ActualOutcome : 0;
+            DefectRejectionRatio = DefectRaised != 0 ? DefectRejected / DefectRaised * 100 : 0;
+        }
+    }
+}

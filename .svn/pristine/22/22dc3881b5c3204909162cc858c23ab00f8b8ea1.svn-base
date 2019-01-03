@@ -1,0 +1,331 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>TSO Dashboard</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURIComponent(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + userId;
+        }
+
+        var tsrId = getUrlVars()["tsrid"];
+
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+         #divProcessing {       
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        background-color: grey;
+        opacity: .8;
+       }
+    </style>
+</head>
+<body>
+    <div id="divProcessing">
+        <p style="text-align:center"><img src="/images/loader.gif" /></p>
+    </div>
+    <div class="header">
+        <div>TSR:<label id="lblTSR"></label><a href="#" style="margin-left:10px;" onclick="NavigateTo('index.html')">
+    <img src="/images/power-button.svg" width="25" />
+</a></div>
+    </div>
+    <div class="leftDiv">
+        <table class="heading">
+            <tr>
+                <td align="right">
+                    <div id="lblUser" style="visibility:hidden"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <table class="heading">
+            <tr>
+                <td align="center">
+                    <div id="txtOutput"></div>
+                    <input type="button" value="Create New TSO" onclick="CreateNewTSO('');" />&nbsp;&nbsp;
+                    <input type="button" value="TSR Dashboard" onclick="GotoTSRDashboard();" />
+                </td>
+            </tr>
+        </table>
+        <table id="TSOTable" cellspacing="0" cellpadding="2" class="table">
+            <thead>
+                <tr>
+                    <th style="width:50px" align="center">ID</th>
+                    <th style="width:200px;" align="left">Title</th>
+                    <th style="width:350px;" align="left">Description</th>
+                    <th style="width:80px;" align="left">CreatedBy</th>
+                    <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                    <th style="width:80px" align="left">UpdatedBy</th>
+                    <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                    <th style="width:100px" align="center">Planned Effort</th>
+                    <th style="width:100px" align="center">Actual Effort</th>
+                    <th style="width:100px" align="center">Tasks</th>
+                    <th style="width:100px" align="center">Action</th>
+                    <th style="width:160px" align="center">Status</th>
+                    <th style="width:50px" align="center"></th>        
+                </tr>
+            </thead>
+            <tbody id="tsodetails"></tbody>
+        </table>
+        <div id="pager" class="pager" style="display:none">
+            <table border="0">
+                <tr>
+                    <td valign="middle"><img src="images/first.png" class="first" /></td>
+                    <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                    <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                    <td valign="middle"><img src="images/next.png" class="next" /></td>
+                    <td valign="middle"><img src="images/last.png" class="last" /></td>
+                    <td valign="middle">
+                        <select id="pagesize">
+                            <option selected="selected" value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+
+        $(document).ready(function () {
+            try {
+                var urlGetAll = urlPrefix + "TSO/GetAllPaged/" + tsrId
+                LoadData(urlGetAll);
+
+                LoadTSR(tsrId);
+
+                $("#lblUser").text(userName);
+
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+        function LoadData(url) {
+            clearTable();
+          
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader("User", userId);
+                    request.setRequestHeader('Content-Type', 'application/json');
+                    request.setRequestHeader('Accept', 'application/json');
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Access-Control-Allow-Credentials', 'false');
+                },
+                dataType: "json",
+                contentType: 'application/json; charset=UTF-8',
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+                    $("#divProcessing").hide();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $("#divProcessing").hide();
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+            $("#divProcessing").hide();
+        }
+
+        function clearTable() {
+            var i = $('#tsodetails').empty();
+        }
+
+        function LoadTSR(tsrId) {
+            var url = urlPrefix + "TSR/GetById/" + tsrId;
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader("User", userId);
+                    request.setRequestHeader('Content-Type', 'application/json');
+                    request.setRequestHeader('Accept', 'application/json');
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Access-Control-Allow-Credentials', 'false');
+                },
+                dataType: "json",
+                contentType: 'application/json; charset=UTF-8',
+                success: function (result) {
+                    if (null != result) {
+                        $("#lblTSR").html(result.Title);
+                        $("#lblTSR").prop("title", "Delivery Manager: " + result.DeliveryManager.Name +
+                            "\nTest Manager: " + result.TestManager.Name +
+                            "\nAccount Manager: " + result.AccountManager.Name +
+                            "\nVertical: " + result.Vertical.Name +
+                            "\nPractice: " + result.Practice.Name +
+                            "\nSolution Centre: " + result.SolutionCentre.Name +
+                            "\nClient Region: " + result.ClientRegion.Name +
+                            "\nClient: " + result.Client +
+                            "\nAccount: " + result.Account +
+                            "\nEngagement: " + result.Engagement +
+                            "\nERPordernumber: " + result.ERPordernumber +
+                            "\nMarketOffering: " + result.MarketOffering.Name +
+                            "\nStartDate: " + dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+                            "\nTargetCompletionDate: " + dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+                            "\nEstimatedeffort: " + result.Estimatedeffort + " days" +
+                            "\nPlannedeffort: " + result.Plannedeffort + " days"
+                        );
+
+                        $("#txtStartDate").val(dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+                        $("#txtTargetCompletionDate").val(dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function populateTable(EntitySummary) {
+            var tbody = $('#tsodetails');
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+
+                var description = EntitySummary[totalrecords]["Description"];
+
+                if (description == null) {
+                    description = "";
+                }
+
+                var linksTSOServiceDeliveryChains = DisplayTasks(EntitySummary[totalrecords]["TSOServiceDeliveryChains"]);
+
+                tbody.append("<tr id='tr" + totalrecords + "'><td align='center'>" + EntitySummary[totalrecords]["ID"] +
+                    "</td><td align='left' class='leftalign'><a href='#' onclick=CreateNewTSO('" + EntitySummary[totalrecords]["ID"] + "')>" + EntitySummary[totalrecords]["Title"] + "</a></td>" +
+                    "<td align='left' class='description'>" + description + "</td>" +
+                    "<td align='left' class='leftalign'>" + EntitySummary[totalrecords]["CreatedBy"] + "</td>" +
+                    //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["CreatedOn"], "dd-mmm-yyyy HH:MM") + "</td>" +
+                    "<td align='left' class='leftalign'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                    //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy HH:MM") + "</td>" +
+                    "<td align='center'>" + EntitySummary[totalrecords]["PlannedEffort"] + "</td>" +
+                    "<td align='center'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td>" +
+                    "<td align='center'>" + linksTSOServiceDeliveryChains + "</td>" +
+                    "<td align='center'><a href=# onclick='Delete(" + EntitySummary[totalrecords]["ID"] + ")'>Delete</a></td>"+
+                    "<td align='center'>" + EntitySummary[totalrecords]["TSOStatus"]["Name"] + "</td>"+
+                    "<td align='center'><a title='Refresh' href=# onclick='RefreshTSOStatus(" + EntitySummary[totalrecords]["ID"] + ")'><img style='width:20px;' src='/images/refresh.png' /></a></td></tr>");
+            }
+        }
+
+        function Delete(ID) {
+            if (!isNaN(ID) && ID != "") {
+                showDeleteConfirm("Are you sure, you want to delete?", ID);
+            }
+        }
+
+        function RefreshTSOStatus(ID) {
+            alert("RefreshTSOStatus : " + ID);
+        }
+
+        function doDelete(ID) {
+            var url = urlPrefix + "/TSO/DeleteTSO/" + ID;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox("TSO deleted successfully.", "green", null, true);
+                        //location.reload();
+                        //$("#txtOutput").css('color', 'green');
+                    }
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function CreateNewTSO(tsoId) {
+            if (tsoId == '') {
+                window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+            }
+            else {
+                window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId + "&tsoid=" + tsoId;
+            }
+        }
+
+        function ViewTasks(tsoId, serviceDeliveryChainId, tsoServiceDeliveryChainId) {
+            window.location = "Tasks.html?user=" + encodeURI(userId) + "&tsoid=" + tsoId + "&serviceDeliveryChainId=" + serviceDeliveryChainId + "&tsoServiceDeliveryChainId=" + tsoServiceDeliveryChainId + "&tsrid=" + tsrId;
+        }
+
+        function GotoTSRDashboard() {
+            window.location = "TSRDashboard.html?user=" + encodeURI(userId);
+        }
+
+        function DisplayTasks(TSOServiceDeliveryChains) {
+            var strTasks = "";
+            var arrServiceDeliveryChain = [];
+            var tsoServiceDeliveryChainId = [];
+            var tsoId;
+            if (null != TSOServiceDeliveryChains && TSOServiceDeliveryChains.length > 0) {
+                for (var iTSOServiceDeliveryChains = 0; iTSOServiceDeliveryChains < TSOServiceDeliveryChains.length; iTSOServiceDeliveryChains++) {
+                    var objTSOServiceDeliveryChain = TSOServiceDeliveryChains[iTSOServiceDeliveryChains];
+
+                    tsoId = objTSOServiceDeliveryChain.TSOId;
+                    tsoServiceDeliveryChainId.push(objTSOServiceDeliveryChain.ID);
+
+                    if (null != objTSOServiceDeliveryChain && null != objTSOServiceDeliveryChain.ServiceDeliveryChain) {
+                        arrServiceDeliveryChain.push(objTSOServiceDeliveryChain.ServiceDeliveryChain);
+                    }
+                }
+
+                if (arrServiceDeliveryChain != null && arrServiceDeliveryChain.length > 0) {
+                    arrServiceDeliveryChain.sort(SortByDisplayOrder);
+                    for (var iServiceDeliveryChain = 0; iServiceDeliveryChain < arrServiceDeliveryChain.length; iServiceDeliveryChain++) {
+                        var objServiceDeliveryChain = arrServiceDeliveryChain[iServiceDeliveryChain];
+                        var id = tsoServiceDeliveryChainId[iServiceDeliveryChain];
+                        strTasks += "<a style='margin:0px 2px;' href='#' title='" + objServiceDeliveryChain.Description + "' onclick=ViewTasks('" + tsoId + "','" + objServiceDeliveryChain.ID + "','" + id + "')>" + objServiceDeliveryChain.Name + "</a>";
+                    }
+                }
+            }
+
+            return strTasks;
+        }
+
+        function SortByDisplayOrder(a, b) {
+            var firstDisplay = parseInt(a.DisplayOrder);
+            var secondDisplay = parseInt(b.DisplayOrder);
+            return ((firstDisplay < secondDisplay) ? -1 : ((firstDisplay > secondDisplay) ? 1 : 0));
+        }
+
+    </script>
+</body>
+</html>

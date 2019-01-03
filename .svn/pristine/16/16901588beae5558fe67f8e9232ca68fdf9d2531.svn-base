@@ -1,0 +1,25 @@
+﻿.leftDiv {
+    width: 16%;
+}
+
+.rightDiv {
+    height: 87vh !important;
+    margin-right: 5px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 5px;
+    width:81%;
+}
+
+.scrollDiv {
+    height: auto !important;
+    float: left;
+    width: 100%;
+    overflow: hidden;
+}
+
+
+.leftDiv {
+    height:80% !important;
+    overflow-y:auto;
+}

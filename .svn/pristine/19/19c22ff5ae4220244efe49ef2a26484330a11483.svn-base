@@ -1,0 +1,68 @@
+﻿using SQS.nTier.TTM.BAL;
+using SQS.nTier.TTM.Encryption;
+using SQS.nTier.TTM.GenericFramework;
+using SQS.nTier.TTM.WebAPI.SessionManagement;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Controllers;
+
+
+namespace SQS.nTier.TTM.WebAPI.RoleAttribute
+{
+    public class SessionAuthorizeAttribute: AuthorizeAttribute
+    {
+        private IBusinessLayer repos = null;
+        LoginSession ls = new LoginSession();
+        private bool flag;
+
+        public SessionAuthorizeAttribute()
+        {
+            repos = new BusinessLayer(ls);
+        }
+        public SessionAuthorizeAttribute(params string[] roles): base()
+        {
+            repos = new BusinessLayer(ls);
+            Roles = string.Join(",", roles);
+        }
+        
+        public override void OnAuthorization(HttpActionContext actionContext)
+        {
+            List<string> errorResponse;
+           
+            string  UserId = actionContext.Request.Headers.GetValues("userid").First();
+            
+            var userSessionManager = new UserSessionManager(repos,UserId, Roles);
+            try
+            {
+                if (userSessionManager.ReValidateSession(out errorResponse))
+                {
+                    base.OnAuthorization(actionContext);
+                }
+                else
+                {
+                   // throw new UnauthorizedAccessException(errorResponse.FirstOrDefault());
+                   actionContext.Response = actionContext.ControllerContext.Request.CreateErrorResponse((HttpStatusCode.Unauthorized), errorResponse.FirstOrDefault());
+                }
+            }
+            catch(Exception e)
+            {
+               // throw new Exception(e.Message);
+            }
+        }
+
+        protected override bool IsAuthorized(HttpActionContext actionContext)
+        {         
+            return flag = true;
+        }
+
+        private static bool SkipAuthorization(HttpActionContext actionContext)
+        {
+            return actionContext.ActionDescriptor.GetCustomAttributes<AllowAnonymousAttribute>().Any()
+                   || actionContext.ControllerContext.ControllerDescriptor.GetCustomAttributes<AllowAnonymousAttribute>().Any();
+        }
+    }
+}

@@ -1,0 +1,443 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Service Order (TSO)</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 2) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        if (CheckUser() == "") {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+
+        function NavigateTo(page) {
+            window.location = page;
+        }
+
+        $(document).ready(function () {
+            $("#UserSearchdiv").css("visibility", "hidden");
+        });
+
+        var startDate;
+        var targetCompletionDate;
+
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="UserSearchdiv" title="User List" style="display:none;">
+        <table id="UserTable" cellspacing="0" cellpadding="2" class="table">
+            <thead>
+                <tr>
+                    <th style="width:30px" align="center"></th>
+                    <th style="width:300px;" align="left">Name</th>
+                    <th style="width:200px" align="center">User ID</th>
+                </tr>
+            </thead>
+            <tbody id="userdetails"></tbody>
+        </table>
+    </div>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:3.5vh; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <!--<div class="topRightLogo Help" onclick="showHelp();">
+        </div>-->
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="Home();" title="Home">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+            <td class="leftMenuSmallPortal">
+                <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+            </td>
+        </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSRDashboard();" title="TSR Dashboard">TSR Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSODashboard('');" title="TSO Dashboard">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr id="trNewTSR">
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="CreateNewTSR('');" title="Create New TSR">Create New TSR</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal AdminClass" style="display:none;">
+                    <a href="#" onclick="ExportExcelDump();" title="Export Data">Export Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal AdminClass" style="display:none;">
+                    <a href="#" onclick="this.href = 'http://192.168.96.196:5601'" target="_blank" title="Delivery Excellence Dashboard">DelEx Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal AdminClass" style="display:none;">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#" onclick="this.href='../Masters/Index.html?user=' + encodeURI(userId)" target="_blank" title="Master Data">Master Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#' onclick="this.href='Wiki.html?user='+ encodeURI(userId)" target="_blank" title="Wiki">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html" title="Sign Off">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <div id="breadCrumb">
+        </div>
+        <div class="scrollDiv" style="height:85vh;">
+            <table cellpadding="5" class="tsoPage">
+                <tr hidden="hidden">
+                    <td class="smallTiletd">
+                        TSR
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field">
+                        <div id="lblTSR" style="font:bold"></div>
+                        <input type="hidden" id="TSRStartDate" />
+                        <input type="hidden" id="TSRTargetCompletionDate" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:98%;">
+                            <legend style="font-weight:bold">TSO Information</legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        <input type="hidden" value="" id="txtID" />
+                                        TSO
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width28imp">
+                                        <input id="txtTitle" type="text" size="36" maxlength="150" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Description
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" colspan="3">
+                                        <textarea id="txtDescription" rows="5" cols="92" maxlength="500"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Team Lead
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtTeamLead" type="text" size="36" maxlength="150" />
+                                        <!--<a class='SearchManager_link' id="lblTeamLeadId" name="txtTeamLead"></a>-->
+                                        <input id="lblTeamLeadName" type="hidden" />
+                                        <input id="lblTeamLeadMail" type="hidden" />
+                                        <input id="lblTeamLeadId" type="hidden" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Core Service
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select id="ddlCoreServices" style="width:250px"></select>
+                                    </td>
+                                    <td class="titletd" style="width:18.7% !important;padding:5px 0px;"><!--required-->
+                                        Relevant Repository
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select id="ddlRelevantRepositories" style="width:250px"></select>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Service Delivery Chain
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select multiple id="listServiceDeliveryChain" style="width:250px;height:100px"></select>
+                                    </td>
+                                    <td class="titletd" style="width:14% !important;padding:16px 56px 16px 0px;">
+                                        <input type="button" id="AddServiceDeliveryChain" value="Add" style="width:130px" title="Add Service Delivery Chain" /><br /> <br />
+                                        <input type="button" id="RemoveServiceDeliveryChain" value="Remove" style="width:130px" title="Remove Service Delivery Chain" />
+                                    </td>
+                                    <td class="seprator"></td>
+                                    <td class="field width28imp">
+                                        <select multiple id="listServiceDeliveryChainSelected" style="width:250px;height:100px"></select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:98%;">
+                            <legend style="font-weight:bold">TSO Progress</legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Start Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtStartDate" type="text" size="36" maxlength="150" />
+                                    </td>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Completion Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td>
+                                        <input id="txtTargetCompletionDate" type="text" size="36" maxlength="150" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Estimated Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtEstimatedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                        <div class="waterInfo">PD (as per SoW)</div>
+                                    </td>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td>
+                                        <input id="txtPlannedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                        <div class="waterInfo">PD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="smallTiletd" style="width:18.7% !important;">
+                                        Actual Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtActualEffort" type="text" size="36" maxlength="100" disabled />
+                                        <div class="waterInfo">PD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Operational Risk
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width28imp">
+                                        <select id="ddlOperationalrisk" style="width:250px"></select>
+                                        <div class="waterInfo">Scale: 0 (no risk) - 10 (highest risk)</div>
+                                    </td>
+                                    <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                        TSO Status
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td>
+                                        <select id="ddlTSOStatus" style="width:248px" <!--onchange="checkClose(event, this)"--> onFocus="(this.aOldValue=this.value)"></select>
+                                        <input id="txtStatus" type="text" size="36" maxlength="150" disabled />
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+            <table class="tsoPage">
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="button" class="GuestClass" id="SubmitTSO" value="Submit" onclick="Save();" style="float:none;" />
+                        <input type="button" value="Cancel" onclick="Cancel();" style="float:none;" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="pager" class="pager" style="display:none">
+            <table border="0">
+                <tr>
+                    <td valign="middle"><img src="images/first.png" class="first" /></td>
+                    <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                    <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                    <td valign="middle"><img src="images/next.png" class="next" /></td>
+                    <td valign="middle"><img src="images/last.png" class="last" /></td>
+                    <td valign="middle">
+                        <select id="pagesize">
+                            <option selected="selected" value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+
+    <script type="text/javascript" src="/scripts/tso.js"></script>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        $(".scrollDiv").scroll(function () {
+            $("#txtStartDate").datepicker("hide");
+            $("#txtTargetCompletionDate").datepicker("hide");
+        });
+
+        $(document).ready(function () {
+            try {
+                CheckUser();
+                LoadOperationalRisk();
+                LoadServiceDeliveryChain();
+                LoadTSOStatus();
+
+                if (tsrId != 'undefined') {
+                    //LoadTSR(tsrId);
+                    LoadCoreServices();
+                    LoadReliventRepositories();
+                }
+
+                
+                if (null != tsoId) {
+                    LoadTSO(tsoId);
+                    $("#txtStatus").hide();
+                    $("#ddlTSOStatus").show();
+                }
+                else {
+                    if (tsrId != 'undefined') {
+                        LoadTSR(tsrId);
+                    }
+                    $("#txtActualEffort").val(0);
+                    $("#txtStatus").show();
+                    $("#ddlTSOStatus").hide();
+                    $("#txtStatus").val("Created");
+                }
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+
+                $("#lblUser").text(userName);
+
+                //Set Auto complete options for AD user and display
+                SetAutoCompleteForAD("txtTeamLead", "lblTeamLeadMail");
+
+                $("#txtTeamLead").keyup(function () {
+                    if ($(this).val() == "") {
+                        $("#lblTeamLeadId").val("");
+                    }
+                });
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtActualStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtActualCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+
+                if (roleId == "Guest" || roleId == "guest")
+                    $(".GuestClass").hide();
+                else if (roleId.toLowerCase() == "account manager") {
+                    $("#trNewTSR").hide();
+                }
+                else {
+                    $(".GuestClass").show();
+                    $("#trNewTSR").show();
+                }
+                if (roleId == "Admin" || roleId == "admin") {
+                    $(".AdminClass").removeAttr('style');
+                }
+
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+
+    </script>
+
+</body>
+</html>

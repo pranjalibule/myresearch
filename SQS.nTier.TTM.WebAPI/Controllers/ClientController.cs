@@ -1,0 +1,500 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// ClientController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class ClientController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetClientById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>Client</returns>
+        private ClientDTO GetClientById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            ClientDTO objClientDTO = null;
+
+            try
+            {
+                Client objClient = objBusinessLayer.ClientRepository.GetByID(id);
+                if (null != objClient)
+                {
+                    objClientDTO = new ClientDTO();
+                    objClientDTO = Conversions.ToDTO<ClientDTO, Client>(objClient);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientDTO;
+        }
+
+
+        /// <summary>
+        /// GetClientNameById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>Client</returns>
+        public string GetClientNameById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            string pmName = "";
+            try
+            {
+                Client objClient = objBusinessLayer.ClientRepository.GetByID(id);
+                if (null != objClient)
+                {
+                    ClientDTO objClientDTO = new ClientDTO();
+                    objClientDTO = Conversions.ToDTO<ClientDTO, Client>(objClient);
+                    pmName = objClientDTO.Name;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return pmName;
+        }
+
+        /// <summary>
+        /// GetAllClient
+        /// </summary>
+        /// <returns>IList<Client>></returns>
+        private IList<ClientDTO> GetAllClient(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<ClientDTO> objClientDTOList = null;
+            try
+            {
+                IList<Client> objClientList = objBusinessLayer.ClientRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objClientList != null && objClientList.Count > 0)
+                {
+                    objClientDTOList = new List<ClientDTO>();
+
+                    foreach (Client objClient in objClientList)
+                    {
+                        ClientDTO objClientDTO = new ClientDTO();
+                        objClientDTO = Conversions.ToDTO<ClientDTO, Client>(objClient);
+
+                        objClientDTOList.Add(objClientDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new Client 
+        /// </summary>
+        /// <param name="objClientDTO">ClientDTO</param>
+        /// <returns>string</returns>
+        private string AddNewClient(ClientDTO objClientDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = objClientDTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                bool result = CheckNameExists(objClientDTO.Name, null);
+                if (result == true)
+                {
+
+                    Client objClient = Conversions.ToEntity<ClientDTO, Client>(objClientDTO);
+                    objBusinessLayer.ClientRepository.Add(objClient);
+
+                    returnMessage = "Client added successfully.";
+                }
+                else
+                {
+                    returnMessage = "This " + objClientDTO.Name + " record already exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+        private bool CheckNameExists(string Name, int? ID)
+        {
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            var CheckNameExists = objBusinessLayer.ClientRepository.GetList(x => x.Name == Name && x.ID == ID);
+            if (CheckNameExists.Count <= 1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Function to update Client 
+        /// </summary>
+        /// <param name="objClientDTO">ClientDTO</param>
+        /// <returns>string</returns>
+        private string ModifyClient(int ID, ClientDTO objClientDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ClientDTO objClientDTOById = this.GetClientById(ID);
+
+                if (objClientDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = objClientDTO.CreatedBy;
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    bool result = CheckNameExists(objClientDTO.Name, ID);
+                    if (result == true)
+                    {
+                        objClientDTOById.Name = objClientDTO.Name;
+                        objClientDTOById.Description = objClientDTO.Description;
+                        returnMessage = "Project Model updated successfully.";
+                    }
+                    else
+                    {
+                        objClientDTOById.Description = objClientDTO.Description;
+                        returnMessage = "This " + objClientDTO.Name + " record already exists.";
+                    }
+                    Client objClient = Conversions.ToEntity<ClientDTO, Client>(objClientDTOById);
+                    objBusinessLayer.ClientRepository.Update(objClient);
+                }
+                else
+                {
+                    returnMessage = "Project Model do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveClient
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>string</returns>
+        private string RemoveClient(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ClientDTO objClientDTOById = this.GetClientById(ID);
+
+                if (objClientDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    Client objClient = Conversions.ToEntity<ClientDTO, Client>(objClientDTOById);
+                    objBusinessLayer.ClientRepository.Delete(objClient);
+                    returnMessage = "Client deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Client do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.InnerException.InnerException.Message));
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified project model mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetClientIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetClientIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objClientList = null;
+            try
+            {
+                objClientList = objBusinessLayer.ClientRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Name });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/Client/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objClientList = null;
+
+            try
+            {
+                objClientList = this.GetClientIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objClientList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// GetById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/Client/GetById/{id}")]
+        [ResponseType(typeof(Client))]
+        public JsonResult<ClientDTO> GetById(int id)
+        {
+            JsonResult<ClientDTO> result = null;
+            ClientDTO objClientDTO;
+
+            try
+            {
+                objClientDTO = this.GetClientById(id);
+
+                result = Json(objClientDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/Client/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<ClientDTO> objClientDTOList = this.GetAllClient(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objClientDTOList)
+                {
+                    foreach (ClientDTO objClient in objClientDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objClient);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreateClient
+        /// </summary>
+        /// <param name="ClientDTO">ClientDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/Client/CreateClient")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreateClient([FromBody]ClientDTO ClientDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewClient(ClientDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateClient
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="ClientDTO">ClientDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/Client/UpdateClient/{ID}")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> UpdateClient(int ID, [FromBody]ClientDTO ClientDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyClient(ID, ClientDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteClient
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpDelete, Route("v1/Client/DeleteClient/{ID}")]
+        public JsonResult<string> DeleteClient(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveClient(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing">bool</param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}

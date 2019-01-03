@@ -1,0 +1,14 @@
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\SQS.nTier.TTM.DAL.dll.config
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\SQS.nTier.TTM.DAL.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\SQS.nTier.TTM.DAL.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\EntityFramework.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\EntityFramework.SqlServer.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\Newtonsoft.Json.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\SQS.nTier.TTM.GenericFramework.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\SQS.nTier.TTM.GenericFramework.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\EntityFramework.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\EntityFramework.SqlServer.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\bin\Release\Newtonsoft.Json.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\obj\Release\SQS.nTier.TTM.DAL.csprojResolveAssemblyReference.cache
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\obj\Release\SQS.nTier.TTM.DAL.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.DAL\obj\Release\SQS.nTier.TTM.DAL.pdb

@@ -1,0 +1,134 @@
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 03Nov2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DTO
+{
+    using Newtonsoft.Json;
+    using GenericFramework;
+    using System;
+
+    public partial class TSOServiceDeliveryChainTaskDTO : IBaseDTO
+    {
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChainId")]
+        public int TSOServiceDeliveryChainId { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethodId")]
+        public int? ServiceDeliveryChainMethodId { get; set; }
+
+        [JsonProperty("PercentageComplete")]
+        public string PercentageComplete { get; set; }
+
+        [JsonProperty("Notes")]
+        public string Notes { get; set; }
+
+        [JsonProperty("PlannedStartDate")]
+        public DateTime PlannedStartDate { get; set; }
+
+        [JsonProperty("PlannedCompletionDate")]
+        public DateTime PlannedCompletionDate { get; set; }
+
+        [JsonProperty("PlannedEffort")]
+        public double PlannedEffort { get; set; }
+
+        [JsonProperty("ActualStartDate")]
+        public DateTime ActualStartDate { get; set; }
+
+        [JsonProperty("ActualCompletionDate")]
+        public DateTime? ActualCompletionDate { get; set; }
+
+        [JsonProperty("ActualEffort")]
+        public double? ActualEffort { get; set; }
+
+        [JsonProperty("WeekNumber")]
+        public int WeekNumber { get; set; }
+
+        [JsonProperty("PlannedProductivity")]
+        public double PlannedProductivity { get; set; }
+
+        [JsonProperty("ActualProductivity")]
+        public double ActualProductivity { get; set; }
+
+        [JsonProperty("PlannedOutcome")]
+        public int? PlannedOutcome { get; set; }
+
+        [JsonProperty("ActualOutcome")]
+        public int? ActualOutcome { get; set; }
+
+        [JsonProperty("PlannedReviewRounds")]
+        public int? PlannedReviewRounds { get; set; }
+
+        [JsonProperty("ActualReviewRounds")]
+        public int? ActualReviewRounds{ get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }
+
+        [JsonProperty("TSOServiceDeliveryChain")]
+        public virtual TSOServiceDeliveryChainDTO TSOServiceDeliveryChain { get; set; }
+
+        [JsonProperty("ServiceDeliveryChainMethod")]
+        public virtual ServiceDeliveryChainMethodDTO ServiceDeliveryChainMethod { get; set; }
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+
+        [JsonProperty("DefectRaised")]
+        public int DefectRaised { get; set; }
+
+        [JsonProperty("DefectRejected")]
+        public int DefectRejected { get; set; }
+
+        [JsonProperty("PlannedOutcomeRatio")]
+        public double PlannedOutcomeRatio { get; set; }
+
+        [JsonProperty("ActualOutcomeRatio")]
+        public double ActualOutcomeRatio { get; set; }
+
+        [JsonProperty("PlannedProcessingTime")]
+        public int PlannedProcessingTime { get; set; }
+
+        [JsonProperty("ActualProcessingTime")]
+        public int ActualProcessingTime { get; set; }
+
+        [JsonProperty("PlannedInput")]
+        public string PlannedInput { get; set; }
+
+        [JsonProperty("ActualInput")]
+        public string ActualInput { get; set; }
+
+        [JsonProperty("TaskStatusId")]
+        public int TaskStatusId { get; set; }
+
+        [JsonProperty("IdleTimeEffort")]
+        public int IdleTimeEffort { get; set; }
+
+        [JsonProperty("IdleTimeDuration")]
+        public int IdleTimeDuration { get; set; }
+
+        [JsonProperty("Headcount")]
+        public double Headcount { get; set; }
+    }
+}

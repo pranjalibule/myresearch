@@ -1,0 +1,104 @@
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DAL
+{
+    using SQS.nTier.TTM.GenericFramework;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    [Table("TSO")]
+    public partial class TSO : IBaseEntity
+    {
+        public TSO()
+        {
+            TSOServiceDeliveryChains = new HashSet<TSOServiceDeliveryChain>();
+        }
+
+        [Key, Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ID { get; set; }
+
+        public int TSRId { get; set; }
+
+        [Required]
+        [StringLength(150)]
+        public string Title { get; set; }
+
+        [StringLength(4000)]
+        public string Description { get; set; }
+
+        public int TeamLeadId { get; set; }
+
+        public int? CoreServiceId { get; set; }
+
+        public int? RelevantRepositoryId { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime TargetCompletionDate { get; set; }
+
+        //public DateTime ActualStartDate { get; set; }
+
+        //public DateTime ActualCompletionDate { get; set; }
+
+        public double EstimatedEffort { get; set; }
+
+        public double? PlannedEffort { get; set; }
+
+        public int OperationalRiskId { get; set; }
+
+        public int TSOStatusID { get; set; }
+
+        [Required]
+        public int SP_Id { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string CreatedBy { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string UpdatedBy { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
+
+        public int Version { get; set; }
+
+        public virtual CoreService CoreService { get; set; }
+
+        public virtual OperationalRisk OperationalRisk { get; set; }
+
+        public virtual TSOStatus TSOStatus { get; set; }
+
+        public virtual RelevantRepository RelevantRepository { get; set; }
+
+        public virtual TSR TSR { get; set; }
+
+        public virtual User TeamLead { get; set; }
+
+        public virtual ICollection<TSOServiceDeliveryChain> TSOServiceDeliveryChains { get; set; }
+
+        [NotMapped]
+        public ObjectSate ObjectSate
+        {
+            get; set;
+        }
+
+        [NotMapped]
+        public string TSOServiceDeliveryChainArr { get; set; }
+
+    }
+}

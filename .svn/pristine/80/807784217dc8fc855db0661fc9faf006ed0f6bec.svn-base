@@ -1,0 +1,129 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                                  *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.BAL
+{
+    using DAL;
+    using Encryption;
+    using GenericFramework;
+    using System;
+    using System.Data.Entity;
+
+    public class UserRepository : GenericDataRepository<User>
+    {
+        #region Private Methods
+
+        /// <summary>
+        /// GetActivationKey
+        /// </summary>
+        /// <param name="entityToAdd">User</param>
+        /// <returns></returns>
+        private string GetActivationKey(User entityToAdd, Boolean isUpdade = false)
+        {
+            CryptorEngine objCryptorEngine = new CryptorEngine();
+
+            string strConcantenated = string.Format("{0}#{1}#{2}", entityToAdd.Name, DateTime.Now, entityToAdd.EmailID);
+
+            strConcantenated = objCryptorEngine.Encrypt(strConcantenated, true);
+
+            if (!isUpdade)
+                entityToAdd.Password = objCryptorEngine.Encrypt(entityToAdd.Password, true);
+
+            objCryptorEngine = null;
+
+            return strConcantenated.Replace("+", String.Empty);
+        }
+
+        #endregion
+
+        #region Default Constructor
+
+        /// <summary>
+        /// UserRepository
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="unitOfWork"></param>
+        public UserRepository(DbContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        {
+
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="entityToAdd"></param>
+        public override void Add(User entityToAdd)
+        {
+            entityToAdd.Activated = false;
+            entityToAdd.Locked = false;
+            entityToAdd.ActivationKey = GetActivationKey(entityToAdd);
+            entityToAdd.UserTypeID = null;
+            base.Add(entityToAdd);
+        }
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="entitiesToAdd">Array of User</param>
+        public override void Add(params User[] entitiesToAdd)
+        {
+            foreach (User entityToAdd in entitiesToAdd)
+            {
+                entityToAdd.Activated = false;
+                entityToAdd.Locked = false;
+                entityToAdd.ActivationKey = GetActivationKey(entityToAdd);
+                entityToAdd.UserTypeID = null;
+            }
+
+            base.Add(entitiesToAdd);
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entityToUpdate">User</param>
+        public override void Update(User entityToUpdate)
+        {
+            entityToUpdate.ActivationKey = GetActivationKey(entityToUpdate, true);
+            base.Update(entityToUpdate);
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entitiesToUpdate">Array of Users</param>
+        public override void Update(params User[] entitiesToUpdate)
+        {
+            foreach (User entityToUpdate in entitiesToUpdate)
+            {
+                entityToUpdate.ActivationKey = GetActivationKey(entityToUpdate, true);
+            }
+            base.Update(entitiesToUpdate);
+        }
+
+        /// <summary>
+        /// ResetPassword
+        /// </summary>
+        /// <param name="objUser">User</param>
+        public void ResetPassword(User objUser)
+        {
+            CryptorEngine objCryptorEngine = new CryptorEngine();
+
+            objUser.Password = objCryptorEngine.Encrypt(objUser.Password, true);
+
+            objCryptorEngine = null;
+
+            Update(objUser);
+        }
+    }
+}

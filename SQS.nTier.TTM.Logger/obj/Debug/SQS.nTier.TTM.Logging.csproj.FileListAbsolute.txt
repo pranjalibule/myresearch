@@ -1,0 +1,14 @@
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\bin\Debug\SQS.nTier.TTM.Logger.dll
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\bin\Debug\SQS.nTier.TTM.Logger.pdb
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\bin\Debug\NLog.dll
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\bin\Debug\NLog.xml
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logging.csprojResolveAssemblyReference.cache
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logger.dll
+C:\Projects\TTM_VSTS\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logger.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Debug\SQS.nTier.TTM.Logger.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Debug\SQS.nTier.TTM.Logger.pdb
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Debug\NLog.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\bin\Debug\NLog.xml
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logging.csprojResolveAssemblyReference.cache
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logger.dll
+C:\Pune_Projects\TTM\SQS.nTier.TTM.Logger\obj\Debug\SQS.nTier.TTM.Logger.pdb

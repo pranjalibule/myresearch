@@ -1,0 +1,150 @@
+﻿using System;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.IO;
+using System.Windows.Forms;
+
+namespace SQS.nTier.TTM.DataImport
+{
+    public partial class frmTTMDataImport : Form
+    {
+        #region private variables
+
+        private readonly string Excel03ConString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties='Excel 8.0;HDR=YES'";
+        private readonly string Excel07ConString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties='Excel 8.0;HDR=YES'";
+
+        #endregion
+
+        public frmTTMDataImport()
+        {
+            InitializeComponent();
+        }
+
+        /// <summary>
+        /// btnSelectFile_Click
+        /// </summary>
+        /// <param name="sender">object</param>
+        /// <param name="e">EventArgs</param>
+        private void btnSelectFile_Click(object sender, EventArgs e)
+        {
+            openFileDialogTTM.ShowDialog();
+
+            if (!String.IsNullOrEmpty(openFileDialogTTM.FileName))
+            {
+                txtSelectFile.Text = openFileDialogTTM.FileName;
+            }
+        }
+
+        /// <summary>
+        /// btnClear_Click
+        /// </summary>
+        /// <param name="sender">object</param>
+        /// <param name="e">EventArgs</param>
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            txtSelectFile.Text = string.Empty;
+            lblTSRCount.Text = "#";
+            lblTSOCount.Text = "#";
+            lblTaskCount.Text = "#";
+            grpReport.Text = "Report (# of #)";
+            progressBarImport.Value = 0;
+        }
+
+        private void openFileDialogTTM_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (!(!String.IsNullOrEmpty(openFileDialogTTM.FileName) &&
+                (openFileDialogTTM.FileName.IndexOf(".xls") > 0 ||
+                openFileDialogTTM.FileName.IndexOf(".xlsx") > 0)))
+            {
+                MessageBox.Show("Please select a valid excel file", "Select valid excel", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                e.Cancel = true;
+            }
+        }
+        /// <summary>
+        /// btnStart_Click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string strFileExtention = Path.GetExtension(txtSelectFile.Text);
+                string strExcelConnectionString = String.Empty;
+
+                strExcelConnectionString = string.Empty;
+                switch (strFileExtention)
+                {
+
+                    case ".xls": //Excel 97-03
+                        strExcelConnectionString = string.Format(Excel03ConString, txtSelectFile.Text);
+                        break;
+
+                    case ".xlsx": //Excel 07 to later
+                        strExcelConnectionString = string.Format(Excel07ConString, txtSelectFile.Text);
+                        break;
+                }
+
+                AppSettingsReader settingsReader = new AppSettingsReader();
+                string strTables = (string)settingsReader.GetValue("tables", typeof(String));
+                String[] strTablesCollection = strTables.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+                DataTable dt = null;
+
+                //Read Data from the Sheet.
+                using (OleDbConnection con = new OleDbConnection(strExcelConnectionString))
+                {
+                    foreach (string strTable in strTablesCollection)
+                    {
+                        lblStatus.Text = String.Format("Fetching data from {0} sheet.", strTable);
+                        Application.DoEvents();
+                        using (OleDbCommand cmd = new OleDbCommand())
+                        {
+                            using (OleDbDataAdapter oda = new OleDbDataAdapter())
+                            {
+                                dt = new DataTable();
+
+                                string strQuery = TableColumns.GetColumns(strTable);
+
+                                var lastMonthDate = DateTime.Today;
+                                var lastDayOfLastMonth = new DateTime(lastMonthDate.Year, lastMonthDate.Month, 1);
+                                var last = lastDayOfLastMonth.AddDays(-1);
+
+                                strQuery = String.Format("Select {0} FROM [{1}$]", strQuery, strTable);
+
+                                cmd.CommandText = strQuery;
+                                cmd.Connection = con;
+                                con.Open();
+                                oda.SelectCommand = cmd;
+                                oda.Fill(dt);
+                                con.Close();
+                            }
+                        }
+
+                        //Save the data table to Database
+                        if (dt != null)
+                        {
+                            using (SqlBulkCopy bulkCopy = new SqlBulkCopy(objSQLConnection))
+                            {
+                                String[] strColumnsArr = TableColumns.GetColumns(strTable).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                for (int i = 0; i < dt.Columns.Count; i++)
+                                {
+                                    //bulkCopy.ColumnMappings.Add(i, i);
+                                    bulkCopy.ColumnMappings.Add(dt.Columns[i].ColumnName, dt.Columns[i].ColumnName);
+                                }
+
+                                bulkCopy.DestinationTableName = strTable;
+                                bulkCopy.WriteToServer(dt);
+                                lblStatus.Text = String.Format("{0}: {1} records inserted successfully.", strTable, dt.Rows.Count.ToString());
+                                Application.DoEvents();
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

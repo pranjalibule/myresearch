@@ -1,0 +1,450 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using Encryption;
+    using GenericFramework;
+    using Newtonsoft.Json;
+    using System;
+    using System.DirectoryServices.AccountManagement;
+    using System.Web.Http;
+    using System.Web.Http.Cors;
+    using System.Web.Http.Results;
+
+    [RoutePrefix("api")]
+    public class LoginController : ApiController
+    {
+        /// <summary>
+        /// ValidateLogin
+        /// </summary>
+        /// <returns>IHttpActionResult></returns>
+        [EnableCors(origins: "*", headers: "*", methods: "*", SupportsCredentials = true)]
+        [HttpPost, Route("v1/Login/ValidateLogin")]
+        //[SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<IDName> ValidateLogin([FromBody]LoginDTO loginDTO)
+        {
+            IDName objIDName = null;
+            User objUser;
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            try
+            {
+                loginDTO.UserName = loginDTO.UserName.Replace("%40", "@");
+                CryptorEngine objCryptorEngine = new CryptorEngine();
+                string adPath = "sqs.group.intl";
+
+                bool chkCredentials = false;
+                if (loginDTO.UserName != "admin")
+                {
+                    try
+                    {
+                        using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, adPath, adPath))
+                        {
+                            if (pc.ValidateCredentials(loginDTO.UserName, loginDTO.Password))
+                            {
+                                chkCredentials = true;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                        TTMLogger.Logger.LogError(ex.Message);
+                    }
+                }
+
+                if (!chkCredentials && loginDTO.UserName != "admin")
+                {
+                    objIDName = new IDName { Name = "Error: Invalid user,please enter valid username and password" };
+                    TTMLogger.Logger.LogError(objIDName.Name);
+                }
+                else
+                {
+                    loginDTO.Password = objCryptorEngine.Encrypt(loginDTO.Password, true);
+                    if (loginDTO.UserName == "admin")
+                    {
+                        objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower() && x.Password == loginDTO.Password, x => x.Role);
+
+                    }
+                    else
+                    {
+                        objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower(), x => x.Role);
+                    }
+                    if (objUser != null)
+                    {
+                        if (objUser.Activated && !objUser.Locked)
+                        {
+                            string strUserType = "Demo";
+
+                            if (null != objUser.UserTypeID)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                UserType objUserType = objBusinessLayer.UserTypeRepository.GetSingle(x => x.ID == objUser.UserTypeID);
+                                if (null != objUserType)
+                                {
+                                    strUserType = objUserType.Name;
+                                }
+
+                                objUserType = null;
+                            }
+
+                            string strConcantenated = String.Format("{0}#{1}#{2}#{3}#{4}#{5}", objUser.Name, objUser.EmailID, DateTime.Now, objUser.UserId, strUserType, objUser.ID, objUser.Role.Name);
+
+                            objIDName = new IDName
+                            {
+                                Name = objCryptorEngine.Encrypt(strConcantenated, true).Replace("=", "~").Replace("+", "!"),
+                                //Name = objUser.Name,
+                                ID = objUser.ID,
+                                Role = objUser.Role.Name
+                            };
+                        }
+                        else if (!objUser.Activated)
+                        {
+                            objIDName = new IDName
+                            {
+                                Name = String.Format("PendingActivation: {0}", "User '" + objUser.Name + "' is not activated."),
+                                Other = objUser.UserId
+                            };
+                        }
+                        else if (objUser.Locked)
+                        {
+                            objIDName = new IDName
+                            {
+                                Name = String.Format("Error:{0}", "User account is locked."),
+                            };
+
+                            TTMLogger.Logger.LogError(objIDName.Name);
+                        }
+                    }
+                    else
+                    {
+                        if (objUser == null && loginDTO.UserName != "admin")
+                        {
+                            System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry(String.Format("LDAP://{0}", adPath));
+                            System.DirectoryServices.DirectorySearcher searcher = new System.DirectoryServices.DirectorySearcher(entry);
+                            searcher.Filter = string.Format("(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(sAMAccountName={0}))", loginDTO.UserName);
+
+                            searcher.PropertiesToLoad.Add("mail");
+                            searcher.PropertiesToLoad.Add("samaccountname");
+                            searcher.PropertiesToLoad.Add("cn");
+                            searcher.PropertiesToLoad.Add("userAccountControl");
+
+                            System.DirectoryServices.SearchResultCollection results = null;
+                            int RecordFound = 0;
+                            try
+                            {
+                                results = searcher.FindAll();
+                                RecordFound = results.Count;
+                            }
+
+                            catch (Exception ex)
+                            {
+                                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                                objIDName = new IDName { Name = String.Format("{0}", ex.Message) };
+                                return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                            }
+
+                            bool IsActive = false;
+
+                            if (null != results && RecordFound > 0)
+                            {
+                                foreach (System.DirectoryServices.SearchResult p in results)
+                                {
+                                    int flags = (int)p.Properties["userAccountControl"][0];
+                                    IsActive = !Convert.ToBoolean(flags & 0x0002);
+                                }
+
+                                if (IsActive == true)
+                                {
+                                    string strName = "", strMail = "";
+
+                                    foreach (System.DirectoryServices.SearchResult p in results)
+                                    {
+                                        if (p.Properties.Contains("cn"))
+                                        {
+                                            strName = p.Properties["cn"] == null ? "" : Convert.ToString(p.Properties["cn"][0]);
+                                        }
+
+                                        if (p.Properties.Contains("mail"))
+                                        {
+                                            strMail = p.Properties["mail"] == null ? "" : Convert.ToString(p.Properties["mail"][0]);
+                                        }
+                                    }
+
+                                    ls.LoginName = "Admin";
+
+                                    //Create a new user record with role as guest.
+                                    objBusinessLayer = new BusinessLayer(ls);
+                                    Roles objRole = objBusinessLayer.RoleRepository.GetSingle(x => x.Name.ToLower() == "Guest");
+
+                                    if (null != objRole)
+                                    {
+                                        objUser = new User { RoleId = objRole.ID, UserId = loginDTO.UserName, EmailID = strMail, Name = strName, Password = loginDTO.Password };
+
+                                        objBusinessLayer = new BusinessLayer(ls);
+                                        objBusinessLayer.UserRepository.Add(objUser);
+
+                                        if (objUser.ID > 0)
+                                        {
+                                            string strConcantenated = String.Format("{0}#{1}#{2}#{3}#{4}#{5}", strName, strMail, DateTime.Now, objUser.UserId, objRole.Name, objUser.ID);
+
+                                            objIDName = new IDName
+                                            {
+                                                Name = objCryptorEngine.Encrypt(strConcantenated, true),
+                                                ID = objUser.ID
+                                            };
+                                            if (!objUser.Activated)
+                                            {
+                                                objIDName = new IDName
+                                                {
+                                                    Name = String.Format("AddFromLogin: {0}", "User '" + objUser.Name + "' is not activated."),
+                                                    Other = objUser.UserId
+                                                };
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        objIDName = new IDName { Name = "Error: Guest role not found." };
+                                        TTMLogger.Logger.LogError(objIDName.Name);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                objIDName = new IDName { Name = "Error: User  not found." };
+                                TTMLogger.Logger.LogError(objIDName.Name);
+                            }
+                        }
+                        else
+                        {
+                            objIDName = new IDName { Name = "Error: Invalid user,please enter valid username and password" };
+                            TTMLogger.Logger.LogError(objIDName.Name);
+                        }
+                    }
+                }
+
+                objCryptorEngine = null;
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                objIDName = new IDName
+                {
+                    Name = String.Format("Error: {0}", ex.Message),
+                };
+            }
+            finally
+            {
+                objBusinessLayer.Dispose();
+                ls = null;
+            }
+            //var response = Request.CreateResponse();
+            //response.Headers.Add("Role", objUserDTO.Role.Name);
+
+            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        [HttpPost, Route("v1/Login/SendActivationMail")]
+        public void SendActivationMail([FromBody]LoginDTO loginDTO)
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            try
+            {
+                loginDTO.UserName = loginDTO.UserName.Replace("%40", "@");
+
+                User objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower());
+                if (objUser != null)
+                {
+                    Utility objUtility = new Utility();
+                    string fulluserNm = objUser.Name + " (" + objUser.UserId + ") ";
+                    objUtility.SendMail(fulluserNm, objUser.EmailID);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(ex.Message);
+            }
+            finally
+            {
+                objBusinessLayer.Dispose();
+                ls = null;
+            }
+        }        /// <summary>
+                 /// RequestAccess
+                 /// </summary>
+                 /// <returns>IHttpActionResult></returns>
+        [HttpPost, Route("v1/Login/RequestAccess")]
+        public JsonResult<IDName> RequestAccess([FromBody]LoginDTO loginDTO)
+        {
+            IDName objIDName = null;
+
+            string adPath = "sqs.group.intl";
+
+            bool chkCredentials = false;
+            try
+            {
+                using (PrincipalContext pc = new PrincipalContext(ContextType.Domain, adPath, adPath))
+                {
+                    if (pc.ValidateCredentials(loginDTO.UserName, loginDTO.Password))
+                    {
+                        chkCredentials = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                TTMLogger.Logger.LogError(ex.Message);
+            }
+
+            if (!chkCredentials)
+            {
+                objIDName = new IDName { Name = "Error: UserName/Password incorrect" };
+                TTMLogger.Logger.LogError(objIDName.Name);
+            }
+            else
+            {
+                try
+                {
+                    LoginSession ls = new LoginSession();
+
+                    IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+                    //Check if user already exists
+                    User objUser = objBusinessLayer.UserRepository.GetSingle(x => x.UserId.ToLower() == loginDTO.UserName.ToLower());
+
+                    //If user do not exits then create a new user and set the Locked = true
+                    if (objUser != null)
+                    {
+                        objIDName = new IDName { Name = "Error: User details exits already." };
+                        TTMLogger.Logger.LogError(objIDName.Name);
+                    }
+                    else
+                    {
+                        CryptorEngine objCryptorEngine = new CryptorEngine();
+
+                        System.DirectoryServices.DirectoryEntry entry = new System.DirectoryServices.DirectoryEntry(String.Format("LDAP://{0}", adPath));
+                        System.DirectoryServices.DirectorySearcher searcher = new System.DirectoryServices.DirectorySearcher(entry);
+                        searcher.Filter = string.Format("(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(sAMAccountName={0}))", loginDTO.UserName);
+
+                        searcher.PropertiesToLoad.Add("mail");
+                        searcher.PropertiesToLoad.Add("samaccountname");
+                        searcher.PropertiesToLoad.Add("cn");
+                        searcher.PropertiesToLoad.Add("userAccountControl");
+
+                        System.DirectoryServices.SearchResultCollection results = null;
+                        int RecordFound = 0;
+                        try
+                        {
+                            results = searcher.FindAll();
+                            RecordFound = results.Count;
+                        }
+
+                        catch (Exception ex)
+                        {
+                            objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                            TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                        }
+
+                        bool IsActive = false;
+
+                        if (null != results && RecordFound > 0)
+                        {
+                            foreach (System.DirectoryServices.SearchResult p in results)
+                            {
+                                int flags = (int)p.Properties["userAccountControl"][0];
+                                IsActive = !Convert.ToBoolean(flags & 0x0002);
+                            }
+
+                            if (IsActive == true)
+                            {
+                                string strName = "", strMail = "";
+
+                                foreach (System.DirectoryServices.SearchResult p in results)
+                                {
+                                    if (p.Properties.Contains("cn"))
+                                    {
+                                        strName = p.Properties["cn"] == null ? "" : Convert.ToString(p.Properties["cn"][0]);
+                                    }
+
+                                    if (p.Properties.Contains("mail"))
+                                    {
+                                        strMail = p.Properties["mail"] == null ? "" : Convert.ToString(p.Properties["mail"][0]);
+                                    }
+                                }
+
+                                ls.LoginName = "Admin";
+
+                                //Create a new user record with role as guest.
+                                objBusinessLayer = new BusinessLayer(ls);
+                                Roles objRole = objBusinessLayer.RoleRepository.GetSingle(x => x.Name.ToLower() == "Guest");
+
+                                if (null != objRole)
+                                {
+                                    objUser = new User { RoleId = objRole.ID, UserId = loginDTO.UserName, EmailID = strMail, Name = strName, Password = loginDTO.Password };
+
+                                    objBusinessLayer = new BusinessLayer(ls);
+                                    objBusinessLayer.UserRepository.Add(objUser);
+
+                                    if (objUser.ID > 0)
+                                    {
+                                        string strConcantenated = String.Format("{0}#{1}#{2}#{3}#{4}#{5}", strName, strMail, DateTime.Now, objUser.UserId, objRole.Name, objUser.ID);
+
+                                        objIDName = new IDName
+                                        {
+                                            Name = objCryptorEngine.Encrypt(strConcantenated, true),
+                                            ID = objUser.ID
+                                        };
+
+                                        Utility objUtility = new Utility();
+                                        objUtility.SendMail(strName, objUser.EmailID, objUser.ActivationKey, MailType.Welcome);
+                                    }
+                                }
+                                else
+                                {
+                                    objIDName = new IDName { Name = "Error: Guest role not found." };
+                                    TTMLogger.Logger.LogError(objIDName.Name);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            objIDName = new IDName { Name = "Error: User details not found." };
+                            TTMLogger.Logger.LogInfo(objIDName.Name);
+                        }
+
+                        objCryptorEngine = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    objIDName = new IDName { Name = String.Format("Error: {0}", ex.Message) };
+                    TTMLogger.Logger.LogError(ex.Message);
+                }
+            }
+            return Json(objIDName, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+
+
+    }
+}

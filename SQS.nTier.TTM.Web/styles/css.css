@@ -1,0 +1,728 @@
+
+html, body, .container {
+    height: 100%;
+}
+
+html, body, h1, p, a, div, section {
+    /*margin: 0;
+    padding: 0;*/
+    font-size: 100%;
+    font: inherit;
+}
+
+body {
+    font-family: Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /*margin: 0;
+    padding: 0;*/
+    width: 99%;
+    height: auto;
+    /*	background-position:center top;*/
+    background-attachment: fixed;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+     background-color:ghostwhite;
+}
+
+.masters {
+    float:left;
+    text-align:center;
+    height:99%;
+    padding:22% 30%;
+}
+
+.tblMain {
+    text-align: left;
+    border-collapse: separate;
+    border-spacing: 2px;
+    background-color:#165f7c;
+    width:100%;
+    height:45px;
+}
+
+.info {
+    background-color: #f8f2bb;
+    margin-bottom:15px;
+    padding:5px 10px;
+    float:none !important;
+    width:96%;
+}
+
+img {
+    width: 100%;
+    height: auto;
+}
+
+.abc {
+    width: auto;
+    height: auto;
+}
+
+.title_bg {
+    margin-top: 25px;
+    line-height: 95px;
+    background-color: #8aab7f;
+    width: 100%;
+    height: 95px;
+}
+
+.title_name {
+    font-size: 30px;
+    padding-left: 20px;
+    font-weight: bold;
+    color: #ffffff;
+    opacity: 5;
+    /*margin-top:20px;*/
+    float: left;
+}
+
+
+div {
+    float: left;
+    /*width: 100%;*/
+}
+
+.logo {
+    background-image: url(/images/sqs_logo.jpg);
+    background-repeat: no-repeat;
+    right: 80px;
+    top: 0;
+    width: 20%;
+    height: 149px;
+    background-size: contain;
+    float: right;
+}
+
+.credential {
+    background-color: #d7e3e3;
+    /*	margin:0 auto;*/
+    position: absolute;
+    z-index: 15;
+    top: 80%;
+    left: 73%;
+    margin: -200px 0 0 -150px;
+    padding: 40px 35px;
+    width: 350px;
+    height: 150px;
+    border-radius: 10px;
+    box-shadow: 5px 5px 20px 2px rgba(0,0,0,0.5);
+}
+
+.username, .password {
+    float: left;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #2d2d2d;
+}
+
+.user, .pass {
+    clear: left;
+    border: 1px solid #686868;
+    width: 240px;
+}
+
+.username_f1, .password_f1 {
+    clear: left;
+    margin-top: 10px;
+    /*	color:#4E4B4B;*/
+    font-size: 14px;
+    color: #646464;
+    border: 0;
+    width: 230px;
+    outline: none;
+}
+
+.password {
+    margin-top: 50px;
+}
+
+.button {
+    clear: left;
+    text-align:center;
+}
+
+.btn_login {
+    border: .5px solid #0d6d69;
+    color: white;
+    font-weight: bolder;
+    padding: 5px 40px;
+    border-radius: 3px;
+    background-color: #0d6d69;
+    cursor: pointer;
+    /*width:240px;
+    background:-webkit-gradient(#5c5959, #2d2d2d);
+	background:-webkit-linear-gradient(#5c5959, #2d2d2d);
+	background:linear-gradient(#5c5959, #2d2d2d);
+	background:-o-linear-gradient(#5c5959, #2d2d2d);
+	background:-moz-linear-gradient(#5c5959, #2d2d2d);
+	color:#fff;
+	font-size:12px;
+	height:35px;
+	border:0;*/
+}
+
+input[type=text], input[type=password] {
+    float: left;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    border-bottom: 1px solid white;    
+    width:40%;
+    padding:8px;
+    color:white;
+}
+
+
+.signup, .signup a, .forgotpass, .forgotpass a {
+    margin-top: 20px;
+    text-decoration: none;
+    font-size: 12px;
+    float: left;
+    color: #2d2d2d;
+}
+
+    .forgotpass, .forgotpass a {
+        float: right;
+        padding-right: 5px;
+    }
+
+        .signup a:hover, .forgotpass a:hover {
+            text-decoration: underline;
+        }
+/* 07/03/2017 new css classes added */
+.new_credential {
+    background-color: #fff;
+    /*	margin:0 auto;*/
+    position: absolute;
+    z-index: 15;
+    top: 50%;
+    left: 50%;
+    margin: -200px 0 0 -320px;
+    padding: 40px 35px;
+    /*width:590px;*/
+    /*	height:380px;*/
+    box-shadow: 5px 5px 20px 2px rgba(0,0,0,0.5);
+}
+
+.title {
+    width: 55px;
+    float: left;
+}
+
+.title_f1 {
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.firstname, .lastname, .emailid, .regPass, .reregPass, .ccode, .cnumber, .countryC, .contN, .checkpwd {
+    margin-top: 5px;
+    font-size: 16px;
+    color: #2d2d2d;
+    float: left;
+    width: 250px;
+}
+
+.ccode, .cnumber {
+    margin-top: 0;
+}
+
+.firstN, .lastN, .email_ID, .regPas, .reregPa, .countryC, .contN {
+    margin-top: 5px;
+    border: 1px solid #686868;
+    width: 240px;
+    float: left;
+}
+
+.firstname, .email_ID, .regPass, .ccode {
+    clear: left;
+}
+
+.firstname_f1, .lastname_f1, .emailid_f1, .regPass_f1, .reregPass_f1, .country_f1, .contact_f1 {
+    clear: left;
+    margin-top: 5px;
+    padding-bottom: 10px;
+    padding-left: 5px;
+    /*	color:#4E4B4B;*/
+    font-size: 14px;
+    color: #646464;
+    border: 0;
+    width: 230px;
+    outline: none !important;
+    float: left;
+}
+
+.email_val_f1 {
+    float: left;
+    margin-top: 40px;
+    font-size: 12px;
+    color: red;
+}
+
+.chckpwd_val {
+    font-size: 12px;
+    color: red;
+}
+
+.country_f1 {
+    border: 0;
+}
+
+.btn_reg, .btn_reset {
+    background: -webkit-linear-gradient(#5c5959, #2d2d2d);
+    background: linear-gradient(#5c5959, #2d2d2d);
+    background: -o-linear-gradient(#5c5959, #2d2d2d);
+    background: -moz-linear-gradient(#5c5959, #2d2d2d);
+    color: #fff;
+    font-size: 12px;
+    width: 115px;
+    height: 35px;
+    border: 0;
+    float: left;
+    margin-top: 30px;
+    margin-right: 10px;
+}
+
+.btns {
+    clear: left;
+    margin: 0 auto;
+}
+
+.txt_super {
+    vertical-align: super;
+    color: red;
+    font-size: 12px;
+}
+
+.left_col, .right_col {
+    margin-bottom: 5px;
+    float: left;
+    width: 250px;
+}
+
+.left_col {
+    width: 310px;
+    clear: left;
+}
+
+.new_credential h1 {
+    font-size: 22px;
+    margin: 5px 0 20px 0;
+    color: #1e6b5a;
+    font-weight: bold;
+    border: 1px solid #ABABAB;
+    border-left: 0;
+    border-right: 0;
+    padding: 5px 0;
+}
+
+.new_credential p {
+    font-size: 14px;
+    width: 600px;
+    color: #2d2d2d;
+    line-height: 20px;
+}
+
+    .new_credential p a {
+        color: #1e6b5a;
+        text-decoration: underline;
+        word-wrap: break-word;
+    }
+
+        .new_credential p a:hover {
+            color: #1e6b5a;
+            text-decoration: underline;
+            word-wrap: break-word;
+        }
+
+.success_reg {
+    font-size: 14px;
+    width: 590px;
+    color: red;
+    text-align: left;
+    line-height: 20px;
+    margin: 20px 0;
+    clear: left;
+    padding-top: 20px;
+}
+
+
+/* new css classes ends here */
+
+#footer {
+    height: 22px;
+    bottom: 0;
+    line-height: 22px;
+    position: fixed;
+    width: 99%;
+    text-align: center;
+    background-color: #464646;
+}
+
+.footer_text, .footer_text a, .footer_text a:hover {
+    bottom: 0;
+    padding-right: 10px;
+    font-size: 12px;
+    line-height: 22px;
+    color: #fff;
+    text-decoration: none;
+    width:100%;
+}
+
+    .footer_text a:hover {
+        text-decoration: underline;
+    }
+
+.title h2 {
+    font-size: 30px;
+    margin-top: 20px;
+    font-weight: bold;
+    color: #1e6b5a;
+}
+
+.text1 {
+    font-size: 15px;
+    font-weight: bold;
+    color: #474747;
+}
+
+.btn {
+    width: 135px;
+    background: -webkit-gradient(#5c5959, #2d2d2d);
+    background: -webkit-linear-gradient(#5c5959, #2d2d2d);
+    background: linear-gradient(#5c5959, #2d2d2d);
+    background: -o-linear-gradient(#5c5959, #2d2d2d);
+    background: -moz-linear-gradient(#5c5959, #2d2d2d);
+    color: #fff;
+    font-size: 12px;
+    height: 35px;
+    border: 0;
+}
+
+.dropdown1 {
+    width: 280px;
+    font-size: 14px;
+    color: #2d2d2d;
+    border: 0;
+}
+
+.dropdown2 {
+    width: 325px;
+    font-size: 14px;
+    color: #2d2d2d;
+    border: 0;
+}
+
+.ddown {
+    border: 1px solid #686868;
+    padding: 5px;
+}
+
+.red {
+    background-color: #FF0004;
+    text-align: center;
+    color: #2d2d2d;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 1%;
+    height: 75px;
+    width: 15%;
+    z-index: -999;
+}
+
+.amber {
+    background-color: #ffc71e;
+    text-align: center;
+    color: #2d2d2d;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 22px;
+    padding: 1%;
+    height: 75px;
+    width: 15%;
+}
+
+.green {
+    background-color: #b7cf23;
+    text-align: center;
+    font-weight: bold;
+    height: 75px;
+    color: #2d2d2d;
+    line-height: 22px;
+    padding: 1%;
+    font-size: 14px;
+    width: 15%;
+}
+
+.subtitle {
+    border: 1px solid #686868;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.bg_icon {
+    background-image: url(/images/cross.png);
+    background-position: center center;
+    z-index: 9999;
+    background-repeat: no-repeat;
+}
+
+.teamcenter_dropd {
+    width: 100%;
+    border: 1px solid #686868;
+}
+
+.text2 {
+    font-size: 15px;
+    font-weight: bold;
+    color: #fff;
+    padding: 10px;
+}
+
+.text3 {
+    font-size: 14px;
+    color: #474747;
+    padding: 10px;
+}
+
+.text4 h2 {
+    font-size: 15px;
+    font-weight: bold;
+    color: #368065;
+    padding: 10px;
+}
+
+.text2_bg {
+    background-color: #959595;
+}
+
+
+.btn_save, .btn_cancel, .btn_submit {
+    width: 100%;
+    background: -webkit-gradient(#5c5959, #2d2d2d);
+    background: -webkit-linear-gradient(#5c5959, #2d2d2d);
+    background: linear-gradient(#5c5959, #2d2d2d);
+    background: -o-linear-gradient(#5c5959, #2d2d2d);
+    background: -moz-linear-gradient(#5c5959, #2d2d2d);
+    color: #fff;
+    font-size: 12px;
+    height: 35px;
+    border: 0;
+}
+
+@media (max-width:1200px) {
+    .title_name {
+        font-size: 30px;
+        line-height: 45px;
+        /*	padding-left:20px;	
+	font-weight:bold;*/
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .red, .amber, .green {
+        font-size: 13px;
+    }
+
+    .title h2 {
+        font-size: 30px;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #1e6b5a;
+        transition: all 0.5s;
+    }
+}
+
+@media (max-width:1200px) {
+    .title_name {
+        font-size: 25px;
+        line-height: 45px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .red, .amber, .green {
+        font-size: 12px;
+    }
+
+    .title h2 {
+        font-size: 25px;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #1e6b5a;
+        transition: all 0.5s;
+    }
+}
+
+
+@media (max-width:800px) {
+    .title_name {
+        font-size: 18px;
+        line-height: 45px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .red, .amber, .green {
+        font-size: 10px;
+        transition: all 0.5s;
+    }
+
+    .title h2 {
+        font-size: 20px;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #1e6b5a;
+        transition: all 0.5s;
+    }
+
+    .credential {
+        width: 200px;
+        transition: all 0.5s;
+    }
+
+    .user, .pass {
+        width: 200px;
+    }
+
+    .username, .password {
+        font-size: 12px;
+        transition: all 0.5s;
+    }
+
+    .username_f1, .password_f1 {
+        margin-top: 10px;
+        font-size: 10px;
+        width: 180px;
+        transition: all 0.5s;
+    }
+
+    .btn_login {
+        width: 200px;
+        transition: all 0.5s;
+    }
+
+    .credential {
+        height: 270px;
+        margin: -100px 0 0 -130px;
+    }
+
+    /* 07/03/2017	*/
+    .new_credential {
+        margin: -200px 0 0 -150px;
+        padding: 20px;
+        width: 250px;
+    }
+
+        .new_credential p {
+            width: 200px;
+            transition: all 0.2s;
+        }
+
+            .new_credential p a {
+                width: 300px;
+                word-wrap: break-word;
+            }
+
+    .left_col, .right_col {
+        float: none;
+    }
+
+    .success_reg {
+        width: 250px;
+    }
+}
+
+@media (max-width:480px) {
+    .title_name {
+        font-size: 15px;
+        line-height: 45px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .logo {
+        width: 15%;
+        margin-right: 5px;
+    }
+
+    .red, .amber, .green {
+        font-size: 7px;
+        line-height: 15px;
+        transition: all 0.5s;
+    }
+}
+
+@media (min-width:481px) and (max-width:639px) {
+    .title_name {
+        font-size: 100%;
+        line-height: 45px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .logo {
+        width: 15%;
+        margin-right: 5px;
+    }
+}
+
+@media (max-width:320px) {
+    .title_name {
+        font-size: 11px;
+        line-height: 25px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .logo {
+        width: 10%;
+        margin-right: 5px;
+    }
+
+    .credential {
+        height: 270px;
+        margin: -150px 0 0 -130px;
+    }
+}
+
+@media (min-width:321px) and (max-width:479px) {
+    .title_name {
+        font-size: 11px;
+        line-height: 35px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .logo {
+        width: 15%;
+        margin-right: 5px;
+    }
+}
+
+@media (min-width:200px) and (max-width:320px) {
+    .title_name {
+        font-size: 9px;
+        line-height: 25px;
+        color: #ffffff;
+        opacity: 5;
+        transition: all 0.5s;
+    }
+
+    .logo {
+        width: 15%;
+        margin-right: 5px;
+    }
+}
+
+ a {
+    font-size:15px;
+    color:#0f28bb;
+}

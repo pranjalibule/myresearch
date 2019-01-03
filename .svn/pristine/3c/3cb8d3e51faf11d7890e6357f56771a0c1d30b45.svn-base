@@ -1,0 +1,496 @@
+﻿body {
+    float: left;
+    width: 99%;
+    overflow:hidden;
+    background-color:#d7e3e3;
+    /*padding:0;
+    margin:0;*/
+}
+
+div {
+    float: left;
+}
+
+.leftDiv {
+    width: 12%;
+    height: 890px;
+    margin-right: 5px;
+}
+
+
+ a {
+     text-decoration:none;
+    font-size:15px;
+    color:#0f28bb;    
+}
+
+.rightDiv {
+    border-left: 1px solid black;
+    width: 85%;
+    height: 80%;
+    padding: 0px 10px;
+    min-height: 920px;
+    padding-top:5px;
+}
+
+.heading {
+    float: left;
+    width: 100%;
+}
+
+    .heading tr {
+        float: left;
+        /*padding: 5px 0px;*/
+        border-radius: 3px;
+        width: 100%;
+    }
+
+    .heading td {
+        float: left;
+        /*padding: 5px 0px;*/
+        border-radius: 3px;
+        width: 100%;
+        text-align: center;
+    }
+
+.headline {
+    float: left;
+    color: black;
+    font-size: 20px;
+    background-color: #8aab7f;
+    font-weight: bolder;
+    width: 100%;
+    align-content: center;
+}
+
+    .headline td {
+        float: left;
+        padding: 5px;
+        border-radius: 3px;
+    }
+
+input[type="button"], input[type="submit"], button {
+    border: .5px solid #0d6d69;
+    float: left;
+    color: white;
+    font-weight: bolder;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background-color: #0d6d69;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.table {
+    float: left;
+    padding: 5px;
+    width: 100%;
+}
+
+.table {
+    float: left;
+    padding: 5px;
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+    .table th {
+        /*float:left;*/
+        padding: 5px;
+        border-radius: 0px;
+        margin-right: 3px;
+        background-color: #b5bd3a;
+        text-align: center;
+    }
+
+th:first-child {
+    border-radius: 5px 0px 0px 0px;
+}
+
+th:last-child {
+    border-radius: 0px 5px 0px 0px;
+}
+
+tr:last-child td:first-child {
+    border-radius: 0px 0px 0px 5px;
+}
+
+tr:last-child td:last-child {
+    border-radius: 0px 0px 5px 0px;
+}
+
+.table tr:nth-child(odd) {
+    background-color: #d6d8e5;
+}
+
+.table tr:nth-child(even) {
+    background-color: #e6e6c1;
+}
+
+.table td {
+    /*float:left;*/
+    padding: 5px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.table .description {
+    text-align: justify;
+}
+
+.table .leftalign {
+    text-align: left;
+}
+
+#lblUser {
+    font-size: 26px;
+}
+
+#logOut {
+    border: .5px solid #9e2222;
+    text-decoration: none;
+    color: white;
+    font-weight: bolder;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background-color: #9e2222;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.tsoPage {
+    float: left;
+    width: 100%;
+}
+
+    .tsoPage tr {
+        float: left;
+        width: 100%;
+        min-height:40px;
+    }
+
+    .tsoPage td {
+        float: left;
+        width: 97.5%;
+    }
+
+.pageHeading {
+    float: left;
+    width: 100%;
+    background-color: #8aab7f;
+    border-radius: 3px;
+}
+
+
+fieldset {
+    float: left;
+    text-align:justify;
+    width: 98.5%;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+legend {
+    float: left;
+    display: inline;
+    width: 98.5%;
+    background-color: #d6d8e5;
+    padding: 7px;
+    border-radius: 5px;
+}
+
+.tsotop {
+    float: left;
+    width: 100%;
+}
+
+    .tsotop tr {
+        float: left;
+        width: 100%;
+        margin: 5px 0px;
+    }
+
+    .tsotop td {
+        float: left;
+        width: 25%;
+        padding: 5px;
+    }
+
+    .tsotop .titletd {
+        width: 20%;
+    }
+
+
+.required:after {
+    content: " *";
+    color: red;
+}
+
+.seprator {
+    float: left;
+    padding: 5px;
+    width: auto !important;
+    font-weight: bold;
+}
+
+input[type=text] {
+    float: left;
+    border: 1px solid grey;
+    padding: 3px 2px;
+    border-radius: 3px;
+}
+
+.waterInfo {
+    float: left;
+    font-style: italic;
+    color: #8e8d8b;
+    padding: 0 3px;
+}
+
+.halfTd td {
+    float: left;
+    width: 48.8%;
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+.halfTd fieldset {
+    float: left;
+    width: 98%;
+}
+
+.halfTd legend {
+    float: left;
+    display: inline;
+    width: 97%;
+}
+
+.halftitletd {
+    width: 38% !important;
+}
+
+.field {
+    float: left;
+    width: 54% !important;
+}
+
+.ui-datepicker {
+    background-color: #e5dfd7;
+    position: absolute;
+    z-index: 1;
+    padding: 3px;
+    border-radius: 3px;
+    float: left;
+    width: 10.5em;
+    display: none;
+}
+
+    .ui-datepicker div {
+        float: left;
+    }
+
+.ui-datepicker-header {
+    width: 150px;
+}
+
+select {
+    border: 1px solid grey;
+    padding: 3px 2px;
+    border-radius: 3px;
+}
+
+.ui-datepicker select {
+    margin: 5px;
+    float: left;
+}
+
+.ui-datepicker-prev, .ui-datepicker-next {
+    border: .5px solid #fccd76;
+    float: left;
+    color: black;
+    font-weight: bolder;
+    padding: 5px 10px;
+    border-radius: 3px;
+    background-color: #fcd180;
+    cursor: pointer;
+    margin: 5px;
+}
+
+textarea {
+    float: left;
+    padding: 3px 2px;
+    border-radius: 3px;
+    margin-top: 3px;
+    border: 1px solid grey;
+}
+
+.info {
+    background-color: #f8f2bb;
+    margin-bottom:15px;
+}
+
+.smallTiletd {
+    width: 18% !important;
+}
+
+.selectionSelectBox {
+    float: left;
+    width: 100%;
+}
+
+    .selectionSelectBox td {
+        float: left;
+        width: 43.5%;
+    }
+
+#tblMain {
+    float: left;
+    text-align: left;
+    padding: 0px 10px;
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+.leftMenu {
+    float: left;
+    text-align: center;
+    margin: 5px;
+}
+
+    .leftMenu a {
+        float: left;
+        text-decoration: none;
+        background-color: #804a5d;
+        border-radius: 3px;
+        padding: 25px;
+        width: 350px;
+        color: white;
+    }
+
+        .leftMenu a:hover {
+            background-color: #e8eece;
+            color: black;
+        }
+
+.leftMenuSmall a {
+    float: left;
+    text-decoration: none;
+    background-color: #804a5d;
+    border-radius: 3px;
+    padding: 8px;
+    width: 152px;
+    color: white;
+}
+
+    .leftMenuSmall a:hover {
+        background-color: #e8eece;
+        color: black;
+    }
+
+.leftMenuSmallselect a {
+    float: left;
+    text-decoration: none;
+    border-radius: 3px;
+    padding: 8px;
+    width: 152px;
+    background-color: #f7e04a;
+    cursor: not-allowed;
+}
+
+.ui-autocomplete {
+    background-color: #d8bf91;
+    width: 150px;
+    list-style: none;
+    padding: 2px;
+    border-radius: 3px;
+}
+
+    .ui-autocomplete li {
+        float: left;
+        width: 95%;
+        padding: 3px;
+        margin: 2px;
+    }
+
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 120px;
+    height: 120px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.scrollDiv{
+    float:left;
+    width:100%;
+    height:630px;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+#upload {
+    background-color:#999999;
+    border:none;
+    margin:0;
+}
+
+.remove {
+    float:left;
+    text-decoration:none;
+    background-color:#999999;
+    padding:1px 8px;
+    margin-left:8px;
+    border-radius:2px;
+    cursor:pointer;
+}
+.download {
+    float:left;
+    text-decoration:none;
+    background-color:#999999;
+    padding:1px 4px;
+    border-radius:2px;
+    cursor:pointer;
+}
+
+.header {
+    width: 100%;
+    height: 60px;
+    background-image: url('/images/TTM-Portal-title.png');
+    /*	background-position:center top;*/
+    background-attachment: fixed;
+    background-position: right top -15px;
+    background-repeat: no-repeat;
+    background-size: contain; 
+    text-align:right; 
+    border-radius:5px;
+}
+
+.header div{
+    float:none;
+    font-size:30px;
+    color:darkslategrey;
+    font-weight:bold;
+    padding:13px 45px;
+}

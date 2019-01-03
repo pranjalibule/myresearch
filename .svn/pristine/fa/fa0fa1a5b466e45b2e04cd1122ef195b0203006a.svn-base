@@ -1,0 +1,426 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// ClientRegionController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class ClientRegionController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetClientRegionById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>ClientRegion</returns>
+        private ClientRegionDTO GetClientRegionById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            ClientRegionDTO objClientRegionDTO = null;
+
+            try
+            {
+                ClientRegion objClientRegion = objBusinessLayer.ClientRegionRepository.GetByID(id);
+                if (null != objClientRegion)
+                {
+                    objClientRegionDTO = new ClientRegionDTO();
+                    objClientRegionDTO = Conversions.ToDTO<ClientRegionDTO, ClientRegion>(objClientRegion);
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientRegionDTO;
+        }
+
+        /// <summary>
+        /// GetAllClientRegion
+        /// </summary>
+        /// <returns>IList<ClientRegion>></returns>
+        private IList<ClientRegionDTO> GetAllClientRegion(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<ClientRegionDTO> objClientRegionDTOList = null;
+            try
+            {
+                IList<ClientRegion> objClientRegionList = objBusinessLayer.ClientRegionRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objClientRegionList != null && objClientRegionList.Count > 0)
+                {
+                    objClientRegionDTOList = new List<ClientRegionDTO>();
+
+                    foreach (ClientRegion objClientRegion in objClientRegionList)
+                    {
+                        ClientRegionDTO objClientRegionDTO = new ClientRegionDTO();
+                        objClientRegionDTO = Conversions.ToDTO<ClientRegionDTO, ClientRegion>(objClientRegion);
+
+                        objClientRegionDTOList.Add(objClientRegionDTO);
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientRegionDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new ClientRegion 
+        /// </summary>
+        /// <param name="objClientRegion"></param>
+        /// <returns></returns>
+        private string AddNewClientRegion(ClientRegionDTO objClientRegionDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                ClientRegion objClientRegion = Conversions.ToEntity<ClientRegionDTO, ClientRegion>(objClientRegionDTO);
+                objBusinessLayer.ClientRegionRepository.Add(objClientRegion);
+                returnMessage = "Client Region added successfully.";
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// Function to update ClientRegion 
+        /// </summary>
+        /// <param name="objClientRegion"></param>
+        /// <returns></returns>
+        private string ModifyClientRegion(int ID, ClientRegionDTO objClientRegionDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ClientRegionDTO objClientRegionDTOById = this.GetClientRegionById(ID);
+
+                if (objClientRegionDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    objClientRegionDTOById.Name = objClientRegionDTO.Name;
+                    objClientRegionDTOById.Description = objClientRegionDTO.Description;
+
+                    ClientRegion objClientRegion = Conversions.ToEntity<ClientRegionDTO, ClientRegion>(objClientRegionDTOById);
+
+                    //objClientRegion = Conversions.ToEntity<ClientRegionDTO, ClientRegion>(objClientRegionDTO, objClientRegion);
+                    objBusinessLayer.ClientRegionRepository.Update(objClientRegion);
+                    returnMessage = "Client Region updated successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Client Region do not exists.";
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// DeleteClientRegion
+        /// </summary>
+        /// <param name="objClientRegionDTO">ClientRegionDTO</param>
+        private string RemoveClientRegion(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ClientRegionDTO objClientRegionDTOById = this.GetClientRegionById(ID);
+
+                if (objClientRegionDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    ClientRegion objClientRegion = Conversions.ToEntity<ClientRegionDTO, ClientRegion>(objClientRegionDTOById);
+                    objBusinessLayer.ClientRegionRepository.Delete(objClientRegion);
+                    returnMessage = "Client Region deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Client Region do not exists.";
+                }
+            }
+            catch(Exception ex)
+            {
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified client region mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetClientRegionIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetClientRegionIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objClientRegionList = null;
+            try
+            {
+                objClientRegionList = objBusinessLayer.ClientRegionRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Name });
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objClientRegionList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/ClientRegion/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objClientRegionList = null;
+
+            try
+            {
+                objClientRegionList = this.GetClientRegionIDNameList();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return Json(objClientRegionList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/ClientRegion/GetById/{id}")]
+        [ResponseType(typeof(ClientRegion))]
+        public JsonResult<ClientRegionDTO> GetById(int id)
+        {
+            JsonResult<ClientRegionDTO> result = null;
+            ClientRegionDTO objClientRegionDTO;
+
+            try
+            {
+                objClientRegionDTO = this.GetClientRegionById(id);
+
+                result = Json(objClientRegionDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/ClientRegion/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<ClientRegionDTO> objClientRegionDTOList = this.GetAllClientRegion(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objClientRegionDTOList)
+                {
+                    foreach (ClientRegionDTO objClientRegion in objClientRegionDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objClientRegion);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreateCoreService
+        /// </summary>
+        /// <param name="coreServiceDTO">ClientRegionDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/ClientRegion/CreateClientRegion")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreateClientRegion([FromBody]ClientRegionDTO clientRegionDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewClientRegion(clientRegionDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateClientRegion
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="clientRegionDTO">ClientRegionDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/ClientRegion/UpdateClientRegion/{ID}")]
+        public JsonResult<string> UpdateClientRegion(int ID, [FromBody]ClientRegionDTO clientRegionDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyClientRegion(ID, clientRegionDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteClientRegion
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpDelete, Route("v1/ClientRegion/DeleteClientRegion/{ID}")]
+        public JsonResult<string> DeleteClientRegion(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveClientRegion(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }            
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}

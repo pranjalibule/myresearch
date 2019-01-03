@@ -1,0 +1,51 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * PM 16Jan2018 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DTO
+{
+    using Newtonsoft.Json;
+    using SQS.nTier.TTM.GenericFramework;
+    using System;
+    using System.Collections.Generic;
+
+    [Serializable]
+    public class EngagementDTO : IBaseDTO
+    {
+        [JsonProperty("ID")]
+        public int ID { get; set; }
+
+        [JsonProperty("Name")]
+        public string Name { get; set; }
+
+        [JsonProperty("Description")]
+        public string Description { get; set; }
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+        [JsonProperty("CreatedOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonProperty("UpdatedBy")]
+        public string UpdatedBy { get; set; }
+
+        [JsonProperty("UpdatedOn")]
+        public DateTime UpdatedOn { get; set; }
+
+        [JsonProperty("Version")]
+        public int Version { get; set; }       
+
+        [JsonIgnore]
+        public ObjectSate ObjectSate { get; set; }
+    }
+}
+
+

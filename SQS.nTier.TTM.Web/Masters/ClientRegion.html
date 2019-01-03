@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Client Region</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link href="/styles/Master.css" rel="stylesheet" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        showLoader();
+            userId = decodeURI(getLocalStorage("user"));
+        function NavigateTo(page) {
+            window.location = page;
+        }
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+    </style>
+</head>
+<body>
+    <div class="leftDiv">
+        <div id="tblMain">
+            <div class="smallRow" style="margin-bottom:5px;">
+                <div class="menu" title="Client" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Client.html');">
+                    <a href="#">Client</a>
+                </div>
+                <div class="menu selectedMenu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="#">Client Region</a>
+                </div>
+                <div class="menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('CoreService.html');" title="Core Service">
+                    <a href="#">Core Service</a>
+                </div>
+                <div class="menu" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Engagement.html');" title="Engagement Model">
+                    <a href="#">Engagement Model</a>
+                </div>
+                <div class="menu" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('MarketOffering.html');" title="Market Offering">
+                    <a href="#">Market Offering</a>
+                </div>
+                <div class="menu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Method.html');" title="Method">
+                    <a href="#">Method</a>
+                </div>
+                <div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('OperationalRisk.html');" title="Operational Risk">
+                    <a href="#">Operational Risk</a>
+                </div>
+                <div class="menu" id="middel-23" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('OperationalRiskIndicator.html');" title="Operational Risk Indicator">
+                    <a href="#">Category</a>
+                </div>
+                <div class="menu" id="middel-8" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Practice.html');" title="Practice">
+                    <a href="#">Practice</a>
+                </div>
+                <div class="menu" id="middel-9" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('PricingModel.html');" title="Pricing Model">
+                    <a href='#'>Pricing Model</a>
+                </div>
+                <div class="menu" id="middel-10" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProjectModel.html');" title="Project Model">
+                    <a href='#'>Project Model</a>
+                </div>
+                <div class="menu" id="middel-11" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Roles.html');" title="Role">
+                    <a href='#'>Role</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProductivityInput.html');" title="ProductivityInput">
+                    <a href='#'>Input</a>
+                </div>
+            </div>
+            <div class="smallRow">
+                <div class="menu" id="middel-13" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProductivityOutcome.html');" title="ProductivityOutcome">
+                    <a href='#'>Outcome</a>
+                </div>
+                <div class="menu" id="middel-14" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('RelevantRepository.html');" title="Relevant Repository">
+                    <a href="#">Relevant Repository</a>
+                </div>
+                <div class="menu" id="middel-15" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ServiceDeliveryChain.html');" title="Service Delivery Chain">
+                    <a href="#">Service Delivery Chain</a>
+                </div>
+                <div class="menu" id="middel-16" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('SolutionCentre.html');" title="Solution Centre">
+                    <a href="#">Solution Centre</a>
+                </div>
+                <div class="menu" id="middel-17" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TaskStatus.html');" title="Task Status">
+                    <a href="#">Task Status</a>
+                </div>
+                <div class="menu" id="middel-18" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TSOStatus.html');" title="TSO Status">
+                    <a href="#">TSO Status</a>
+                </div>
+                <div class="menu" id="middel-19" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TSRStatus.html');" title="TSR Status">
+                    <a href="#">TSR Status</a>
+                </div>
+                <div class="menu" id="middel-20" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Users.html');" title="User">
+                    <a href="#">User</a>
+                </div>
+                <div class="menu" id="middel-21" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Vertical.html');" title="Vertical">
+                    <a href='#'>Vertical</a>
+                </div>
+                <div class="menu" id="middel-24" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('RiskStatus.html');" title="Risk Status">
+                    <a href='#'>Risk Status</a>
+                </div>
+                <div class="menu" id="middel-22" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="LogOff(false);">
+                    <a class="SignOff" title="Sign Off"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="rightDiv">
+        <fieldset>
+            <legend style="font-weight:bold" id="tdOperation">Add Client Region</legend>
+            <table cellpadding="0" cellspacing="0" class="tsotop">
+                <tr>
+                    <td class="smallTiletd required">
+                        <input type="hidden" value="" id="txtID" />
+                        Name
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field">
+                        <input id="txtName" type="text" width="250" size="100" maxlength="150" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="smallTiletd">
+                        Description
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field">
+                        <textarea id="txtDescription" rows="5" cols="75"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="button" value="Submit" onclick="Save();" />&nbsp;&nbsp;
+                        <input type="button" value="Cancel" onclick="CancelAll();">&nbsp;&nbsp;&nbsp;&nbsp;
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+        <br /> <div style="margin-left:10px">Note: Double click on the row to update the record.</div> <br />
+        <div class="scrollDiv">
+            <table id="ClientRegionTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">Name</th>
+                        <th style="width:350px;" align="left">Description</th>
+                        <th style="width:80px;" align="left">CreatedBy</th>
+                        <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                        <th style="width:80px" align="left">UpdatedBy</th>
+                        <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                        <th style="width:100px" align="center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="clientRegiondetails"></tbody>
+            </table>
+            <div id="pager" class="pager" style="display:none">
+                <table border="0">
+                    <tr>
+                        <td valign="middle"><img src="images/first.png" class="first" /></td>
+                        <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                        <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                        <td valign="middle"><img src="images/next.png" class="next" /></td>
+                        <td valign="middle"><img src="images/last.png" class="last" /></td>
+                        <td valign="middle">
+                            <select id="pagesize">
+                                <option selected="selected" value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+
+        $(document).ready(function () {
+            CheckUser();
+            try {
+                var urlGetAll = urlPrefix + "ClientRegion/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+                LoadData(urlGetAll);
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+        function LoadData(url) {
+            clearTable();
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function clearTable() {
+            var i = $('#clientRegiondetails').empty();
+        }
+
+        function populateTable(EntitySummary) {
+            var tbody = $('#clientRegiondetails');
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+                var description = EntitySummary[totalrecords]["Description"];
+
+                if (description == null) {
+                    description = "";
+                }
+
+                tbody.append("<tr id='tr" + totalrecords + "'><td align='center'>" + EntitySummary[totalrecords]["ID"] +
+                    "</td><td class='leftalign'>" + EntitySummary[totalrecords]["Name"] + "</td>" +
+                "<td class='leftalign'>" + description + "</td>" +
+                "<td class='centeralign'>" + EntitySummary[totalrecords]["CreatedBy"] + "</td>" +
+                //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["CreatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                "<td class='centeralign'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                "<td align='center'><a href=# onclick='Delete(" + EntitySummary[totalrecords]["ID"] + ")'>Delete</a></td></tr>");
+            }
+
+            $('tr').dblclick(function () {
+                if ($(this).parent() != null && $(this).parent()[0] != null && $(this).parent()[0].id != null && $(this).parent()[0].id === "clientRegiondetails") {
+                    $("#clientRegiondetails tr").removeClass("highlight");
+
+                    var selected = $(this).hasClass("highlight");
+                    if (!selected)
+                        $(this).addClass("highlight");
+                    $("#txtID").val($(this).find("td").eq(0).html());
+                    $("#txtName").val(decodeURIComponent($(this).find("td").eq(1).html().replace("amp;", "")));
+                    $("#txtDescription").val(decodeURIComponent($(this).find("td").eq(2).html().replace("amp;", "")));
+                    $("#tdOperation").empty();
+                    $("#tdOperation").html("Edit Client Region");
+                }
+            });
+        }
+
+        function Save() {
+            var txtID = $("#txtID").val();
+            var txtName = $("#txtName").val();
+            var txtDescription = $("#txtDescription").val();
+
+            if (txtName.trim() == '') {
+                showMessageBox("Please fill all the mandatory fields.", "red");
+                return false;
+            }
+            else {
+                var data = JSON.stringify({ name: txtName, description: txtDescription, CreatedBy: userName });
+
+                var urlAddUpdate = urlPrefix + "ClientRegion";
+
+                var method = "POST";
+
+                if (!isNaN(txtID) && txtID != "") {
+                    method = "PUT";
+                    urlAddUpdate = urlAddUpdate + "/UpdateClientRegion/" + txtID;
+                }
+                else {
+                    urlAddUpdate = urlAddUpdate + "/CreateClientRegion";
+                }
+
+                $.ajax({
+                    url: urlAddUpdate,
+                    data: data,
+                    type: method,
+                    contentType: 'application/json; charset=UTF-8',
+                    success: function (response) {
+                        //$("#txtOutput").html("<b>" + response + "</b>");
+                        if (response.indexOf("Error") == 0) {
+                            showMessageBox(response, "red");
+                            //$("#txtOutput").css('color', 'red');
+                        }
+                        else {
+                            showMessageBox(response, "green");
+                            callSuccess();
+                            //$("#txtOutput").css('color', 'green');
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        showMessageBox(textStatus + "--" + errorThrown, "red");
+                    }
+                });
+            }
+        }
+
+        function Delete(ID) {
+            if (!isNaN(ID) && ID != "") {
+                showDeleteConfirm("Are you sure, you want to delete?", ID);
+            }
+        }
+
+        function doDelete(ID) {
+            var url = urlPrefix + "/ClientRegion/DeleteClientRegion/" + ID;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox(response, "green");
+                        callSuccess();
+                        //$("#txtOutput").css('color', 'green');
+                    }
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function CancelAll() {
+            Cancel();
+            $("#txtOutput").html("");
+        }
+
+        function Cancel() {
+            $("#txtID").val("");
+            $("#txtName").val("");
+            $("#txtDescription").val("");
+            $("#tdOperation").empty();
+            $("#tdOperation").html("Add Client Region");
+            var selected = $(this).hasClass("highlight");
+            $("#clientRegiondetails tr").removeClass("highlight");
+
+        }
+
+        function callSuccess() {
+            var urlGetAll = urlPrefix + "ClientRegion/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+            LoadData(urlGetAll);
+            Cancel();
+        }
+
+
+    </script>
+</body>
+</html>

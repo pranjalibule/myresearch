@@ -1,0 +1,1171 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Task</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        //if (getUrlVars().length < 2) {
+        //    window.location = "index.html?page=TSRDashboard.html";
+        //}
+        //else {
+        userId = getLocalStorage("user");
+        //}
+
+        if (CheckUser() == "") {
+            window.location = "index.html";
+        }
+
+        function NavigateTo(page) {
+            window.location = page;
+        }
+        //var tsrId = getUrlVars()["tsrid"];
+        //var tsoId = getUrlVars()["tsoid"];
+        var serviceDeliveryChainId = getLocalStorage("serviceDeliveryChainId");
+        var tsoServiceDeliveryChainId = getLocalStorage("tsoServiceDeliveryChainId");
+
+        var startDate;
+        var targetCompletionDate;
+        function GotoTASKDashboard() {
+            window.location = "TASKDashboard.html";
+        }
+
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div id="lblUser" style="display:none;"></div>
+    <div class="leftDiv">
+        <div id="tblMain">
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="top-1">
+                </div>
+                <div class="toomenu " id="top-2">
+                </div>
+                <div class="toomenu" id="top-7">
+                </div>
+                <div class="toomenu" id="top-10">
+                </div>
+                <div class="GuestClass toomenu" id="top-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-5">
+                </div>
+                <div class="toomenu" id="top-6">
+                </div>
+                <div class="toomenu" id="top-8" style="width:47px;padding:0;float:right; margin-right:5px;">
+                </div>
+                <div class="toomenu" id="top-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+
+            <div class="smallRow">
+                <div class="small menu" style="padding:5px 10px;" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="Home();">
+                    <a href="#" title="Home" class="home"></a>
+                </div><div class="menu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSRDashboard();" title="TSR Dashboard">
+                    <a href="#">TSR Dashboard</a>
+                </div>
+                <div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSODashboard('');" title="TSO Dashboard">
+                    <a href="#">TSO Dashboard</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTASKDashboard('');" title="TASK Dashboard">
+                    <a href="#">TASK Dashboard</a>
+                </div>
+                <div class="AdminClass menu" id="middel-10" style="display:none;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" title="iMS Analytics">
+                    <a href="http://192.168.96.196:5601" target="_blank">iMS Analytics</a>
+                </div>
+                <div class="GuestClass menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="CreateNewTSR('');" title="Create New TSR">
+                    <a href="#">Create New TSR</a>
+                </div>
+                <div class="AdminClass menu" style="display:none;" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="ExportExcelDump();" title="Export Data">
+                    <a href="#">Export Data</a>
+                </div>
+                <!--<td class="AdminClass" style="display:none;">
+                    <a href="#" onclick="this.href = 'http://192.168.96.196:5601'" target="_blank" title="Delivery Excellence Dashboard">iMS Analytics</a>
+                </td>-->
+                <div class="AdminClass menu" style="display:none;" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoMaster();" target="_blank" title="Master Data">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#">Master Data</a>
+                </div>
+                <div class="menu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoWiki();" target="_blank" title="Wiki">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#'>Wiki</a>
+                </div>
+                <div class="menu" id="middel-11" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="LogOff(false);">
+                    <a class="SignOff" title="Sign Off"></a>
+                </div>
+                <!--<div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="index.html" title="Sign Off">Sign Off</a>
+                </div>-->
+                <div class="small menu" id="middel-8" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <div class="UserLogo" title="User Details">
+                    </div>
+                    <ul class="user_list" style="display:none;">
+                        <li id="userName"></li>
+                        <li id="userRole"></li>
+                    </ul>
+                </div>
+                <div class="small menu" id="middel-9" style="padding:5px 10px;float:right;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="sendEmail();">
+                    <div class="ContactUs" title="ContactUs">
+                    </div>
+                </div>
+            </div>
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="bottom-1">
+                </div>
+                <div class="toomenu " id="bottom-2">
+                </div>
+                <div class="toomenu" id="bottom-7">
+                </div>
+                <div class="toomenu" id="bottom-10">
+                </div>
+                <div class="GuestClass toomenu" id="bottom-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-5">
+                </div>
+                <div class="toomenu" id="bottom-6">
+                </div>
+                <div class="toomenu" id="bottom-8" style="width:47px;padding:0;float:right;margin-right:5px;">
+                </div>
+                <div class="toomenu" id="bottom-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+
+        </div>
+    </div>
+    <div class="rightDiv">
+        <div id="breadCrumb" style="display:none;">
+        </div>
+        <div class="scrollDiv">
+            <table cellpadding="5" class="tsoPage" id="TaskInfo">
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:100%;">
+                            <div id="lblTSK" style="font:bold"></div>
+
+                            <legend style="font-weight:bold">Task Information</legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width10imp">
+                                        Task
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width21imp">
+                                        <!--<div id="lblTask"></div>-->
+                                        <input type="hidden" value="" id="txtOid" />
+                                        <input type="hidden" value="" id="txtTaskActualOid" />
+                                        <input type="hidden" value="" id="txtTaskPlannedOid" />
+                                        <input type="hidden" value="" id="txtTSOOid" />
+                                        <input type="hidden" value="" id="txtTaskServiceChainIdOid" />
+                                        <input id="lblTask" style="float:left;" type="text" size="30" maxlength="100" readonly="readonly" />
+                                    </td>
+
+                                    <td class="smallTiletd width12imp" style="width:13.5% !important;">
+                                        Method
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width18imp">
+                                        <select id="ddlMethod" style="width:207px;float:left;"></select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width10imp required">
+                                        Description
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" colspan="3">
+                                        <textarea id="txtNotes" rows="5" cols="127" maxlength="500"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width10imp">
+                                        TSO
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width21imp">
+                                        <input id="lblTSO" style="float:left;" type="text" size="30" maxlength="100" />
+                                        <input type="hidden" id="TSOStartDate" />
+                                        <input type="hidden" id="TSOTargetCompletionDate" />
+                                        <input type="hidden" id="hiddennEstimatedEffort" />
+                                        <input type="hidden" id="hiddentsoPlannedEffort" />
+                                        <input type="hidden" value="" id="txtTSOServiceDeliveryChainId" />
+                                    </td>
+                                </tr>
+                                <tr style="display:none;">
+                                    <td class="titletd width18imp" hidden="hidden">
+                                        Project Model
+                                    </td>
+                                    <td class="seprator" hidden="hidden">:</td>
+                                    <td class="width25imp" hidden="hidden">
+                                        <div id="lblProjectModel" hidden="hidden"></div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <fieldset style="width:100%;">
+                            <legend style="font-weight:bold">
+                                <table cellpadding="0" cellspacing="0" class="tsotop">
+                                    <tr style="min-height:20px;margin:0;">
+                                        <td style="width:18%;padding:0;">
+                                            Task Progress
+                                        </td>
+                                        <td style="width:40%;padding:0;font-size:13px;font-weight:normal;">( Please fill in your respective data below )</td>
+                                    </tr>
+                                </table>
+                            </legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width10imp required">
+                                        Planned Start Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width21imp">
+                                        <input id="txtStartDate" type="text" size="30" maxlength="100" /><br />
+                                    </td>
+                                    <td class="titletd width12imp required" style="width:13.5% !important;">
+                                        Planned Completion Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width21imp" style="width:20.2% !important;">
+                                        <input id="txtTargetCompletionDate" type="text" size="30" maxlength="100" /><br />
+                                    </td>
+                                    <td class="titletd required width10imp">
+                                        Week Number
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width15imp">
+                                        <input type="hidden" id="hiddenEffortsEnteredUntil" />
+                                        <input id="txtEffortsEnteredUntil" type="text" size="27" maxlength="100" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width10imp">
+                                        Headcount
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width21imp">
+                                        <input id="txtHeadCount" onkeyup="NumAndTwoDecimals(event, this); IdleEffort();" type="text" size="30" maxlength="100" disabled />
+                                        <div class="waterInfo">#FTE</div>
+                                    </td>
+                                    <td class="titletd width12imp" style="width:13.5% !important;">
+                                        Idle Time (Effort)
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width21imp" style="width:20.2% !important;">
+                                        <input id="txtIdleTimeEf" onkeyup="intNumber(event, this)" ; type="text" size="30" maxlength="100" disabled />
+                                        <div class="waterInfo">PD</div>
+                                    </td>
+
+                                    <td class="titletd width10imp">
+                                        Idle Time (Duration)
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width15imp">
+                                        <input id="txtIdleTimeDu" onkeyup="NumAndTwoDecimals(event, this); IdleEffort();" type="text" size="27" maxlength="100" />
+                                        <div class="waterInfo">WD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width10imp">
+                                        Task Status
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width21imp">
+                                        <select id="ddlTaskStatus" style="width:207px;float:left;" onFocus="(this.aOldValue=this.value)"></select>
+                                    </td>
+                                </tr>
+                                <tr style="display:none;">
+                                    <td class="titletd required width18imp">
+                                        Completed
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width29imp">
+                                        <!--<!--<input id="txtPercentageComplete" onkeyup="intNumber(event , this);" type="text" size="40" maxlength="3" />-->
+                                        <select id="txtPercentageComplete" style="width:175px;">
+                                            <option value="N">No</option>
+                                            <option value="Y">Yes</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr class="halfTd">
+                    <td>
+                        <fieldset id="actualProductivity">
+                            <legend style="font-weight:bold">
+                                <table cellpadding="0" cellspacing="0" class="tsotop">
+                                    <tr style="min-height:20px;margin:0;">
+                                        <td style="width:32%;padding:0;">
+                                            Productivity KPIs (Actual)
+                                        </td>
+                                        <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                        <td style="width:15%;padding:0;font-size:small;font-weight:normal;text-align:center;"></td>
+                                        <td style="width:38%;padding:0;font-size:small;font-weight:normal;text-align:center;"></td>
+                                        <td style="width:auto;padding:0;float:right;">
+                                            <input type="button" id="ActualReset" title="Use this option only for the first week of task" value="Reset to 0" onclick="ActualReset();" style="float:none;margin:0;padding:2px 10px;" />
+                                        </td>
+                                    </tr>
+                                    <tr style="min-height:2vh;">
+                                        <td style="width:47%;padding:0;">
+                                            <div style="width:99%;padding:0;float:left;font-style:italic; font-weight:normal;font-size:small;padding-top:3px;" id="foractualweek"></div>
+                                        </td>
+                                        <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                        <td style="width:15%;padding:0;font-size:small;font-weight:normal;text-align:center;">Aggregated</td>
+                                        <td style="width:33%;padding:0;font-size:small;font-weight:normal;text-align:center;">Weekly</td>
+                                        <td style="width:auto;padding:0;float:right;"></td>
+                                    </tr>
+                                </table>
+                            </legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Effort
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lbleffort"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtActualEffort" onkeyup="NumAndTwoDecimals(event, this); ActualProductivity(); Headcount();" type="text" size="18" maxlength="100" /> <!--value="0"-->
+                                        <div class="waterInfo">PD</div>
+                                    </td>
+                                </tr>
+                                <tr id="txtActualInput_Row_0">
+                                    <td class="titletd width45imp">
+                                        Input Type
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;" id="lblActualInputCumulative"></td>
+                                    <td class="seprator"></td>
+                                    <td class="field width45imp"></td>
+                                </tr>
+                                <tr id="txtActualOutcome_Row_0">
+                                    <td class="titletd width45imp">
+                                        Outcome Type
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblActualOutcome"></td>
+                                    <td class="seprator"></td>
+                                    <td class="field width45imp"></td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp ">
+                                        Outcome(Test Steps)
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblActualOutcomeTestSteps"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtActualOutcomeTestSteps" onkeyup="intNumber(event, this);" type="text" size="18" maxlength="100" />
+                                        <div class="waterInfo"># of test steps</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Processing Time
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblActualProcessingTime"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtActualProcessingTime" onkeyup="NumAndTwoDecimals(event, this);; ActualProductivityTB(); Headcount();" type="text" size="18" maxlength="100" />
+                                        <div class="waterInfo">WD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Productivity
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtActualProductivityEB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/PD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Throughput
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtActualProductivityTB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/WD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Outcome ratio
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtActualProductivityIB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/Input</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset id="plannedProductivity">
+                            <legend style="font-weight:bold">
+                                <table cellpadding="0" cellspacing="0" class="tsotop">
+                                    <tr style="min-height:20px;margin:0;">
+                                        <td style="width:32%;padding:0;">
+                                            Productivity KPIs (Planned)
+
+                                        </td>
+                                        <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                        <td style="width:15%;padding:0;font-size:small;font-weight:normal;text-align:center;"></td>
+                                        <td style="width:38%;padding:0;font-size:small;font-weight:normal;text-align:center;"></td>
+                                        <td style="width:auto;padding:0;float:right;">
+                                            <input type="button" id="PlannedReset" title="Use this option only for the last week of task" value="Reset to 0" onclick="PlannedReset();" style="float:none;margin:0;padding:2px 10px;" />
+                                        </td>
+                                    </tr>
+                                    <tr style="min-height:2vh;">
+                                        <td style="width:47%;padding:0;">
+                                            <div style="width:99%;padding:0;float:left;font-style:italic; font-weight:normal;font-size:small;padding-top:3px;" id="forplannedweek"></div>
+                                        </td>
+                                        <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                        <td style="width:15%;padding:0;font-size:small;font-weight:normal;text-align:center;">Aggregated</td>
+                                        <td style="width:33%;padding:0;font-size:small;font-weight:normal;text-align:center;">Weekly</td>
+                                        <td style="width:auto;padding:0;float:right;"></td>
+                                    </tr>
+                                </table>
+                            </legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Effort
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblPlannedeffort"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtPlannedEffort" onkeyup="NumAndTwoDecimals(event, this); PlannedProductivity();" type="text" size="18" maxlength="100" />
+                                        <div class="waterInfo">PD</div>
+                                    </td>
+                                </tr>
+                                <tr id="txtPlannedInput_Row_0">
+                                    <td class="titletd width45imp">
+                                        Input Type
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;" id="lblPlannedInputCumulative"></td>
+                                    <td class="seprator"></td>
+                                    <td class="field width45imp"></td>
+                                </tr>
+                                <tr id="txtPlannedOutcome_Row_0">
+                                    <td class="titletd width45imp">
+                                        Outcome Type
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblPlannedActualOutcome"></td>
+                                    <td class="seprator"></td>
+                                    <td class="field width45imp"></td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp ">
+                                        Outcome (Test Steps)
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblPlannedActualOutcomeTestSteps"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtPlannedOutcomeTestSteps" onkeyup="intNumber(event, this);" type="text" size="18" maxlength="100" />
+                                        <div class="waterInfo"># of test steps</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Processing Time
+                                    </td>
+                                    <!--<td class="field" style="width:15% !important;text-align:center;"></td>-->
+                                    <td class="field width15imp" style="text-align:center;" id="lblPlannedActualProcessingTime"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtPlannedProcessingTime" onkeyup="NumAndTwoDecimals(event, this);; PlannedProductivityTB();" type="text" size="18" maxlength="100" />
+                                        <div class="waterInfo">WD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Productivity
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtPlannedProductivityEB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/PD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Throughput
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width29imp">
+                                        <input id="txtPlannedProductivityTB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/WD</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width45imp required">
+                                        Outcome ratio
+                                    </td>
+                                    <td class="field width15imp" style="text-align:center;"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width25imp">
+                                        <input id="txtPlannedProductivityIB" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="18" maxlength="100" disabled value="0" />
+                                        <div class="waterInfo"># of outcome/Input</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:100%;">
+                            <legend style="font-weight:bold">
+                                <table cellpadding="0" cellspacing="0" class="tsotop">
+                                    <tr style="min-height:20px;margin:0;">
+                                        <td style="width:15%;padding:0;">
+                                            Service Quality KPIs
+                                        </td>
+                                        <td style="width:14%;padding:0;"> Cumulative</td>
+                                        <!--<td style="width:50%;padding:0;font-size:medium;font-weight:normal;">Cumulative</td>
+                                        <td style="width:20%;padding:0;"></td>
+                                        <td style="width:20%;padding:0;font-size:medium;font-weight:normal;">Cumulative</td>-->
+                                        <td style="width:40%;padding:0;font-size:medium;font-weight:normal;">( Please fill in your respective weekly data below )</td>
+                                    </tr>
+                                </table>
+                            </legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width12imp required" style="width:13% !important;">
+                                        Defects Raised
+                                    </td>
+                                    <td class="field" style="width:7% !important;text-align:center;" id="lblDefectsRaised"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="width10imp">
+                                        <input id="txtDefectsRaised" onkeyup="intNumber(event, this); defectDensity();" type="text" size="10" maxlength="100" />
+                                    </td>
+
+                                    <td class="titletd width12imp " style="width:11.1% !important;">
+                                        Defect Density
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width15imp" style="width: 17% !important;">
+                                        <!--style="width:17.1% !important;"-->
+                                        <!--<div id="lblDefectDensity"></div>-->
+                                        <input id="txtDefectDensity" onkeyup="NumAndTwoDecimals(event , this);" type="text" size="10" maxlength="100" disabled />
+                                    </td>
+                                    <td class="titletd width12imp required" style="width:13.5% !important;">
+                                        Planned Review Rounds
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width15imp">
+                                        <input id="txtPlannedServiceQuality" onkeyup="intNumber(event , this);" type="text" size="10" maxlength="100" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width10imp required" style="width:13% !important;">
+                                        Defects Rejected
+                                    </td>
+                                    <td class="field" style="width:7% !important;text-align:center;" id="lblDefectsRejected"></td>
+                                    <td class="seprator">:</td>
+                                    <td class="width10imp">
+                                        <input id="txtDefectsRejected" onkeyup="intNumber(event, this); defectRatio(); " type="text" size="10" maxlength="100" />
+
+                                    </td>
+                                    <td class="titletd width12imp " style="width:11.1% !important;">
+                                        Defect Rejection Ratio
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width10imp" style="width:17.1% !important;">
+                                        <!--<div id="lblDefectRejectionRatio" style="width:40px;"></div>-->
+                                        <input id="lblDefectRejectionRatio" type="text" size="10" maxlength="100" disabled />
+                                        <!--<div class="waterInfo" style="min-width:15%;">%</div>-->
+                                    </td>
+                                    <td class="titletd width12imp required" style="width:13.5% !important;">
+                                        Actual Review Rounds
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width15imp" style="width:15% !important;">
+                                        <input id="txtActualServiceQuality" onkeyup="intNumber(event , this);" type="text" size="10" maxlength="100" />
+                                        <!--<div class="waterInfo">Person days</div>-->
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+
+                <!--<tr>
+                    <td colspan="2">
+                        <fieldset style="width:100%;">
+                            <legend>Task Description</legend>
+                            <textarea id="txtNotes" rows="5" cols="125" maxlength="500"></textarea>
+                        </fieldset>
+                    </td>
+                </tr>-->
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="button" class="GuestClass" id="SubmitTask" value="Submit" onclick="Save();" style="float:none;" />
+                        <input type="button" value="Cancel" onclick="Cancel();" style="float:none;" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="myfooter">
+        By - SQS Development Team
+    </div>
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+
+    <script type="text/javascript" src="/scripts/tasks.js"></script>
+    <script type="text/javascript">
+        showLoader();
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        $(".scrollDiv").scroll(function () {
+            $("#txtStartDate").datepicker("hide");
+            $("#txtTargetCompletionDate").datepicker("hide");
+            //$("#txtActualCompletionDate").datepicker("hide");
+            //$("#txtActualStartDate").datepicker("hide");
+            $("#txtEffortsEnteredUntil").datepicker("hide");
+        });
+
+        $(document).ready(function () {
+            showLoader();
+            try {
+                CheckUser();
+                LoadTaskStatus();
+                $('#txtPercentageComplete').focus();
+
+                if (null != serviceDeliveryChainId) {
+                    LoadServiceDeliveryChain();
+
+                    if (serviceDeliveryChainId == 1) {
+                        //$("#actualA").show();
+                        //$("#plannedA").show();
+                        $("#actualD").hide();
+                        $("#plannedD").hide();
+                        $("#actualI").hide();
+                        $("#plannedI").hide();
+                        $("#actualE").hide();
+                        $("#plannedE").hide();
+                    }
+                    else if (serviceDeliveryChainId == 2) {
+                        //$("#actualA").show();
+                        //$("#plannedA").show();
+                        $("#actualD").show();
+                        $("#plannedD").show();
+                        $("#actualI").hide();
+                        $("#plannedI").hide();
+                        $("#actualE").hide();
+                        $("#plannedE").hide();
+                    }
+                    else if (serviceDeliveryChainId == 3) {
+                        //$("#actualA").show();
+                        //$("#plannedA").show();
+                        $("#actualD").hide();
+                        $("#plannedD").hide();
+                        $("#actualI").show();
+                        $("#plannedI").show();
+                        $("#actualE").hide();
+                        $("#plannedE").hide();
+                    }
+                    else if (serviceDeliveryChainId == 4) {
+                        //$("#actualA").show();
+                        //$("#plannedA").show();
+                        $("#actualD").hide();
+                        $("#plannedD").hide();
+                        $("#actualI").hide();
+                        $("#plannedI").hide();
+                        $("#actualE").show();
+                        $("#plannedE").show();
+                    }
+                    LoadServiceDeliveryChainMethod(serviceDeliveryChainId);
+                }
+
+                if (null != tsoServiceDeliveryChainId) {
+                    LoadLastTSOServiceDeliveryChainTask();
+                    $("#txtEffortsEnteredUntil").prop("disabled", false);
+                }
+                else {
+                    $("#txtEffortsEnteredUntil").attr("disabled", "disabled");
+                }
+
+                if (null != tsoId)
+                    LoadTSO(tsoId);
+
+                $("#txtTSOServiceDeliveryChainId").val(tsoServiceDeliveryChainId);
+
+                //$("#txtStartDate").datepicker({
+                //    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, firstDay: 1,
+                //    buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true, showWeek: true, weekHeader: "W"
+                //});
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, firstDay: 1,
+                    buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true, showWeek: true, weekHeader: "W"
+                });
+
+
+                //$("#txtActualStartDate").datepicker({
+                //    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                //});
+                //$("#txtActualCompletionDate").datepicker({
+                //    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                //});
+
+                $("#txtEffortsEnteredUntil").datepicker({
+                    showButtonPanel: true, changeMonth: true, changeYear: true, firstDay: 1,
+                    buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true, showWeek: true, weekHeader: "W",
+                    onSelect: function (dateText, inst) {
+
+                        var myDate = new Date();
+                        var currentweek = myDate.getWeek();
+                        var selectedWeek = $.datepicker.iso8601Week(new Date(dateText));
+                        $(this).val(selectedWeek);
+                        if (roleId.toLowerCase() != "admin") {
+                            if (selectedWeek > currentweek) {
+                                showMessageBox("You can not select the future week !", "red");
+                                $(this).val(currentweek);
+                                $("#foractualweek").text("fill in actual data for week" + currentweek);
+                                $("#forplannedweek").text("fill in planned data for week " + (parseInt(currentweek) + 1));
+                            }
+                            else {
+                                $(this).val(selectedWeek);
+                                $("#foractualweek").text("fill in actual data for week" + selectedWeek);
+                                $("#forplannedweek").text("fill in planned data for week " + (parseInt(selectedWeek) + 1));
+                                var url = urlPrefix + "TSO/GetTaskByWeek/" + tsoServiceDeliveryChainId + "/" + selectedWeek;
+                                if (selectedWeek == currentweek) {
+                                    $("#SubmitTask").prop("disabled", false);
+                                    $("#actualProductivity").prop("disabled", false);
+                                    $("#plannedProductivity").prop("disabled", false);
+                                    togglePlannedActualselection(false);
+                                }
+                                else if (selectedWeek == currentweek - 1) {
+                                    $("#SubmitTask").prop("disabled", false);
+                                    $("#actualProductivity").prop("disabled", false);
+                                    $("#plannedProductivity").prop("disabled", false);
+                                    togglePlannedActualselection(false);
+                                }
+                                else if (selectedWeek < currentweek - 1) {
+                                    showMessageBox("You are not allowed to select past week’s date. Kindly select current week’s date.", "red");
+                                    $(this).val(currentweek);
+                                    $("#foractualweek").text("fill in actual data for week" + currentweek);
+                                    $("#forplannedweek").text("fill in planned data for week " + (parseInt(currentweek) + 1));
+
+                                }
+                                else {
+                                    $("#SubmitTask").prop("disabled", true);
+                                    $("#actualProductivity").prop("disabled", true);
+                                    $("#plannedProductivity").prop("disabled", true);
+                                    //togglePlannedActualselection(true);
+                                    togglePlannedActualselection(false);
+                                    if (oldTask != null && oldTask != "") {
+                                        if (checkWithOld()) {
+                                            $(this).val(currentweek);
+                                            showMessageBox("You have change the data, please save it first and then change the week !", "red");
+                                            $("#foractualweek").text("fill in actual data for week" + currentweek);
+                                            $("#forplannedweek").text("fill in planned data for week " + (parseInt(currentweek) + 1));
+                                            return false;
+                                        }
+                                    }
+                                }
+                                $.ajax({
+                                    type: "GET",
+                                    beforeSend: function (request) {
+                                        request.setRequestHeader('userid', userId);
+                                    },
+                                    url: url,
+                                    dataType: "json",
+                                    success: function (result) {
+                                        if (null != result) {
+                                            oldTask = result;
+                                        }
+
+                                        if (null != result && result.TSOServiceDeliveryChainId > 0) {
+                                            PopulateTask(result);
+                                        }
+                                        else if (selectedWeek < currentweek - 1) {
+                                            //ActualReset();
+                                            //PlannedReset();
+                                            $(this).val(currentweek);
+                                            $("#foractualweek").text("fill in actual data for week" + currentweek);
+                                            $("#forplannedweek").text("fill in planned data for week " + (parseInt(currentweek) + 1));
+                                            //$("#txtEffortsEnteredUntil").val(selectedWeek);
+                                            //$("#foractualweek").text("fill in actual data for week" + selectedWeek);
+                                            //$("#forplannedweek").text("fill in planned data for week " + (parseInt(selectedWeek) + 1));
+                                            $("#txtActualEffort").prop("disabled", false);
+                                            $("#txtPlannedOutcome_0").prop("disabled", false);
+                                            $("#txtActualOutcome_0").prop("disabled", false);
+                                            $("#txtActualInput_0").prop("disabled", false);
+                                            $("#txtPlannedInput_0").prop("disabled", false);
+                                            $("#txtPlannedProcessingTime").prop("disabled", false);
+                                            $("#txtActualProcessingTime").prop("disabled", false);
+
+
+
+                                            $("#lbleffort").text("");
+                                            $("#lblActualOutcome").text("");
+                                            $("#lblActualOutcomeTestSteps").text("");
+                                            $("#lblActualProcessingTime").text("");
+                                            $("#lblActualInputCumulative").text("");
+
+                                            $("#lblPlannedeffort").text("");
+                                            $("#lblPlannedActualOutcome").text("");
+                                            $("#lblPlannedActualOutcomeTestSteps").text("");
+                                            $("#lblPlannedActualProcessingTime").text("");
+                                            $("#lblPlannedInputCumulative").text("");
+
+                                            //showMessageBox("Record not found for this week !", "red");
+                                            //$("#txtEffortsEnteredUntil").val(currentweek);
+                                            //$("#foractualweek").text("for week " + currentweek);
+                                            //$("#forplannedweek").text("for week " + (parseInt(currentweek) + 1));
+                                        }
+                                        else if (null != result && result.TSOServiceDeliveryChainId == 0) {
+                                            $("#txtActualEffort").val("");
+                                            $("#txtPlannedOutcome_0").val("");
+                                            $("#txtActualOutcome_0").val("");
+                                            $("#txtActualInput_0").val("");
+                                            $("#txtPlannedInput_0").val("");
+                                            $("#txtPlannedProcessingTime").val("");
+                                            $("#txtActualProcessingTime").val("");
+                                            $("#txtHeadCount").val("");
+
+                                            $("#txtIdleTimeDu").val("");
+                                            $("#txtIdleTimeEf").val("");
+                                            $("#txtPlannedEffort").val("");
+                                            $("#txtActualOutcomeTestSteps").val("");
+
+                                            $("#txtPlannedOutcomeTestSteps").val("");
+                                            $("#txtActualProductivityEB").val(0);
+                                            $("#txtPlannedProductivityEB").val(0);
+                                            $("#txtActualProductivityTB").val(0);
+
+                                            $("#txtPlannedProductivityTB").val(0);
+                                            $("#txtActualProductivityIB").val(0);
+                                            $("#txtPlannedProductivityIB").val(0);
+                                            $("#txtPlannedServiceQuality").val("");
+
+                                            $("#txtActualServiceQuality").val("");
+                                            $("#txtDefectsRaised").val("");
+                                            $("#txtDefectsRejected").val("");
+                                            $("#txtDefectDensity").val("");
+                                            $("#lblDefectRejectionRatio").val("");
+                                            $("#txtHeadCount").val("");
+
+                                            $("#lbleffort").text("");
+                                            $("#lblActualOutcome").text("");
+                                            $("#lblActualOutcomeTestSteps").text("");
+                                            $("#lblActualProcessingTime").text("");
+                                            $("#lblActualInputCumulative").text("");
+
+                                            $("#lblPlannedeffort").text("");
+                                            $("#lblPlannedActualOutcome").text("");
+                                            $("#lblPlannedActualOutcomeTestSteps").text("");
+                                            $("#lblPlannedActualProcessingTime").text("");
+                                            $("#lblPlannedInputCumulative").text("");
+
+                                            $("#txtDefectsRaised").prop("disabled", false);
+                                            $("#txtDefectsRejected").prop("disabled", false);
+                                            if (selectedWeek == currentweek) {
+                                                $("#txtActualServiceQuality").prop("disabled", false);
+                                                $("#txtPlannedServiceQuality").prop("disabled", false);
+                                            }
+                                            else {
+                                                $("#txtActualServiceQuality").prop("disabled", true);
+                                                $("#txtPlannedServiceQuality").prop("disabled", true);
+                                            }
+
+                                            if (selectedWeek == currentweek - 1) {
+                                                $("#txtPlannedServiceQuality").prop("disabled", true);
+                                                $("#txtDefectsRaised").prop("disabled", true);
+                                                $("#txtDefectDensity").prop("disabled", true);
+                                                $("#txtDefectsRejected").prop("disabled", true);
+                                                $("#txtActualServiceQuality").prop("disabled", true);
+                                                togglePlannedActualselection(true);
+                                            }
+                                        }
+
+                                        updateInputOutcome();
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        // showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                        if (errorThrown == "Unauthorized") {
+                                            textStatus = "You are not authorized to do the current operation."
+                                        }
+                                        showMessageBox(textStatus, "red");
+                                    }
+                                });
+                            }
+                        }
+                        else {
+                            $("#foractualweek").text("fill in actual data for week" + selectedWeek);
+                            $("#forplannedweek").text("fill in planned data for week " + (parseInt(selectedWeek) + 1));
+                            var url = urlPrefix + "TSO/GetTaskByWeek/" + tsoServiceDeliveryChainId + "/" + selectedWeek;
+                            $.ajax({
+                                type: "GET",
+                                beforeSend: function (request) {
+                                    request.setRequestHeader('userid', userId);
+                                },
+                                url: url,
+                                dataType: "json",
+                                success: function (result) {
+                                    if (null != result) {
+                                        oldTask = result;
+                                    }
+                                    if (null != result && result.TSOServiceDeliveryChainId > 0) {
+                                        PopulateTask(result);
+                                    }
+                                    else {
+                                        //Added cumulative field
+
+                                        $("#lbleffort").text(result.ActualEffortCumulative);
+                                        $("#lblActualOutcome").text(result.ActualOutcomeCumulative);
+                                        $("#lblActualOutcomeTestSteps").text(result.ActualOutcomeTestStepsCumulative);
+                                        $("#lblActualProcessingTime").text(result.ActualProcessingTimeCumulative);
+                                        $("#lblActualInputCumulative").text(result.ActualInputCumulative);
+
+                                        $("#lblPlannedeffort").text(result.PlannedEffortCumulative);
+                                        $("#lblPlannedActualOutcome").text(result.PlannedOutcomeCumulative);
+                                        $("#lblPlannedActualOutcomeTestSteps").text(result.PlannedOutcomeTestStepsCumulative);
+                                        $("#lblPlannedActualProcessingTime").text(result.PlannedProcessingTimeCumulative);
+                                        $("#lblPlannedInputCumulative").text(result.PlannedInputCumulative);
+
+                                        $("#txtActualEffort").val("");
+                                        $("#txtPlannedOutcome_0").val("");
+                                        $("#txtActualOutcome_0").val("");
+                                        $("#txtActualInput_0").val("");
+                                        $("#txtPlannedInput_0").val("");
+                                        $("#txtPlannedProcessingTime").val("");
+                                        $("#txtActualProcessingTime").val("");
+                                        $("#txtHeadCount").val("");
+
+                                        $("#txtIdleTimeDu").val("");
+                                        $("#txtIdleTimeEf").val("");
+                                        $("#txtPlannedEffort").val("");
+                                        $("#txtActualOutcomeTestSteps").val("");
+
+                                        $("#txtPlannedOutcomeTestSteps").val("");
+                                        $("#txtActualProductivityEB").val(0);
+                                        $("#txtPlannedProductivityEB").val(0);
+                                        $("#txtActualProductivityTB").val(0);
+
+                                        $("#txtPlannedProductivityTB").val(0);
+                                        $("#txtActualProductivityIB").val(0);
+                                        $("#txtPlannedProductivityIB").val(0);
+                                        $("#txtPlannedServiceQuality").val("");
+
+                                        $("#txtActualServiceQuality").val("");
+                                        $("#txtDefectsRaised").val("");
+                                        $("#txtDefectsRejected").val("");
+                                        $("#txtDefectDensity").val("");
+                                        $("#lblDefectRejectionRatio").val("");
+                                        $("#txtHeadCount").val("");
+
+                                        $("#txtDefectsRaised").prop("disabled", false);
+                                        $("#txtDefectsRejected").prop("disabled", false);
+                                        $("#txtActualServiceQuality").prop("disabled", false);
+                                        $("#txtPlannedServiceQuality").prop("disabled", false);
+                                    }
+
+                                    updateInputOutcome();
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    // showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                    if (errorThrown == "Unauthorized") {
+                                        textStatus = "You are not authorized to do the current operation."
+                                    }
+                                    showMessageBox(textStatus, "red");
+                                }
+                            });
+                        }
+
+                    }
+                });
+
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, firstDay: 1,
+                    buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true, showWeek: true, weekHeader: "W",
+                    onSelect: function (dateText, inst) {
+
+                        var myDate = new Date();
+                        var currentweek = myDate.getWeek();
+
+                        dateText = dateText.replace(/-/g, "");
+                        var selectedWeek = jQuery.datepicker.iso8601Week(new Date(dateText));
+
+                        if (roleId.toLowerCase() != "admin") {
+                            //  $("#txtEffortsEnteredUntil").val(selectedWeek);
+                            //  $("#hiddenEffortsEnteredUntil").val(selectedWeek);
+                            if (selectedWeek > currentweek + 1) {
+                                showMessageBox("You are not allowed to select a date from immediate  future week only", "red");
+                                //$("#txtEffortsEnteredUntil").val(currentweek);
+                                //$("#foractualweek").text("fill in actual data for week" + currentweek);
+                                //$("#forplannedweek").text("fill in planned data for week " + (parseInt(currentweek) + 1));
+                            }
+                            else if (selectedWeek <= currentweek - 1) {
+                                showMessageBox("You are not allowed to select past week’s date. Kindly select current week’s date.", "red");
+                                $("#txtStartDate").val("");
+                            }
+                            else if (selectedWeek == currentweek) {
+                            }
+                            else {
+                                //$("#txtEffortsEnteredUntil").val(selectedWeek);
+                                //$("#hiddenEffortsEnteredUntil").val(selectedWeek);
+                                //$("#foractualweek").text("fill in actual data for week" + selectedWeek);
+                                //$("#forplannedweek").text("fill in planned data for week " + (parseInt(selectedWeek) + 1));
+                                ActualReset();
+                                $("#txtDefectsRaised").val(0);
+                                $("#txtDefectsRejected").val(0);
+                                $("#txtDefectsRaised").attr("disabled", "disabled");
+                                $("#txtDefectsRejected").attr("disabled", "disabled");
+                                $("#txtActualEffort").attr("disabled", "disabled");
+                                $("#txtActualOutcome_0").attr("disabled", "disabled");
+                                $("#txtActualOutcomeTestSteps").attr("disabled", "disabled");
+                                $("#txtActualProcessingTime").attr("disabled", "disabled");
+                                $("#txtActualInput_0").attr("disabled", "disabled");
+                                $("#txtActualServiceQuality").val(0);
+                                $("#txtActualServiceQuality").attr("disabled", "disabled");
+
+
+
+                                $("#txtPlannedOutcome_0").val("");
+                                $("#txtPlannedInput_0").val("");
+                                $("#txtPlannedProcessingTime").val("");
+                                $("#txtHeadCount").val("");
+                                $("#txtIdleTimeDu").val("");
+                                $("#txtIdleTimeEf").val("");
+                                $("#txtPlannedEffort").val("");
+                                $("#txtPlannedOutcomeTestSteps").val("");
+                                $("#txtPlannedProductivityEB").val(0);
+                                $("#txtPlannedProductivityTB").val(0);
+                                $("#txtPlannedProductivityIB").val(0);
+                                $("#txtPlannedServiceQuality").val("");
+                                $("#txtDefectDensity").val("");
+                                $("#lblDefectRejectionRatio").val("");
+                                $("#txtHeadCount").val("");
+
+                            }
+                        }
+                        else {
+                            ActualReset();
+                            $("#txtDefectsRaised").val(0);
+                            $("#txtDefectsRejected").val(0);
+                            $("#txtActualServiceQuality").val(0);
+
+
+
+                            $("#txtPlannedOutcome_0").val("");
+                            $("#txtPlannedInput_0").val("");
+                            $("#txtPlannedProcessingTime").val("");
+                            $("#txtHeadCount").val("");
+                            $("#txtIdleTimeDu").val("");
+                            $("#txtIdleTimeEf").val("");
+                            $("#txtPlannedEffort").val("");
+                            $("#txtPlannedOutcomeTestSteps").val("");
+                            $("#txtPlannedProductivityEB").val(0);
+                            $("#txtPlannedProductivityTB").val(0);
+                            $("#txtPlannedProductivityIB").val(0);
+                            $("#txtPlannedServiceQuality").val("");
+                            $("#txtDefectDensity").val("");
+                            $("#lblDefectRejectionRatio").val("");
+                            $("#txtHeadCount").val("");
+                        }
+                    }
+                });
+
+                $("#lblUser").text(userName);
+                if (roleId == "Guest" || roleId == "guest")
+                    $(".GuestClass").hide();
+                else if (roleId.toLowerCase() == "account manager") {
+                    $("#trNewTSR").hide();
+                }
+                else {
+                    $(".GuestClass").show();
+                    $("#trNewTSR").show();
+                }
+                if (roleId == "Admin" || roleId == "admin") {
+                    $(".AdminClass").removeAttr('style');
+                }
+
+                $(".UserLogo").on("click", function () {
+                    if ($('.user_list:visible').length == 0) {
+                        $(".user_list").css("display", "block");
+                    }
+                    else {
+                        $(".user_list").css("display", "none");
+                    }
+                });
+
+                $(".rightDiv").on("click", function () {
+                    hideAllMenu();
+                });
+
+            }
+            catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+
+    </script>
+
+</body>
+</html>

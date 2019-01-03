@@ -1,0 +1,404 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.BAL
+{
+    using DAL;
+    using GenericFramework;
+    using System;
+    public class BusinessLayer : IBusinessLayer, IDisposable
+    {
+        #region private variables
+
+        private readonly IUnitOfWork uow;
+        private readonly TTMContext ttmContext;
+
+        private IGenericDataRepository<ClientRegion> clientRegionRepository = null;
+        private IGenericDataRepository<CoreService> coreServiceRepository = null;
+        private IGenericDataRepository<MarketOffering> marketOfferingRepository = null;
+        private IGenericDataRepository<TSRFileUpload> tsrFileUploadRepository = null;
+        private IGenericDataRepository<OperationalRisk> operationalRiskRepository = null;//
+        private IGenericDataRepository<Practice> practiceRepository = null;
+        private IGenericDataRepository<QGPassed> qgPassedRepository = null;
+        private IGenericDataRepository<RelevantRepository> relevantRepositoryRepository = null;
+        private IGenericDataRepository<ServiceDeliveryChain> serviceDeliveryChainRepository = null;
+        private IGenericDataRepository<SolutionCentre> solutionCentreRepository = null;
+        private IGenericDataRepository<TSOStatus> tsoStatusRepository = null;
+        private IGenericDataRepository<TSRStatus> tsrStatusRepository = null;
+        private IGenericDataRepository<Vertical> verticalReposiory = null;
+
+        private IGenericDataRepository<UserType> userTypeRepository = null;
+        private UserRepository userRepository = null;
+
+        private IGenericDataRepository<TSRCoreService> tsrCoreServicesRepository = null;
+        private IGenericDataRepository<TSRRelevantRepository> tsrReleventRepositoriesRepository = null;
+
+        private IGenericDataRepository<TSR> tsrRepository = null;
+        private IGenericDataRepository<TSO> tsoRepository = null;
+        private IGenericDataRepository<TSOServiceDeliveryChain> tsoServiceDeliveryChainRepository = null;
+        private IGenericDataRepository<TSOServiceDeliveryChainTask> tsoServiceDeliveryChainTaskRepository = null;
+
+        private IGenericDataRepository<ProjectModel> projectModelRepository = null;
+        private IGenericDataRepository<TaskStatus> taskstatusRepository = null;
+
+
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Default Constructor
+        /// </summary>
+        public BusinessLayer(LoginSession loginSession)
+        {
+            ttmContext = new TTMContext();
+
+            ttmContext.Configuration.ProxyCreationEnabled = false;
+
+            uow = new UnitOfWork(ttmContext, loginSession);
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>
+        /// ClientRegion Repository
+        /// </summary>
+        public IGenericDataRepository<ClientRegion> ClientRegionRepository
+        {
+            get
+            {
+                if (null == clientRegionRepository)
+                    clientRegionRepository = uow.GetRepository<ClientRegion>();
+                return clientRegionRepository;
+            }
+        }
+
+        /// <summary>
+        /// CoreService Repository
+        /// </summary>
+        public IGenericDataRepository<CoreService> CoreServiceRepository
+        {
+            get
+            {
+                if (null == coreServiceRepository)
+                    coreServiceRepository = uow.GetRepository<CoreService>();
+                return coreServiceRepository;
+            }
+        }
+
+        /// <summary>
+        /// MarketOffering Repository
+        /// </summary>
+        public IGenericDataRepository<MarketOffering> MarketOfferingRepository
+        {
+            get
+            {
+                if (null == marketOfferingRepository)
+                    marketOfferingRepository = uow.GetRepository<MarketOffering>();
+                return marketOfferingRepository;
+            }
+        }
+
+        
+        /// <summary>
+        /// MarketOffering Repository
+        /// </summary>
+        public IGenericDataRepository<TaskStatus> TaskStatusRepository
+        {
+            get
+            {
+                if (null == taskstatusRepository)
+                    taskstatusRepository = uow.GetRepository<TaskStatus>();
+                return taskstatusRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSR File Upload Repository
+        /// </summary>
+        public IGenericDataRepository<TSRFileUpload> TSRFileUploadRepository
+        {
+            get
+            {
+                if (null == tsrFileUploadRepository)
+                    tsrFileUploadRepository = uow.GetRepository<TSRFileUpload>();
+                return tsrFileUploadRepository;
+            }
+        }
+
+        /// <summary>
+        /// OperationalRisk Repository
+        /// </summary>
+        public IGenericDataRepository<OperationalRisk> OperationalRiskRepository
+        {
+            get
+            {
+                if (null == operationalRiskRepository)
+                    operationalRiskRepository = uow.GetRepository<OperationalRisk>();
+                return operationalRiskRepository;
+            }
+        }
+
+        /// <summary>
+        /// Practice Repository
+        /// </summary>
+        public IGenericDataRepository<Practice> PracticeRepository
+        {
+            get
+            {
+                if (null == practiceRepository)
+                    practiceRepository = uow.GetRepository<Practice>();
+                return practiceRepository;
+            }
+        }
+
+        /// <summary>
+        /// QGPassed Repository
+        /// </summary>
+        public IGenericDataRepository<QGPassed> QGPassedRepository
+        {
+            get
+            {
+                if (null == qgPassedRepository)
+                    qgPassedRepository = uow.GetRepository<QGPassed>();
+                return qgPassedRepository;
+            }
+        }
+
+        /// <summary>
+        /// RelevantRepository Repository
+        /// </summary>
+        public IGenericDataRepository<RelevantRepository> RelevantRepositoryRepository
+        {
+            get
+            {
+                if (null == relevantRepositoryRepository)
+                    relevantRepositoryRepository = uow.GetRepository<RelevantRepository>();
+                return relevantRepositoryRepository;
+            }
+        }
+
+        /// <summary>
+        /// ServiceDeliveryChain Repository
+        /// </summary>
+        public IGenericDataRepository<ServiceDeliveryChain> ServiceDeliveryChainRepository
+        {
+            get
+            {
+                if (null == serviceDeliveryChainRepository)
+                    serviceDeliveryChainRepository = uow.GetRepository<ServiceDeliveryChain>();
+                return serviceDeliveryChainRepository;
+            }
+        }
+
+        /// <summary>
+        /// SolutionCentre Repository
+        /// </summary>
+        public IGenericDataRepository<SolutionCentre> SolutionCentreRepository
+        {
+            get
+            {
+                if (null == solutionCentreRepository)
+                    solutionCentreRepository = uow.GetRepository<SolutionCentre>();
+                return solutionCentreRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSOStatus Repository
+        /// </summary>
+        public IGenericDataRepository<TSOStatus> TSOStatusRepository
+        {
+            get
+            {
+                if (null == tsoStatusRepository)
+                    tsoStatusRepository = uow.GetRepository<TSOStatus>();
+                return tsoStatusRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSRStatus Repository
+        /// </summary>
+        public IGenericDataRepository<TSRStatus> TSRStatusRepository
+        {
+            get
+            {
+                if (null == tsrStatusRepository)
+                    tsrStatusRepository = uow.GetRepository<TSRStatus>();
+                return tsrStatusRepository;
+            }
+        }
+
+        /// <summary>
+        /// Project Model Repository
+        /// </summary>
+        public IGenericDataRepository<ProjectModel> ProjectModelRepository
+        {
+            get
+            {
+                if (null == projectModelRepository)
+                    projectModelRepository = uow.GetRepository<ProjectModel>();
+                return projectModelRepository;
+            }
+        }
+
+        /// <summary>
+        /// Vertical Repository
+        /// </summary>
+        public IGenericDataRepository<Vertical> VerticalRepository
+        {
+            get
+            {
+                if (null == verticalReposiory)
+                    verticalReposiory = uow.GetRepository<Vertical>();
+                return verticalReposiory;
+            }
+        }
+
+        /// <summary>
+        /// UserType Repository
+        /// </summary>
+        public IGenericDataRepository<UserType> UserTypeRepository
+        {
+            get
+            {
+                if (null == userTypeRepository)
+                    userTypeRepository = uow.GetRepository<UserType>();
+                return userTypeRepository;
+            }
+        }
+
+        /// <summary>
+        /// User Repository
+        /// </summary>
+        public UserRepository UserRepository
+        {
+            get
+            {
+                if (null == userRepository)
+                    userRepository = new UserRepository(ttmContext, uow);
+                return userRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSRRepository
+        /// </summary>
+        public IGenericDataRepository<TSR> TSRRepository
+        {
+            get
+            {
+                if (null == tsrRepository)
+                    tsrRepository = uow.GetRepository<TSR>();
+
+                return tsrRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSRCoreServicesRepository
+        /// </summary>
+        public IGenericDataRepository<TSRCoreService> TSRCoreServicesRepository
+        {
+            get
+            {
+                if (null == tsrCoreServicesRepository)
+                    tsrCoreServicesRepository = uow.GetRepository<TSRCoreService>();
+                return tsrCoreServicesRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSRReleventRepositoriesRepository
+        /// </summary>
+        public IGenericDataRepository<TSRRelevantRepository> TSRRelevantRepositoriesRepository
+        {
+            get
+            {
+                if (null == tsrReleventRepositoriesRepository)
+                    tsrReleventRepositoriesRepository = uow.GetRepository<TSRRelevantRepository>();
+                return tsrReleventRepositoriesRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSORepository
+        /// </summary>
+        public IGenericDataRepository<TSO> TSORepository
+        {
+            get
+            {
+                if (null == tsoRepository)
+                    tsoRepository = uow.GetRepository<TSO>();
+
+                return tsoRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSOServiceDeliveryChainRepository
+        /// </summary>
+        public IGenericDataRepository<TSOServiceDeliveryChain> TSOServiceDeliveryChainRepository
+        {
+            get
+            {
+                if (null == tsoServiceDeliveryChainRepository)
+                    tsoServiceDeliveryChainRepository = uow.GetRepository<TSOServiceDeliveryChain>();
+
+                return tsoServiceDeliveryChainRepository;
+            }
+        }
+
+        /// <summary>
+        /// TSOServiceDeliveryChainTaskRepository
+        /// </summary>
+        public IGenericDataRepository<TSOServiceDeliveryChainTask> TSOServiceDeliveryChainTaskRepository
+        {
+            get
+            {
+                if (null == tsoServiceDeliveryChainTaskRepository)
+                    tsoServiceDeliveryChainTaskRepository = uow.GetRepository<TSOServiceDeliveryChainTask>();
+
+                return tsoServiceDeliveryChainTaskRepository;
+            }
+        }
+
+        #endregion
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    ttmContext.Dispose();
+                    uow.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion
+    }
+}

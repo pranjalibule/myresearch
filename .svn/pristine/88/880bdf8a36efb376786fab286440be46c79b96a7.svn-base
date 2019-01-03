@@ -1,0 +1,495 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Service Request (TSR)</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=TSR.html";
+        }
+        else {
+            userId = getUrlVars()["user"];
+        }
+
+        if (CheckUser() == "") {
+            window.location = "index.html?page=TSR.html";
+        }
+
+        function NavigateTo(page) {
+            window.location = page;
+        }
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header">
+        <div>Test Service Request (TSR)</div>
+    </div>
+    <div class="leftDiv" style="height:900px;">
+        <table class="heading">
+            <tr>
+                <td>
+                    <img src="/images/if_Streamline-66_185086 (2).svg" width="100" />
+                </td>
+            </tr>
+            <tr>
+                <td align="right">
+                    <div id="lblUser"></div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <a href="#" onclick="NavigateTo('index.html')" id="logOut">LogOut</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <table class="heading">
+            <tr>
+                <td align="center">
+                    <div id="txtOutput"></div>
+                    <input type="button" value="TSR Dashboard" onclick="GotoTSRDashboard();" />
+                </td>
+            </tr>
+        </table>
+        <fieldset class="info">
+            To create a TSR you are asked to fill in the fields below. Fields indicated by * are mandatory. If you need to attach file(s) you should use the "Attach File" button in the ribbon and then follow the instructions. You can get an overview of all TSR items by using the "All TSRs" menu item in the left navigation.
+
+            Field validation is not performed as such so users must ensure data integrity as far as possible.  e.g. Make sure Start Dates are Before End Dates etc.  Also be advised that no consistency checks are built into the system e.g. no checks are performed to ensure that a TSO doesn't have a start date before its related TSR
+
+            Don't forget to save your data.
+            <br /><br />
+            In case of any questions please contact <a href="mailto:Rajesh.Gidwani@sqs.com" title="Send mail to Rajesh Gidwani"> Rajesh Gidwani </a> or <a href="mailto:Martin.Wieczorek@sqs.com" title="Send mail to Martin Wieczorek">Martin Wieczorek</a> by e-mail.
+        </fieldset>
+        <input type="hidden" id="TSRStartDate" />
+        <div class="scrollDiv" style="height:70vh;">
+            <table cellpadding="5" class="tsoPage">
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Title
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtTitle" type="text" size="36" maxlength="150" />
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Delivery manager
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtDeliveryManager" type="text" size="36" maxlength="150" />
+                                    <input id="lblDeliveryManagerMail" type="hidden" />
+                                    <input id="lblDeliveryManagerId" type="hidden" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr style="height:100px;">
+                    <td class="smallTiletd">
+                        Description
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field">
+                        <textarea id="txtDescription" rows="5" cols="92" maxlength="500"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Test Manager
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtTestManager" type="text" size="36" maxlength="150" />
+                                    <input id="lblTestManagerMail" type="hidden" />
+                                    <input id="lblTestManagerId" type="hidden" />
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Operational risk
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlOperationalrisk" style="width:250px"></select><br />Scale: 0 (no risk) - 10 (highest risk)
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Vertical
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlVertical" style="width:250px"></select>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Practice
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlPractice" style="width:250px"></select>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Solution centre
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlSolutioncentre" style="width:250px"></select>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Client Region
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlClientRegion" style="width:250px"></select>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Client
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtClient" type="text" size="36" maxlength="200" /><div class="waterInfo">Get from ERP system</div>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Account
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtAccount" type="text" size="36" maxlength="100" /><div class="waterInfo">Get from ERP system</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Engagement
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;padding:5px;">
+                                    <input id="txtEngagement" type="text" size="36" maxlength="200" /><div class="waterInfo">Get from ERP system</div>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Account Manager
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtAccountManager" type="text" size="36" maxlength="100" /><div class="waterInfo">Get from ERP system</div>
+                                    <input id="lblAccountManagerMail" type="hidden" />
+                                    <input id="lblAccountManagerId" type="hidden" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    ERP order number
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtERPOrderNumber" type="text" size="36" maxlength="200" /><div class="waterInfo">Get from ERP system</div>
+                                </td>
+                                <td class="smallTiletd" style="width:18.7% !important;padding:5px 0px;">
+                                    Market Offering
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlMarketOffering" style="width:250px"></select>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Start Date
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtStartDate" type="text" size="36" maxlength="100" /><div class="waterInfo">As per SoW</div>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Target Completion Date
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtTargetCompletionDate" type="text" size="36" maxlength="100" /><div class="waterInfo">As per SoW</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Estimated effort
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtEstimatedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                    <div class="waterInfo">Person days</div>
+                                </td>
+                                <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                    Planned effort
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <input id="txtPlannedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                    <div class="waterInfo">Person days</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd" style="width:18.7% !important;padding:5px 0px;">
+                                    Project Model
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:28% !important;padding:5px;">
+                                    <select id="ddlProjectModel" style="width:250px"></select>                                    
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd" style="width:18.7% !important;padding:5px 0px;">
+                                    Core Service(s)
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:75% !important;">
+                                    <table border="0" cellpadding="0" cellspacing="5" class="selectionSelectBox">
+                                        <tr>
+                                            <td>
+                                                <select multiple id="listCoreServices" style="width:320px;height:100px"></select>
+                                            </td>
+                                            <td style="width:13%;padding:13px 0px;">
+                                                <input type="button" id="AddCoreServices" value="Add" style="width:80px" title="Add core service(s)" />
+                                                <input type="button" id="RemoveCoreServies" value="Remove" style="width:80px" title="Remove core service(s)" />
+                                            </td>
+                                            <td>
+                                                <select multiple id="listCoreServicesSelected" style="width:320px;height:100px"></select>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd" style="width:18.7% !important;padding:5px 0px;">
+                                    Relevant repositories
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:75% !important;">
+                                    <table border="0" cellpadding="0" cellspacing="5" class="selectionSelectBox">
+                                        <tr>
+                                            <td>
+                                                <select multiple id="listRelevantRepositories" style="width:320px;height:100px"></select>
+                                            </td>
+                                            <td style="width:13%;padding:13px 0px;">
+                                                <input type="button" id="AddRelevantRepositories" value="Add" style="width:80px" title="Add Relevant Repositories" />
+                                                <input type="button" id="RemoveRelevantRepositories" value="Remove" style="width:80px" title="Remove Relevant Repositories" />
+                                            </td>
+                                            <td>
+                                                <select multiple id="listRelevantRepositoriesSelected" style="width:320px;height:100px"></select>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="height:35px;">
+                        <table class="tsoPage">
+                            <tr>
+                                <td class="smallTiletd" style="width:18.7% !important;padding:5px 0px;">
+                                    File Upload
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field" style="width:75% !important;">
+                                    <table border="0" cellpadding="0" cellspacing="5" class="selectionSelectBox">
+                                        <tr>
+                                            <td class="smallTiletd" style="width:100% !important;">
+                                                <form action="" method="post" enctype="multipart/form-data" id="FileUploadForm">
+                                                    <input type="button" value="Select" id="upload" onclick="SelectFile();" />
+                                                    <input type="file" id="fileUpload" style="display:none" multiple />
+                                                    <div class="waterInfo">
+                                                        Select single or multiple files, and then press Save for upload.
+                                                    </div>
+                                                    <!--<input type="button" value="Upload" id="upload" onclick="showUpload();" />-->
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <div style="width:92%;">
+                <table id="TSRFileTable" cellspacing="0" cellpadding="2" class="table" style="padding:0px;width:77%;float:right;">
+                    <thead>
+                        <tr style="background-color:transparent;">
+                            <th style="width:13%;height: 26px;" align="center">No</th>
+                            <th style="width:80%;height: 26px;" align="left">File Name</th>
+                            <th style="width:10%;height: 26px;" align="center">Show</th>
+                            <th style="width:10%;height: 26px;" align="center">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tsrfiledetails"></tbody>
+                </table>
+            </div>
+            <table class="tsoPage">
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="button" value="Submit" onclick="Save();" />&nbsp;&nbsp;
+                        <input type="button" value="Cancel" onclick="Cancel();">&nbsp;&nbsp;&nbsp;&nbsp;
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <iframe id="frame" style="display:none"></iframe>
+        <div id="pager" class="pager" style="display:none">
+            <table border="0">
+                <tr>
+                    <td valign="middle"><img src="images/first.png" class="first" /></td>
+                    <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                    <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                    <td valign="middle"><img src="images/next.png" class="next" /></td>
+                    <td valign="middle"><img src="images/last.png" class="last" /></td>
+                    <td valign="middle">
+                        <select id="pagesize">
+                            <option selected="selected" value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script type="text/javascript" src="/scripts/tsr.js"></script>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+
+        $(document).ready(function () {
+            try {
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+
+                $("#lblUser").text(userName);
+
+                var tsrId = getUrlVars()["tsrid"];
+
+                //Set Auto complete options for AD user and display
+                SetAutoCompleteForAD("txtDeliveryManager", "lblDeliveryManagerMail");
+                SetAutoCompleteForAD("txtTestManager", "lblTestManagerMail");
+                SetAutoCompleteForAD("txtAccountManager", "lblAccountManagerMail");
+
+                LoadVertical();
+                LoadPractice();
+                LoadSolutionCentre();
+                LoadClientRegion();
+                LoadMarketOffering();
+                LoadOperationalRisk();
+                LoadCoreServices();
+                LoadReliventRepositories();
+
+                if (tsrId != null && tsrId != "") {
+                    $("#txtID").val(tsrId);
+
+                    LoadTSR(tsrId);
+                }
+
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+
+        });
+
+        function GotoTSRDashboard() {
+            window.location = "TSRDashboard.html?user=" + encodeURI(userId);
+        }
+
+    </script>
+
+</body>
+</html>

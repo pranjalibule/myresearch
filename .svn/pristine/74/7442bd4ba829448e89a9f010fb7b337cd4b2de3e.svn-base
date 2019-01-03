@@ -1,0 +1,103 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 02Nov2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DAL
+{
+    using SQS.nTier.TTM.GenericFramework;
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    [Table("TSOServiceDeliveryChainTask")]
+    public class TSOServiceDeliveryChainTask : IBaseEntity
+    {
+        [Key, Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ID { get; set; }
+
+        public int TSOServiceDeliveryChainId { get; set; }
+
+        public string PercentageComplete { get; set; }
+
+        [StringLength(500)]
+        public string Notes { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime TargetCompletionDate { get; set; }
+
+        public double PlannedEffort { get; set; }
+
+        public DateTime ActualStartDate { get; set; }
+
+        public DateTime? ActualCompletionDate { get; set; }
+
+        public double ActualEffort { get; set; }
+
+        public int EffortsEnteredUntil { get; set; }
+
+        public double PlannedProductivity { get; set; }
+
+        public double ActualProductivity { get; set; }
+
+        public int? PlannedOutcome { get; set; }
+
+        public int? ActualOutcome { get; set; }
+
+        public int? PlannedServiceQuality { get; set; }
+
+        public int? ActualServiceQuality { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string CreatedBy { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string UpdatedBy { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
+
+        public int Version { get; set; }
+
+        public virtual TSOServiceDeliveryChain TSOServiceDeliveryChain { get; set; }
+
+        [NotMapped]
+        public ObjectSate ObjectSate
+        {
+            get; set;
+        }
+
+        public int DefectRaised { get; set; }
+
+        public int DefectRejeceted { get; set; }
+
+        public double PlannedProductivityIB { get; set; }
+
+        public double ActualProductivityIB { get; set; }
+
+        public int PlannedProcessingTime { get; set; }
+
+        public int ActualProcessingTime { get; set; }
+
+        public string PlannedInput { get; set; }
+
+        public string ActualInput { get; set; }
+
+        public int TaskStatusId { get; set; }
+        public int IdleTimeEffort { get; set; }
+        public int IdleTimeDuration { get; set; }
+        public double Headcount { get; set; }
+
+    }
+}

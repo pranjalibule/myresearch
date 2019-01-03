@@ -1,0 +1,420 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit http://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\PublishFolder\TTMPortal</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="bin/Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csc.exe">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csc.exe.config">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csc.rsp">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csi.exe">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csi.exe.config">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/csi.rsp">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.Build.Tasks.CodeAnalysis.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.CSharp.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.CSharp.Scripting.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.Scripting.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.VisualBasic.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CSharp.Core.targets">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.DiaSymReader.Native.amd64.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.DiaSymReader.Native.x86.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.VisualBasic.Core.targets">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.Win32.Primitives.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.AppContext.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Collections.Immutable.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Console.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Diagnostics.FileVersionInfo.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Diagnostics.Process.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Diagnostics.StackTrace.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.IO.Compression.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.IO.FileSystem.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.IO.FileSystem.DriveInfo.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.IO.FileSystem.Primitives.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.IO.Pipes.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Reflection.Metadata.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.AccessControl.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Claims.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Cryptography.Algorithms.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Cryptography.Encoding.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Cryptography.Primitives.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Cryptography.X509Certificates.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Security.Principal.Windows.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Text.Encoding.CodePages.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Threading.Thread.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.ValueTuple.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Xml.ReaderWriter.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Xml.XmlDocument.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Xml.XPath.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Xml.XPath.XDocument.dll">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/vbc.exe">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/vbc.exe.config">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/vbc.rsp">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/VBCSCompiler.exe">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/roslyn/VBCSCompiler.exe.config">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="bin/SQS.nTier.TTM.Web.dll">
+      <publishTime>12/19/2018 15:39:35</publishTime>
+    </File>
+    <File Include="images/588a6695d06f6719692a2d1c.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/Contact Us.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/cross.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/first.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/Help.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/Home.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/if_Streamline-66_185086 %282%29.svg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/if_Streamline-66_185086.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/if_Streamline-66_185086.svg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/iMS-Logo.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/last.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/load.gif">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/loader.gif">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/logOff.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/logo_sqs.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/main_bg.jpg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/next.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/pdf-icon.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/power-button.svg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/prev.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/refresh.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/search.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/sqs_logo.jpg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/TTM-Master-Log.jpg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/TTM-master.jpg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/TTM-Portal 2.jpg">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/TTM-Portal-title.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/TTM-Portal.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="images/User.png">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Client.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/ClientRegion.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/CoreService.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Engagement.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Index.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Login.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/MarketOffering.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Method.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/OperationalRisk.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/OperationalRiskIndicator.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Practice.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/PricingModel.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/ProductivityInput.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/ProductivityOutcome.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/ProjectModel.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/QGPassed.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/RelevantRepository.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/RiskStatus.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Roles.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/ServiceDeliveryChain.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/SolutionCentre.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/TaskStatus.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/TSOStatus.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/TSRStatus.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Users.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/UserType.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Masters/Vertical.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/common.js">
+      <publishTime>12/18/2018 15:35:37</publishTime>
+    </File>
+    <File Include="scripts/dateformt.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/index.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/jquery-3.1.1.min.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/jquery-ui.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/taskRisk.js">
+      <publishTime>12/20/2018 14:25:05</publishTime>
+    </File>
+    <File Include="scripts/tasks.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/tso.js">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="scripts/tsr.js">
+      <publishTime>12/28/2018 12:21:45</publishTime>
+    </File>
+    <File Include="styles/css.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="styles/jquery-ui.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="styles/Master.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="styles/Site.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="styles/strength.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="styles/TTM.css">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/ActivateUser.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/Help.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/Home.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/index.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/ManagementTasks.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/RISKDashboard.html">
+      <publishTime>12/18/2018 14:03:09</publishTime>
+    </File>
+    <File Include="TTM/TASKDashboard.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/TaskRisk.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/Tasks.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/TSO.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/TSODashboard.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/TSR.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/TSRDashboard.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="TTM/Wiki.html">
+      <publishTime>12/18/2018 12:52:41</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>12/19/2018 15:39:36</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

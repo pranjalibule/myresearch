@@ -1,0 +1,30 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>TTM Activate User</title>
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link rel="stylesheet" href="/Styles/css.css" />
+</head>
+
+<body>
+
+    <div class="title_bg">
+        <div class="title_name">TTM Portal</div>
+        <div class="logo"></div>
+    </div>
+    <div style="text-align:right"><a href="#" onclick="NavigateTo()">Login</a></div>
+    <div class="new_credential" id="divActivationMessage" style="display:none">
+        <h1>Activate your account</h1>
+        <p>Thank you for activating your account. Please wait for the moderator's mail for further details.</p>
+    </div>
+    <div class="new_credential" id="divMessage">
+        <label id="lblMessage">Activating..</label>
+    </div>
+    <div id="footer"><div class="footer_text">© 2017 copyright  |  <a href="#">Disclaimer</a></div></div>
+    <script src="/scripts/ActivateUser.min.js">  
+    </script>
+</body>
+</html>

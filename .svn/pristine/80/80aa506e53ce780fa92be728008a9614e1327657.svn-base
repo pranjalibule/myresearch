@@ -1,0 +1,204 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+using SQS.nTier.TTM.Encryption;
+using System;
+using System.Configuration;
+using System.Net;
+using System.Net.Mail;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+
+namespace SQS.nTier.TTM.WebAPI.Common
+{
+    public class Utility
+    {
+        #region Private Variables
+
+        private readonly string Host;
+        int Port;
+        string EmailUserName;
+        string EmailPassword;
+        string FromEmailID;
+        string FromEmailDisplay;
+        string AdministratorEmail;
+        string ApplicationUrl;
+        string Domain;
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// GetSMTPClient
+        /// </summary>
+        /// <returns>SmtpClient</returns>
+        private SmtpClient GetSMTPClient()
+        {
+            SmtpClient oclient = new SmtpClient(Host, Port);
+
+            oclient.EnableSsl = true;
+            oclient.DeliveryMethod = SmtpDeliveryMethod.Network;
+            oclient.UseDefaultCredentials = false;
+            oclient.Credentials = new NetworkCredential(EmailUserName, EmailPassword);
+
+            return oclient;
+        }
+
+        /// <summary>
+        /// GetMailMessage
+        /// </summary>
+        /// <param name="message">string</param>
+        /// <param name="subject">string</param>
+        /// <returns></returns>
+        private MailMessage GetMailMessage(string message, string subject)
+        {
+            MailMessage mailMessage = new MailMessage();
+            mailMessage.From = new MailAddress(FromEmailID, FromEmailDisplay); //From Email Id
+            mailMessage.Subject = subject; //Subject of Email
+            mailMessage.Body = message; //body or message of Email
+            mailMessage.IsBodyHtml = true;
+
+            return mailMessage;
+        }
+
+        #endregion
+
+        #region Default Constructor
+
+        /// <summary>
+        /// Utility
+        /// </summary>
+        public Utility()
+        {
+            CryptorEngine objCryptorEngine = new CryptorEngine();
+
+            Host = ConfigurationManager.AppSettings["Host"];
+            Port = int.Parse(ConfigurationManager.AppSettings["Port"]);
+            EmailUserName = ConfigurationManager.AppSettings["EmailUserName"];
+            EmailPassword = ConfigurationManager.AppSettings["EmailPwd"];
+            FromEmailID = ConfigurationManager.AppSettings["FromEmail"];
+            FromEmailDisplay = ConfigurationManager.AppSettings["FromEmailDisplay"];
+            AdministratorEmail = ConfigurationManager.AppSettings["AdministratorEmail"];
+            ApplicationUrl = ConfigurationManager.AppSettings["ApplicationUrl"];
+            Domain = ConfigurationManager.AppSettings["Domain"];
+
+            objCryptorEngine = null;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// SendWelcomeMail
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="email"></param>
+        public void SendMail(string userName, string emailId, string activationKey, MailType objMailType, string strType = "", string strName= "")
+        {
+            try
+            {
+                //SmtpClient settings
+                SmtpClient oclient = GetSMTPClient();
+
+                string urlForPasting = string.Empty;
+
+                if (ApplicationUrl.Contains("https"))
+                {
+                    urlForPasting = ApplicationUrl.Replace("https:", "<span>https:</span>");
+                }
+                else
+                {
+                    urlForPasting = ApplicationUrl.Replace("http:", "<span>http:</span>");
+                }
+
+                urlForPasting = urlForPasting.Replace("//", "<span>//</span>");
+
+                string strMessage = string.Empty;
+                string strSubject = string.Empty;
+
+                if (objMailType == MailType.Welcome)
+                {
+                    strMessage = string.Format(ServiceWebConstants.WelcomeMailText, userName, ApplicationUrl, activationKey, urlForPasting, activationKey);
+                    strSubject = "Welcome to TTM Portal";
+                }
+                else if (objMailType == MailType.ForgotPassword)
+                {
+                    strMessage = string.Format(ServiceWebConstants.ForgotMailText, userName, ApplicationUrl, activationKey, urlForPasting, activationKey);
+                    strSubject = "TTM Portal - Reset account password";
+                }
+                else if (objMailType == MailType.PasswordReset)
+                {
+                    strMessage = string.Format(ServiceWebConstants.PasswordResetMailText, userName);
+                    strSubject = "TTM Portal - Reset account password";
+                }
+                else if (objMailType == MailType.UserAssignment)
+                {
+                    strMessage = string.Format(ServiceWebConstants.UserAssignmentMailText, userName, strType, strName);
+                    strSubject = "TTM Portal - Reset account password";
+                }
+                //Getting the object of MailMessage
+                MailMessage mailMessage = GetMailMessage(strMessage, strSubject);
+
+                mailMessage.To.Add(emailId);
+
+                if (!string.IsNullOrWhiteSpace(AdministratorEmail))
+                    mailMessage.CC.Add(AdministratorEmail);
+
+                ServicePointManager.ServerCertificateValidationCallback =
+                        delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) { return true; };
+
+                oclient.Send(mailMessage); //sending Email
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public void SendMail(string userName, string Useremailid)
+        {
+            try
+            {
+                //SmtpClient settings
+                SmtpClient oclient = GetSMTPClient();
+
+                string urlForPasting = string.Empty;
+
+                if (ApplicationUrl.Contains("https"))
+                    urlForPasting = ApplicationUrl.Replace("https:", "<span>https:</span>");
+                else
+                    urlForPasting = ApplicationUrl.Replace("http:", "<span>http:</span>");
+
+                urlForPasting = urlForPasting.Replace("//", "<span>//</span>");
+
+                string strMessage = string.Empty;
+                string strSubject = string.Empty;
+
+                strMessage = string.Format(ServiceWebConstants.ActivationEmailText, userName);
+                strSubject = "TTM Portal Access Request";
+
+                
+                MailMessage mailMessage = GetMailMessage(strMessage, strSubject);
+                mailMessage.To.Add(AdministratorEmail);
+                mailMessage.CC.Add(Useremailid);
+
+                ServicePointManager.ServerCertificateValidationCallback =
+                        delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) { return true; };
+
+                oclient.Send(mailMessage); //sending Email
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+    }
+}

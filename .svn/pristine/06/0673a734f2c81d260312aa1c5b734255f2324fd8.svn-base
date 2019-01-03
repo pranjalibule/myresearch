@@ -1,0 +1,2217 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS  04Oct2017   Created the class
+ * AKS  01Dec2017   Added logic to check unique TSO title
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using RoleAttribute;
+    using System;
+    using System.Collections.Generic;
+    using System.Configuration;
+    using System.Data.Entity.Validation;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// TSOController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class TSOController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetTSOById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <param name="loadEntities">bool</param>
+        /// <returns>TSO</returns>
+        private TSODTO GetTSOById(int id, bool loadEntities = true)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            TSODTO objTSODTO = null;
+
+            try
+            {
+                TSO objTSO = null;
+
+                if (loadEntities)
+                {
+                    objTSO = objBusinessLayer.TSORepository.GetSingle(x => x.ID == id,
+                    x => x.TeamLead,
+                    x => x.OperationalRisk,
+                    x => x.TSOServiceDeliveryChains,
+                    x => x.TSOStatus,
+                    x => x.TSR);
+                }
+                else
+                {
+                    objTSO = objBusinessLayer.TSORepository.GetSingle(x => x.ID == id);
+                }
+
+                if (null != objTSO)
+                {
+                    objTSODTO = new TSODTO();
+                    objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+
+                    ProjectModelController pmC = new ProjectModelController();
+                    if (objTSODTO.TSR == null)
+                    {
+                        TSRController tsrC = new TSRController();
+                        objTSODTO.TSR = tsrC.GetTSR(objTSODTO.TSRId);
+                    }
+                    objTSODTO.TSR.ProjectModelName = pmC.GetProjectModelNameById(objTSODTO.TSR.ProjectModelID);
+                }
+
+                //TSOStatusDTO objTSOStatusDTO = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                //objTSODTO.TSOStatus = objTSOStatusDTO;
+
+                //CoreServiceDTO objCoreServiceDTO = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                //objTSODTO.CoreService = objCoreServiceDTO;
+
+                //TSRDTO objSTRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                //objTSODTO.TSR = objSTRDTO;
+
+                //OperationalRiskDTO objOperationalRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+                //objTSODTO.OperationalRisk = objOperationalRiskDTO;
+
+                if (objTSODTO.ActualEffort == null)
+                {
+                    objTSODTO.ActualEffort = 0;
+                }
+
+                int taskCC = 0;
+                int taskCount = 0;
+                objTSODTO.CanClose = false;
+                double ChildTaskPlannedEffortSum = 0;
+                foreach (TSOServiceDeliveryChainDTO dileverychain in objTSODTO.TSOServiceDeliveryChains)
+                {
+                    TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTOList = this.GetLastTSOServiceDeliveryChainTask(dileverychain.ID);
+                    //IList<TSOServiceDeliveryChainTaskDTO> objTSOServiceDeliveryChainTaskDTOList = this.GetLastTSOServiceDeliveryChainTaskList(dileverychain.ID).OrderBy(x => x.UpdatedOn).ToList();
+                    taskCount++;
+                    if (objTSOServiceDeliveryChainTaskDTOList != null)
+                    {
+                        //foreach (TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO in objTSOServiceDeliveryChainTaskDTOList)
+                        //{
+                        objTSODTO.ActualEffort = Convert.ToInt32(objTSODTO.ActualEffort) + Convert.ToInt32(Math.Round(objTSOServiceDeliveryChainTaskDTOList.ActualEffortCumulative, MidpointRounding.AwayFromZero));
+                        ChildTaskPlannedEffortSum = ChildTaskPlannedEffortSum + (objTSOServiceDeliveryChainTaskDTOList.PlannedEffort ?? 0);
+                        if (objTSOServiceDeliveryChainTaskDTOList.TaskStatusId > 0)
+                        {
+                            if (GetTaskStatus(objTSOServiceDeliveryChainTaskDTOList.TaskStatusId) == "cancelled"
+                                || GetTaskStatus(objTSOServiceDeliveryChainTaskDTOList.TaskStatusId) == "closed")
+                            {
+                                if (objTSODTO.CloseTaskIds == null || objTSODTO.CloseTaskIds == "")
+                                {
+                                    objTSODTO.CloseTaskIds = objTSOServiceDeliveryChainTaskDTOList.TSOServiceDeliveryChainId.ToString();
+                                    taskCC++;
+                                }
+                                else
+                                {
+                                    if (!objTSODTO.CloseTaskIds.Contains(objTSOServiceDeliveryChainTaskDTOList.TSOServiceDeliveryChainId.ToString()))
+                                    {
+                                        objTSODTO.CloseTaskIds = objTSODTO.CloseTaskIds + "," + objTSOServiceDeliveryChainTaskDTOList.TSOServiceDeliveryChainId;
+                                        taskCC++;
+                                    }
+                                }
+                            }
+                        }
+                        //}
+                    }
+                }
+                objTSODTO.ChildTaskPlannedEffortSum = ChildTaskPlannedEffortSum;
+                if (taskCC == taskCount)
+                {
+                    objTSODTO.CanClose = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSODTO;
+        }
+
+        public string GetTaskStatus(int statusId)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            string status = null;
+            try
+            {
+                TaskStatus objTaskStatus = objBusinessLayer.TaskStatusRepository.GetSingle(x => x.ID == statusId);
+                status = objTaskStatus.Name.ToLower();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+            return status;
+        }
+        private IList<TSODTO> GetTSOByTitleOrClient(int startingRecordNumber, int pageSize, string strTitleOrClient, int status, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            IList<TSODTO> objTSODTOList = new List<TSODTO>();
+            IList<TSO> objTSOList = null; totalRecords = 0;
+            TSODTO objTSODTO = new TSODTO();
+
+            try
+            {
+                if (strTitleOrClient != "none")
+                {
+                    if (status != 0)
+                    {
+                        objTSOList = objBusinessLayer.TSORepository.GetList(startingRecordNumber, pageSize, x => x.TSOStatusID == status && (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.ID, false, out totalRecords, x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository, x => x.TSR.PricingModel, x => x.TSR.Engagement, x => x.TSR.ClientRegion, x => x.TSR.SolutionCentre, x => x.TSR.TSRCoreServices, x => x.TSR.OperationalRisk, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.TestManager, x => x.TSR.Vertical, x => x.TSR.Practice, x => x.TSR.MarketOffering, x => x.TSOServiceDeliveryChains);
+                    }
+                    else
+                    {
+                        objTSOList = objBusinessLayer.TSORepository.GetList(startingRecordNumber, pageSize, x => (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.ID, false, out totalRecords, x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository, x => x.TSR.PricingModel, x => x.TSR.Engagement, x => x.TSR.ClientRegion, x => x.TSR.SolutionCentre, x => x.TSR.TSRCoreServices, x => x.TSR.OperationalRisk, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.TestManager, x => x.TSR.Vertical, x => x.TSR.Practice, x => x.TSR.MarketOffering, x => x.TSOServiceDeliveryChains);
+                    }
+                }
+                else
+                {
+                    if (status != 0)
+                    {
+                        objTSOList = objBusinessLayer.TSORepository.GetList(startingRecordNumber, pageSize, x => x.TSOStatusID == status, x => x.ID, false, out totalRecords, x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository, x => x.TSR.PricingModel, x => x.TSR.Engagement, x => x.TSR.ClientRegion, x => x.TSR.SolutionCentre, x => x.TSR.TSRCoreServices, x => x.TSR.OperationalRisk, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.TestManager, x => x.TSR.Vertical, x => x.TSR.Practice, x => x.TSR.MarketOffering, x => x.TSOServiceDeliveryChains);
+                    }
+                    else
+                    {
+                        objTSOList = objBusinessLayer.TSORepository.GetList(startingRecordNumber, pageSize, x => x.ID != 0, x => x.ID, false, out totalRecords, x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository, x => x.TSR.PricingModel, x => x.TSR.Engagement, x => x.TSR.ClientRegion, x => x.TSR.SolutionCentre, x => x.TSR.TSRCoreServices, x => x.TSR.OperationalRisk, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.TestManager, x => x.TSR.Vertical, x => x.TSR.Practice, x => x.TSR.MarketOffering, x => x.TSOServiceDeliveryChains);
+                    }
+                }
+
+                if (objTSOList != null && objTSOList.Count > 0)
+                {
+                    objTSODTOList = new List<TSODTO>();
+
+                    foreach (TSO objTSO in objTSOList)
+                    {
+
+                        double? ActualEffort = 0;
+                        if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                        {
+                            foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                ServiceDeliveryChain objServiceDeliveryChain = objBusinessLayer.ServiceDeliveryChainRepository.GetByID(objTSOServiceDeliveryChain.ServiceDeliveryChainId);
+
+                                if (null != objServiceDeliveryChain)
+                                {
+                                    objTSOServiceDeliveryChain.ServiceDeliveryChain = objServiceDeliveryChain;
+                                }
+
+                                TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTask(objTSOServiceDeliveryChain.ID);
+                                if (objTSOServiceDeliveryChainTaskDTO != null)
+                                {
+                                    ActualEffort = ActualEffort + (objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative);
+                                }
+                            }
+                        }
+
+                        // TSODTO objTSODTO = new TSODTO();
+                        objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+                        var TSOServiceDeliveryChainsDTO = objTSODTO.TSOServiceDeliveryChains.ToList();
+                        foreach (TSOServiceDeliveryChainDTO item in TSOServiceDeliveryChainsDTO)
+                        {
+                            // objBusinessLayer = new BusinessLayer(ls);
+                            // var task = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetSingle(x => x.TSOServiceDeliveryChainId == item.ID);
+                            var task = this.GetLastTSOServiceDeliveryChainTask(item.ID);
+                            if (task != null && task.TaskStatusId != 0)
+                            {
+                                item.TaskStatus = GetTaskStatus(task.TaskStatusId);
+                            }
+                        }
+                        objTSODTO.TeamLead = Conversions.ToDTO<UserDTO, User>(objTSO.TeamLead);
+                        objTSODTO.TSOStatus = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                        objTSODTO.TSR = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                        objTSODTO.CoreService = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                        objTSODTO.OperationalRisk = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+
+                        TSOStatusDTO objTSOStatusDTO = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                        SolutionCentreDTO objSolutionCentreDTO = Conversions.ToDTO<SolutionCentreDTO, SolutionCentre>(objTSO.TSR.SolutionCentre);
+
+                        //objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+                        objTSODTO.TSOStatus = objTSOStatusDTO;
+
+                        ClientDTO objClientDTO = Conversions.ToDTO<ClientDTO, Client>(objTSO.TSR.Client);
+
+                        TSRDTO objTSRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                        objTSRDTO.SolutionCentre = objSolutionCentreDTO;
+                        objTSRDTO.Client = objClientDTO;
+
+                        // TSOServiceDeliveryChainDTO objTSOServiceDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSO.TSOServiceDeliveryChains);
+                        //objTSODTO.TSOServiceDeliveryChains = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSO.TSOServiceDeliveryChains);
+                        objTSODTO.TeamLead = Conversions.ToDTO<UserDTO, User>(objTSO.TeamLead);
+                        objTSODTO.TSR = objTSRDTO;
+                        objTSODTO.CoreService = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                        objTSODTO.OperationalRisk = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+                        objTSODTO.RelevantRepository = Conversions.ToDTO<RelevantRepositoryDTO, RelevantRepository>(objTSO.RelevantRepository);
+
+                        objTSODTO.ActualEffort = ActualEffort;
+                        objTSODTOList.Add(objTSODTO);
+                    }
+
+                    totalRecords = objTSODTOList.Count;
+                }
+
+                totalRecords = objTSOList.Count();
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            if (null == objTSOList)
+            {
+                //throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+
+            return objTSODTOList;
+        }
+
+        /// <summary>
+        /// GetAllTSO
+        /// </summary>
+        /// <returns>IList<TSO>></returns>
+        private IList<TSODTO> GetAllTSO(int tsrId, int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSODTO> objTSODTOList = null;
+            totalRecords = 0;
+            try
+            {
+                // IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == tsrId, x => x.TSOServiceDeliveryChains, x => x.TSR, x=> x.TSOStatus,x=>x.TeamLead,x=>x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetAllWithWhere(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords, x => x.TSRId == tsrId, x => x.TSR, x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                if (objTSOList != null && objTSOList.Count > 0)
+                {
+                    objTSODTOList = new List<TSODTO>();
+
+                    foreach (TSO objTSO in objTSOList)
+                    {
+                        UserDTO tl = Conversions.ToDTO<UserDTO, User>(objTSO.TeamLead);
+                        double? ActualEffort = 0;
+                        if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                        {
+                            foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                ServiceDeliveryChain objServiceDeliveryChain = objBusinessLayer.ServiceDeliveryChainRepository.GetByID(objTSOServiceDeliveryChain.ServiceDeliveryChainId);
+
+                                if (null != objServiceDeliveryChain)
+                                {
+                                    objTSOServiceDeliveryChain.ServiceDeliveryChain = objServiceDeliveryChain;
+                                }
+
+                                TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTask(objTSOServiceDeliveryChain.ID);
+                                if (objTSOServiceDeliveryChainTaskDTO != null)
+                                {
+                                    ActualEffort = ActualEffort + (objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative);
+                                }
+                            }
+                        }
+
+                        TSODTO objTSODTO = new TSODTO();
+                        objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+
+                        var TSOServiceDeliveryChainsDTO = objTSODTO.TSOServiceDeliveryChains.ToList();
+                        foreach (TSOServiceDeliveryChainDTO item in TSOServiceDeliveryChainsDTO)
+                        {
+                            //objBusinessLayer = new BusinessLayer(ls);
+                            //var task = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetSingle(x=>x.TSOServiceDeliveryChainId==item.ID);
+                            //if (task != null)
+                            //{
+                            //    item.TaskStatus = GetTaskStatus(task.TaskStatusId);
+                            //}
+                            var task = this.GetLastTSOServiceDeliveryChainTask(item.ID);
+                            if (task != null && task.TaskStatusId != 0)
+                            {
+                                item.TaskStatus = GetTaskStatus(task.TaskStatusId);
+                            }
+                        }
+
+                        TSOStatusDTO objTSOStatusDTO = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                        objTSODTO.TSOStatus = objTSOStatusDTO;
+
+                        CoreServiceDTO objCoreServiceDTO = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                        objTSODTO.CoreService = objCoreServiceDTO;
+
+                        TSRDTO objSTRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                        objTSODTO.TSR = objSTRDTO;
+
+                        OperationalRiskDTO objOperationalRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+                        objTSODTO.OperationalRisk = objOperationalRiskDTO;
+
+                        objTSODTO.ActualEffort = ActualEffort;
+                        objTSODTO.TeamLead = tl;
+                        objTSODTOList.Add(objTSODTO);
+                    }
+
+                    totalRecords = objTSODTOList.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSODTOList;
+        }
+
+        /// <summary>
+        /// GetAllTSO
+        /// </summary>
+        /// <returns>IList<TSO>></returns>
+        private IList<TSODTO> GetAllTSO()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSODTO> objTSODTOList = null;
+            try
+            {
+                IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetAll(x => x.TSOServiceDeliveryChains, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository, x => x.TSR.PricingModel, x => x.TSR.Engagement, x => x.TSR.ClientRegion, x => x.TSR.SolutionCentre, x => x.CoreService, x => x.TSR.OperationalRisk, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.TestManager, x => x.TSR.Vertical, x => x.TSR.Practice, x => x.TSR.MarketOffering);
+
+                if (objTSOList != null && objTSOList.Count > 0)
+                {
+                    objTSODTOList = new List<TSODTO>();
+
+                    foreach (TSO objTSO in objTSOList)
+                    {
+                        UserDTO tl = Conversions.ToDTO<UserDTO, User>(objTSO.TeamLead);
+                        double? ActualEffort = 0;
+                        if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                        {
+                            foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                ServiceDeliveryChain objServiceDeliveryChain = objBusinessLayer.ServiceDeliveryChainRepository.GetByID(objTSOServiceDeliveryChain.ServiceDeliveryChainId);
+
+                                if (null != objServiceDeliveryChain)
+                                {
+                                    objTSOServiceDeliveryChain.ServiceDeliveryChain = objServiceDeliveryChain;
+                                }
+
+                                TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTask(objTSOServiceDeliveryChain.ID);
+                                if (objTSOServiceDeliveryChainTaskDTO != null)
+                                {
+                                    ActualEffort = ActualEffort + (objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative);
+                                }
+                            }
+                        }
+
+                        TSODTO objTSODTO = new TSODTO();
+                        objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+                        var TSOServiceDeliveryChainsDTO = objTSODTO.TSOServiceDeliveryChains.ToList();
+                        foreach (TSOServiceDeliveryChainDTO item in TSOServiceDeliveryChainsDTO)
+                        {
+                            var task = this.GetLastTSOServiceDeliveryChainTask(item.ID);
+                            if (task != null && task.TaskStatusId != 0)
+                            {
+                                item.TaskStatus = GetTaskStatus(task.TaskStatusId);
+                            }
+                        }
+
+                        TSOStatusDTO objTSOStatusDTO = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                        objTSODTO.TSOStatus = objTSOStatusDTO;
+
+                        CoreServiceDTO objCoreServiceDTO = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                        objTSODTO.CoreService = objCoreServiceDTO;
+
+                        TSRDTO objSTRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                        objTSODTO.TSR = objSTRDTO;
+
+                        OperationalRiskDTO objOperationalRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+                        objTSODTO.OperationalRisk = objOperationalRiskDTO;
+
+                        objTSODTO.ActualEffort = ActualEffort;
+                        objTSODTO.TeamLead = tl;
+                        objTSODTOList.Add(objTSODTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSODTOList;
+        }
+
+        /// <summary>
+        /// GetAllTSO
+        /// </summary>
+        /// <returns>IList<TSO>></returns>
+        private IList<TSODTO> GetAllUserTSO(int startingRecordNumber, int pageSize, string userId, out int totalRecords, bool isadmin = false)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSODTO> objTSODTOList = null;
+            totalRecords = 0;
+            try
+            {
+                int userID = Convert.ToInt32(userId);
+                IList<TSO> objTSOList;
+                // Note- Currently we are showing all record in TSO dashboard as per discussion
+
+
+                objTSOList = objBusinessLayer.TSORepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TeamLead, x => x.TSOStatus, x => x.TSOServiceDeliveryChains, x => x.OperationalRisk, x => x.CoreService, x => x.RelevantRepository);
+
+                if (objTSOList != null && objTSOList.Count > 0)
+                {
+                    objTSODTOList = new List<TSODTO>();
+
+                    foreach (TSO objTSO in objTSOList)
+                    {
+                        double? ActualEffort = 0;
+                        if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                        {
+                            foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                ServiceDeliveryChain objServiceDeliveryChain = objBusinessLayer.ServiceDeliveryChainRepository.GetByID(objTSOServiceDeliveryChain.ServiceDeliveryChainId);
+
+                                if (null != objServiceDeliveryChain)
+                                {
+                                    objTSOServiceDeliveryChain.ServiceDeliveryChain = objServiceDeliveryChain;
+                                }
+
+                                TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTask(objTSOServiceDeliveryChain.ID);
+                                if (objTSOServiceDeliveryChainTaskDTO != null)
+                                {
+                                    ActualEffort = ActualEffort + (objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative);
+                                }
+                            }
+                        }
+
+                        TSODTO objTSODTO = new TSODTO();
+                        objTSODTO = Conversions.ToDTO<TSODTO, TSO>(objTSO);
+                        var TSOServiceDeliveryChainsDTO = objTSODTO.TSOServiceDeliveryChains.ToList();
+                        foreach (TSOServiceDeliveryChainDTO item in TSOServiceDeliveryChainsDTO)
+                        {
+                            var task = this.GetLastTSOServiceDeliveryChainTask(item.ID);
+                            if (task != null && task.TaskStatusId != 0)
+                            {
+                                item.TaskStatus = GetTaskStatus(task.TaskStatusId);
+                            }
+                        }
+                        objTSODTO.TeamLead = Conversions.ToDTO<UserDTO, User>(objTSO.TeamLead);
+                        objTSODTO.TSOStatus = Conversions.ToDTO<TSOStatusDTO, TSOStatus>(objTSO.TSOStatus);
+                        objTSODTO.TSR = Conversions.ToDTO<TSRDTO, TSR>(objTSO.TSR);
+                        objTSODTO.CoreService = Conversions.ToDTO<CoreServiceDTO, CoreService>(objTSO.CoreService);
+                        objTSODTO.OperationalRisk = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSO.OperationalRisk);
+
+                        objTSODTO.ActualEffort = ActualEffort;
+                        objTSODTOList.Add(objTSODTO);
+                    }
+
+                    totalRecords = objTSODTOList.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSODTOList;
+        }
+
+
+        /// <summary>
+        /// Function to add new TSO 
+        /// </summary>
+        /// <param name="objTSO"></param>
+        /// <returns></returns>
+        private string AddNewTSO(TSODTO objTSODTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = objTSODTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSO chkTSO = null;
+                chkTSO = objBusinessLayer.TSORepository.GetSingle(x => x.Title == objTSODTO.Title && x.TSRId == objTSODTO.TSRId);
+
+                if (chkTSO != null)
+                {
+                    returnMessage = "Error: TSO title already exists.";
+                }
+                else
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    string strDefaultTSRStatusText = ConfigurationManager.AppSettings["DefaultTSOStatusText"].ToString();
+                    TSOStatus objTSOStatus = objBusinessLayer.TSOStatusRepository.GetSingle(x => x.Name == strDefaultTSRStatusText);
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objTSODTO.TSOStatusID = objTSOStatus.ID;
+                    TSO objTSO = Conversions.ToEntity<TSODTO, TSO>(objTSODTO);
+                    objBusinessLayer.TSORepository.Add(objTSO);
+
+                    if (null != objTSO && objTSO.ID > 0)
+                    {
+                        if (!String.IsNullOrWhiteSpace(objTSODTO.TSOServiceDeliveryChainArr))
+                        {
+                            if (objTSODTO.TSOServiceDeliveryChainArr.IndexOf(",") <= 0)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+
+                                TSOServiceDeliveryChain objTSOServiceDeliveryChain = new TSOServiceDeliveryChain { ServiceDeliveryChainId = int.Parse(objTSODTO.TSOServiceDeliveryChainArr), TSOId = objTSO.ID };
+
+                                objBusinessLayer.TSOServiceDeliveryChainRepository.Add(objTSOServiceDeliveryChain);
+                            }
+                            else
+                            {
+                                //Add core services to TSO
+                                foreach (string tsrCoreService in objTSODTO.TSOServiceDeliveryChainArr.Split(','))
+                                {
+                                    objBusinessLayer = new BusinessLayer(ls);
+
+                                    TSOServiceDeliveryChain objTSOServiceDeliveryChain = new TSOServiceDeliveryChain { ServiceDeliveryChainId = int.Parse(tsrCoreService), TSOId = objTSO.ID };
+
+                                    objBusinessLayer.TSOServiceDeliveryChainRepository.Add(objTSOServiceDeliveryChain);
+                                }
+                            }
+                        }
+                    }
+
+                    UserController user = new UserController();
+                    if (objTSODTO.TSR == null)
+                    {
+                        objBusinessLayer = new BusinessLayer(ls);
+                        TSR objTSR = objBusinessLayer.TSRRepository.GetByID(objTSODTO.TSRId);
+                        if (null != objTSR)
+                        {
+                            objTSODTO.TSR = Conversions.ToDTO<TSRDTO, TSR>(objTSR);
+                        }
+                    }
+                    if (objTSODTO.TSR.Client == null)
+                    {
+                        objBusinessLayer = new BusinessLayer(ls);
+                        Client objClient = objBusinessLayer.ClientRepository.GetByID(objTSODTO.TSR.ClientId);
+                        if (null != objClient)
+                        {
+                            objTSODTO.TSR.Client = Conversions.ToDTO<ClientDTO, Client>(objClient);
+                        }
+                    }
+                    System.Threading.Tasks.Task.Factory.StartNew(() => user.UserAssignmentAndSendMail(objTSO.TeamLeadId, "TSO", objTSODTO.Title, objTSO.ID.ToString(), objTSODTO.CreatedBy, objTSODTO.TSR.Client.Name));
+
+                    returnMessage = objTSO.ID.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// Function to update TSO 
+        /// </summary>
+        /// <param name="objTSO"></param>
+        /// <returns></returns>
+        private string ModifyTSO(int ID, TSODTO objTSODTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSO chkTSO = null;
+                chkTSO = objBusinessLayer.TSORepository.GetSingle(x => x.Title == objTSODTO.Title && x.TSRId == objTSODTO.TSRId && x.ID != ID);
+
+                if (chkTSO != null)
+                {
+                    returnMessage = "Error: TSO title already exists.";
+                }
+                else
+                {
+                    TSODTO objTSODTOById = this.GetTSOById(ID, false);
+
+                    if (objTSODTOById != null)
+                    {
+                        ls = new LoginSession();
+                        ls.LoginName = objTSODTO.UpdatedBy;
+
+                        objTSODTOById.Title = objTSODTO.Title;
+                        objTSODTOById.TeamLeadId = objTSODTO.TeamLeadId;
+                        objTSODTOById.Description = objTSODTO.Description;
+                        //objTSODTOById.TSRId = objTSODTO.TSRId;
+                        objTSODTOById.CoreServiceId = objTSODTO.CoreServiceId;
+                        objTSODTOById.CoreService = null;
+                        objTSODTOById.RelevantRepositoryId = objTSODTO.RelevantRepositoryId;
+                        objTSODTOById.RelevantRepository = null;
+                        objTSODTOById.StartDate = objTSODTO.StartDate;
+                        objTSODTOById.TargetCompletionDate = objTSODTO.TargetCompletionDate;
+                        objTSODTOById.EstimatedEffort = objTSODTO.EstimatedEffort;
+                        objTSODTOById.PlannedEffort = objTSODTO.PlannedEffort;
+                        objTSODTOById.OperationalRiskId = objTSODTO.OperationalRiskId;
+                        objTSODTOById.TSOStatusID = objTSODTO.TSOStatusID;
+                        objTSODTOById.TSR = null;
+                        objTSODTOById.OperationalRisk = null;
+                        objTSODTOById.SP_Id = objTSODTO.SP_Id;
+
+                        TSO objTSO = Conversions.ToEntity<TSODTO, TSO>(objTSODTOById);
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objBusinessLayer.TSORepository.Update(objTSO);
+
+                        if (null != objTSO && objTSO.ID > 0)
+                        {
+                            //Delete TSO Core Services
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objTSODTOById = this.GetTSOById(ID);
+
+                            objBusinessLayer = new BusinessLayer(ls);
+                            string arrExistingTSOServiceDeliveryChain = string.Empty;
+
+                            List<int> arrTSOServiceDeliveryChainToDelete = new List<int>();
+                            List<int> arrTSOServiceDeliveryChainToInsert = new List<int>();
+
+                            //Get the Service Delivery chain which needs to be deleted
+                            foreach (TSOServiceDeliveryChainDTO objTSOServiceDeliveryChainDTO in objTSODTOById.TSOServiceDeliveryChains)
+                            {
+                                bool Found = false;
+
+                                if (objTSODTO.TSOServiceDeliveryChainArr.IndexOf(",") <= 0)
+                                {
+                                    if (objTSOServiceDeliveryChainDTO.ServiceDeliveryChainId.ToString() == objTSODTO.TSOServiceDeliveryChainArr)
+                                    {
+                                        Found = true;
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (string strTSOServiceDeliveryChainId in objTSODTO.TSOServiceDeliveryChainArr.Split(','))
+                                    {
+                                        if (objTSOServiceDeliveryChainDTO.ServiceDeliveryChainId.ToString() == strTSOServiceDeliveryChainId)
+                                        {
+                                            Found = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!Found)
+                                {
+                                    arrTSOServiceDeliveryChainToDelete.Add(objTSOServiceDeliveryChainDTO.ServiceDeliveryChainId);
+                                }
+                            }
+
+                            //Get the Service Delivery chain which needs to be added
+                            if (objTSODTO.TSOServiceDeliveryChainArr.IndexOf(",") <= 0)
+                            {
+                                bool Found = false;
+                                foreach (TSOServiceDeliveryChainDTO objTSOServiceDeliveryChainDTO in objTSODTOById.TSOServiceDeliveryChains)
+                                {
+                                    if (objTSOServiceDeliveryChainDTO.ServiceDeliveryChainId.ToString() == objTSODTO.TSOServiceDeliveryChainArr)
+                                    {
+                                        Found = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!Found)
+                                {
+                                    arrTSOServiceDeliveryChainToInsert.Add(int.Parse(objTSODTO.TSOServiceDeliveryChainArr));
+                                }
+                            }
+                            else
+                            {
+                                foreach (string strTSOServiceDeliveryChainId in objTSODTO.TSOServiceDeliveryChainArr.Split(','))
+                                {
+                                    bool Found = false;
+
+                                    foreach (TSOServiceDeliveryChainDTO objTSOServiceDeliveryChainDTO in objTSODTOById.TSOServiceDeliveryChains)
+                                    {
+                                        if (objTSOServiceDeliveryChainDTO.ServiceDeliveryChainId.ToString() == strTSOServiceDeliveryChainId)
+                                        {
+                                            Found = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!Found)
+                                    {
+                                        arrTSOServiceDeliveryChainToInsert.Add(int.Parse(strTSOServiceDeliveryChainId));
+                                    }
+                                }
+                            }
+
+                            //Delete the removed service chain
+                            foreach (int deleteId in arrTSOServiceDeliveryChainToDelete)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+
+                                TSOServiceDeliveryChain chkobj = null;
+                                chkobj = objBusinessLayer.TSOServiceDeliveryChainRepository.GetSingle(x => x.TSOId == objTSO.ID && x.ServiceDeliveryChainId == deleteId);
+                                if (chkobj != null)
+                                {
+                                    objBusinessLayer = new BusinessLayer(ls);
+                                    objBusinessLayer.TSOServiceDeliveryChainTaskRepository.Delete(x => x.TSOServiceDeliveryChainId == chkobj.ID);
+
+                                    objBusinessLayer = new BusinessLayer(ls);
+                                    objBusinessLayer.TSOServiceDeliveryChainRepository.Delete(x => x.TSOId == objTSO.ID && x.ServiceDeliveryChainId == deleteId);
+                                }
+                            }
+
+                            //Insert new service delivery chain
+                            foreach (int insertId in arrTSOServiceDeliveryChainToInsert)
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+                                TSOServiceDeliveryChain tSRCoreService = new TSOServiceDeliveryChain { ServiceDeliveryChainId = insertId, TSOId = objTSO.ID };
+                                objBusinessLayer.TSOServiceDeliveryChainRepository.Add(tSRCoreService);
+                            }
+                        }
+
+                        returnMessage = "TSO updated successfully.";
+
+                    }
+                    else
+                    {
+                        returnMessage = "TSO do not exists.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveTSO
+        /// </summary>
+        /// <param name="ID">int</param>
+        private string RemoveTSO(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                TSODTO objTSODTOById = this.GetTSOById(ID);
+
+                if (objTSODTOById != null)
+                {
+                    if (objTSODTOById.TSOServiceDeliveryChains != null && objTSODTOById.TSOServiceDeliveryChains.Count > 0)
+                    {
+                        returnMessage = "Error: Can not delete TSO as Service delivery tasks exists for it.";
+                    }
+                    else
+                    {
+                        ls = new LoginSession();
+                        ls.LoginName = "Admin";
+
+                        objBusinessLayer = new BusinessLayer(ls);
+
+
+                        TSO objTSO = Conversions.ToEntity<TSODTO, TSO>(objTSODTOById);
+                        objBusinessLayer.TSORepository.Delete(objTSO);
+                        returnMessage = "TSO deleted successfully.";
+                    }
+                }
+                else
+                {
+                    returnMessage = "TSO do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// AddNewTask
+        /// </summary>
+        /// <param name="tsoServiceDeliveryChainTaskDTO">TSOServiceDeliveryChainTaskDTO</param>
+        /// <returns></returns>
+        private string AddNewTask(TSOServiceDeliveryChainTaskDTO tsoServiceDeliveryChainTaskDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = tsoServiceDeliveryChainTaskDTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask = Conversions.ToEntity<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(tsoServiceDeliveryChainTaskDTO);
+                TSOServiceDeliveryChainTask existstask = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTask.ID && x.WeekNumber == objTSOServiceDeliveryChainTask.WeekNumber);
+
+                if (existstask != null)
+                {
+                    objTSOServiceDeliveryChainTask.CreatedOn = existstask.CreatedOn;
+                    objTSOServiceDeliveryChainTask.UpdatedOn = DateTime.Today;
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objBusinessLayer.TSOServiceDeliveryChainTaskRepository.Update(objTSOServiceDeliveryChainTask);
+                    returnMessage = "Task updated successfully";
+                }
+                else
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objBusinessLayer.TSOServiceDeliveryChainTaskRepository.Add(objTSOServiceDeliveryChainTask);
+                    returnMessage = "Task saved successfully";
+                }
+
+                ls = new LoginSession();
+                ls.LoginName = tsoServiceDeliveryChainTaskDTO.CreatedBy;
+                objBusinessLayer = new BusinessLayer(ls);
+
+                TSOServiceDeliveryChain tSOServiceDeliveryChain = objBusinessLayer.TSOServiceDeliveryChainRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTask.TSOServiceDeliveryChainId, x => x.TSO, x => x.ServiceDeliveryChain);
+                string name = tSOServiceDeliveryChain.ServiceDeliveryChain.Name;
+                if (name == "A" || name == "D" || name == "I" || name == "E")
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = tsoServiceDeliveryChainTaskDTO.CreatedBy;
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    objBusinessLayer.TSORepository.Update(tSOServiceDeliveryChain.TSO);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// GetLastTSOServiceDeliveryChainTask
+        /// </summary>
+        /// <param name="tsoServiceDeliveryChainId">int</param>
+        /// <returns>TSOServiceDeliveryChainTaskDTO</returns>
+        private TSOServiceDeliveryChainTaskDTO GetLastTSOServiceDeliveryChainTask(int tsoServiceDeliveryChainId)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = null;
+
+            try
+            {
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetListWithOrder(x => x.TSOServiceDeliveryChainId == tsoServiceDeliveryChainId, x => x.WeekNumber);
+
+                if (null != objTSOServiceDeliveryChainTaskList)
+                {
+                    objTSOServiceDeliveryChainTaskDTO = new TSOServiceDeliveryChainTaskDTO();
+
+                    double ActualEffortCumulative = 0;
+                    int ActualOutcomeCumulative = 0;
+                    int ActualOutcomeTestStepsCumulative = 0;
+                    double ActualProcessingTimeCumulative = 0;
+                    int DefectRaisedCumulative = 0;
+                    int DefectRejectedCumulative = 0;
+
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        ActualEffortCumulative += objTSOServiceDeliveryChainTaskDTO.ActualEffort ?? 0;
+                        ActualOutcomeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcome;
+                        ActualOutcomeTestStepsCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestSteps;
+                        ActualProcessingTimeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime;
+                        DefectRaisedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRaised;
+                        DefectRejectedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRejected;
+                    }
+
+                    objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative = ActualEffortCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeCumulative = ActualOutcomeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestStepsCumulative = ActualOutcomeTestStepsCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTimeCumulative = ActualProcessingTimeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRaisedCumulative = DefectRaisedCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRejectedCumulative = DefectRejectedCumulative;
+
+                    objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime, 2);
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime, 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSOServiceDeliveryChainTaskDTO;
+        }
+
+        /// <summary>
+        /// GetLastTSOServiceDeliveryChainTaskOfWeek
+        /// </summary>
+        /// <param name="tsoServiceDeliveryChainId">int</param>
+        /// <returns>TSOServiceDeliveryChainTaskDTO</returns>
+        private TSOServiceDeliveryChainTaskDTO GetLastTSOServiceDeliveryChainTaskOfWeek(int tsoServiceDeliveryChainId)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = null;
+
+            try
+            {
+                int currentWeek = GetWeekOfYear(DateTime.Now);
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == tsoServiceDeliveryChainId && x.WeekNumber == currentWeek);
+
+                if (null != objTSOServiceDeliveryChainTaskList)
+                {
+                    objTSOServiceDeliveryChainTaskDTO = new TSOServiceDeliveryChainTaskDTO();
+
+                    double ActualEffortCumulative = 0;
+                    int ActualOutcomeCumulative = 0;
+                    int ActualOutcomeTestStepsCumulative = 0;
+                    double ActualProcessingTimeCumulative = 0;
+                    int DefectRaisedCumulative = 0;
+                    int DefectRejectedCumulative = 0;
+
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        ActualEffortCumulative += objTSOServiceDeliveryChainTaskDTO.ActualEffort ?? 0;
+                        ActualOutcomeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcome;
+                        ActualOutcomeTestStepsCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestSteps;
+                        ActualProcessingTimeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime;
+                        DefectRaisedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRaised;
+                        DefectRejectedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRejected;
+                    }
+
+                    objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative = ActualEffortCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeCumulative = ActualOutcomeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestStepsCumulative = ActualOutcomeTestStepsCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTimeCumulative = ActualProcessingTimeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRaisedCumulative = DefectRaisedCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRejectedCumulative = DefectRejectedCumulative;
+
+                    objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime, 2);
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime, 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSOServiceDeliveryChainTaskDTO;
+        }
+
+        /// <summary>
+        /// GetLastTSOServiceDeliveryChainTask
+        /// </summary>
+        /// <param name="tsoServiceDeliveryChainId">int</param>
+        /// <returns>TSOServiceDeliveryChainTaskDTO</returns>
+        private IList<TSOServiceDeliveryChainTaskDTO> GetLastTSOServiceDeliveryChainTaskList(int tsoServiceDeliveryChainId)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSOServiceDeliveryChainTaskDTO> objTSOServiceDeliveryChainTaskDTOList = new List<TSOServiceDeliveryChainTaskDTO>();
+
+            try
+            {
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetListWithOrder(x => x.TSOServiceDeliveryChainId == tsoServiceDeliveryChainId, x => x.CreatedOn);
+
+                if (null != objTSOServiceDeliveryChainTaskList)
+                {
+                    foreach (TSOServiceDeliveryChainTask task in objTSOServiceDeliveryChainTaskList)
+                    {
+                        TSOServiceDeliveryChainTaskDTO objTSOTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(task);
+                        objTSOServiceDeliveryChainTaskDTOList.Add(objTSOTaskDTO);
+                    }
+
+                    double ActualEffortCumulative = 0;
+                    int ActualOutcomeCumulative = 0;
+                    int ActualOutcomeTestStepsCumulative = 0;
+                    double ActualProcessingTimeCumulative = 0;
+                    int DefectRaisedCumulative = 0;
+                    int DefectRejectedCumulative = 0;
+
+                    TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = new TSOServiceDeliveryChainTaskDTO();
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        ActualEffortCumulative += objTSOServiceDeliveryChainTaskDTO.ActualEffort ?? 0;
+                        ActualOutcomeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcome;
+                        ActualOutcomeTestStepsCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestSteps;
+                        ActualProcessingTimeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime;
+                        DefectRaisedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRaised;
+                        DefectRejectedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRejected;
+                    }
+
+                    objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative = ActualEffortCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeCumulative = ActualOutcomeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestStepsCumulative = ActualOutcomeTestStepsCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTimeCumulative = ActualProcessingTimeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRaisedCumulative = DefectRaisedCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRejectedCumulative = DefectRejectedCumulative;
+
+                    objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime, 2);
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime, 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSOServiceDeliveryChainTaskDTOList;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetTSOIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetTSOIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objTSOList = null;
+            try
+            {
+                objTSOList = objBusinessLayer.TSORepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Title, Other = x.Description });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSOList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/TSO/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objTSOList = null;
+
+            try
+            {
+                objTSOList = this.GetTSOIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objTSOList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/TSO/GetById/{id}")]
+        [ResponseType(typeof(TSO))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager,Team Lead, Guest")]
+        public JsonResult<TSODTO> GetById(int id)
+        {
+            JsonResult<TSODTO> result = null;
+            TSODTO objTSODTO;
+
+            try
+            {
+                objTSODTO = this.GetTSOById(id);
+
+                result = Json(objTSODTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        public TSODTO GetTSODTO(int id)
+        {
+            TSODTO objTSODTO;
+            try
+            {
+                objTSODTO = this.GetTSOById(id);
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return objTSODTO;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/TSO/GetAllPaged/{tsrId}/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllPaged(int tsrId, int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<TSODTO> objTSODTOList = this.GetAllTSO(tsrId, startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objTSODTOList)
+                {
+                    foreach (TSODTO objTSO in objTSODTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTSO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/TSO/GetAllUserPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllUserPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            Encryption.CryptorEngine objCryptorEngine = new Encryption.CryptorEngine();
+            JsonResult<DataCollection> objReturn = null;
+            string userId = Request.Headers.GetValues("userid").FirstOrDefault();
+            if (!String.IsNullOrWhiteSpace(userId))
+            {
+                userId = userId.Replace("~", "=").Replace("!", "+");
+                string User = objCryptorEngine.Decrypt(userId, true);
+                bool isAdmin = User.ToLower().Contains("admin");
+                string[] usrInfo = User.Split('#');
+                User = usrInfo[usrInfo.Length - 2];
+
+                IList<TSODTO> objTSODTOList = this.GetAllUserTSO(startingRecordNumber, pageSize, User, out totalRecords, isAdmin);
+
+                DataCollection objDataCollection;
+
+                try
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                    if (null != objTSODTOList)
+                    {
+                        foreach (TSODTO objTSO in objTSODTOList)
+                        {
+                            objDataCollection.EntitySummary.Add(objTSO);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                    throw;
+                }
+
+                objReturn = Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return objReturn;
+        }
+
+        /// <summary>
+        /// CreateTSO
+        /// </summary>
+        /// <param name="tsoDTO">TSODTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/TSO/CreateTSO")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager,Team Lead")]
+        public JsonResult<string> CreateTSO([FromBody]TSODTO tsoDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewTSO(tsoDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// GetTSOCount
+        /// </summary>
+        /// <param name="strTitleOrClient"></param>
+        /// <param name="status"></param>
+        /// <param name="tsrId"></param>
+        /// <returns></returns>
+        [HttpGet, Route("v1/TSO/GetTSOCount/{strTitleOrClient}/{status}/{tsrId}")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<string> GetTSOCount(string strTitleOrClient, int status, int tsrId = 0)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                IList<TSO> objTSOList = null;
+                Encryption.CryptorEngine objCryptorEngine = new Encryption.CryptorEngine();
+                string userId = Request.Headers.GetValues("userid").FirstOrDefault();
+                if (!String.IsNullOrWhiteSpace(userId))
+                {
+                    userId = userId.Replace("~", "=").Replace("!", "+");
+                    string User = objCryptorEngine.Decrypt(userId, true);
+                    bool isadmin = User.ToLower().Contains("admin");
+                    string[] usrInfo = User.Split('#');
+                    User = usrInfo[usrInfo.Length - 2];
+
+                    int userID = Convert.ToInt32(User);
+
+                    if (strTitleOrClient != "none")
+                    {
+                        if (status != 0)
+                        {
+                            if (tsrId > 0)
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSOStatusID == status && x.TSRId == tsrId && (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                            else
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSOStatusID == status && (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                        }
+                        else
+                        {
+                            if (tsrId > 0)
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == tsrId && (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                            else
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => (x.Title.ToLower().Contains(strTitleOrClient) || x.TSR.Client.Name.ToLower().Contains(strTitleOrClient) || x.TSR.SolutionCentre.Name.ToLower().Contains(strTitleOrClient)), x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (status != 0)
+                        {
+                            if (tsrId > 0)
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == tsrId && x.TSOStatusID == status, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                            else
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSOStatusID == status, x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSOServiceDeliveryChains, x => x.TSOStatus, x => x.TeamLead, x => x.CoreService, x => x.OperationalRisk, x => x.RelevantRepository);
+                            }
+                        }
+                        else
+                        {
+                            if (tsrId > 0)
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == tsrId);
+                            }
+                            else
+                            {
+                                objTSOList = objBusinessLayer.TSORepository.GetAll();
+                            }
+                        }
+                    }
+                }
+
+                result = Json(objTSOList.Count.ToString(), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateTSO
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="tsoDTO">TSODTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/TSO/UpdateTSO/{ID}")]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager,Team Lead")]
+        public JsonResult<string> UpdateTSO(int ID, [FromBody]TSODTO tsoDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyTSO(ID, tsoDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteTSO
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpDelete, Route("v1/TSO/DeleteTSO/{ID}")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin")]
+        public JsonResult<string> DeleteTSO(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveTSO(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// CreateTSO
+        /// </summary>
+        /// <param name="tsrDTO">TSODTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/TSO/CreateTask")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Team Lead,Test Manager")]
+        public JsonResult<string> CreateTask([FromBody]TSOServiceDeliveryChainTaskDTO tsoServiceDeliveryChainTaskDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewTask(tsoServiceDeliveryChainTaskDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/TSO/GetTaskByWeek/{TSOServiceDeliveryChainId}/{week}")]
+        [ResponseType(typeof(TSO))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<TSOServiceDeliveryChainTaskDTO> GetTaskByWeek(int TSOServiceDeliveryChainId, int week)
+        {
+            JsonResult<TSOServiceDeliveryChainTaskDTO> result = null;
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO = null;
+            try
+            {
+                objBusinessLayer = new BusinessLayer(ls);
+
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == TSOServiceDeliveryChainId && x.WeekNumber == week);
+
+                if (null != objTSOServiceDeliveryChainTaskList)
+                {
+                    objTSOServiceDeliveryChainTaskDTO = new TSOServiceDeliveryChainTaskDTO();
+
+                    double ActualEffortCumulative = 0;
+                    int ActualOutcomeCumulative = 0;
+                    int ActualOutcomeTestStepsCumulative = 0;
+                    double ActualProcessingTimeCumulative = 0;
+                    int DefectRaisedCumulative = 0;
+                    int DefectRejectedCumulative = 0;
+
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        ActualEffortCumulative += objTSOServiceDeliveryChainTaskDTO.ActualEffort ?? 0;
+                        ActualOutcomeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcome;
+                        ActualOutcomeTestStepsCumulative += objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestSteps;
+                        ActualProcessingTimeCumulative += objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime;
+                        DefectRaisedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRaised;
+                        DefectRejectedCumulative += objTSOServiceDeliveryChainTaskDTO.DefectRejected;
+                    }
+
+                    objTSOServiceDeliveryChainTaskDTO.ActualEffortCumulative = ActualEffortCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeCumulative = ActualOutcomeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualOutcomeTestStepsCumulative = ActualOutcomeTestStepsCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTimeCumulative = ActualProcessingTimeCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRaisedCumulative = DefectRaisedCumulative;
+                    objTSOServiceDeliveryChainTaskDTO.DefectRejectedCumulative = DefectRejectedCumulative;
+
+                    objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.PlannedProcessingTime, 2);
+                    objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime = Math.Round((Double)objTSOServiceDeliveryChainTaskDTO.ActualProcessingTime, 2);
+                }
+
+                objTSOServiceDeliveryChainTaskDTO.CurrentWeek = GetWeekOfYear(DateTime.Now);
+                objTSOServiceDeliveryChainTaskDTO.CurrentDate = DateTime.Now;
+
+                result = Json(objTSOServiceDeliveryChainTaskDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/TSO/GetLastTask/{tsoServiceDeliveryChainId}")]
+        [ResponseType(typeof(TSO))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<TSOServiceDeliveryChainTaskDTO> GetLastTask(int tsoServiceDeliveryChainId)
+        {
+            JsonResult<TSOServiceDeliveryChainTaskDTO> result = null;
+            TSOServiceDeliveryChainTaskDTO objTSOServiceDeliveryChainTaskDTO;
+
+            try
+            {
+                //objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTaskOfWeek(tsoServiceDeliveryChainId);
+                objTSOServiceDeliveryChainTaskDTO = this.GetLastTSOServiceDeliveryChainTask(tsoServiceDeliveryChainId);
+                objTSOServiceDeliveryChainTaskDTO.CurrentWeek = GetWeekOfYear(DateTime.Now);
+                objTSOServiceDeliveryChainTaskDTO.CurrentDate = DateTime.Now;
+                if (null != objTSOServiceDeliveryChainTaskDTO)
+                {
+                    result = Json(objTSOServiceDeliveryChainTaskDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                }
+                else
+                {
+                    objTSOServiceDeliveryChainTaskDTO = new TSOServiceDeliveryChainTaskDTO();
+
+                    result = Json(objTSOServiceDeliveryChainTaskDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+        // This presumes that weeks start with Monday.
+        // Week 1 is the 1st week of the year with a Thursday in it.
+        public static int GetWeekOfYear(DateTime time)
+        {
+            // be the same week# as whatever Thursday, Friday or Saturday are,
+            // and we always get those right
+            DayOfWeek day = System.Globalization.CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(time);
+            if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
+            {
+                time = time.AddDays(3);
+            }
+
+            // Return the week of our adjusted day
+            return System.Globalization.CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+        }
+
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// GetTSRDump
+        /// </summary>
+        /// <returns>HttpResponseMessage</returns>
+        [HttpGet, Route("v1/TSO/GetTSODump")]
+        [ResponseType(typeof(HttpResponseMessage))]
+        //[SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public HttpResponseMessage GetTSODump()
+        {
+            IList<TSODTO> objTSROTOList = this.GetAllTSO();
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            try
+            {
+                if (null != objTSROTOList)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    //Set the Headings and Orders                    
+                    sb.Append("TSOID").Append(",");                                             //ID
+                    sb.Append("Title").Append(",");                                             //Title
+                    sb.Append("Client").Append(",");                                            //Client
+                    sb.Append("TSO Status").Append(",");                                        //TSO Status
+                    sb.Append("Related TSR").Append(",");                                       //Related TSR
+                    sb.Append("Related Tasks").Append(",");                                     //Related Tasks	
+                    sb.Append("Engagement Model").Append(",");                                  //Engagement Model
+                    sb.Append("Pricing Model").Append(",");                                     //Pricing Model	
+                    sb.Append("Project Model").Append(",");                                     //Project Model	
+                    sb.Append("Client Region").Append(",");                                     //Client Region
+                    sb.Append("Account").Append(",");                                           //Account	
+                    sb.Append("ERP order number").Append(",");                                  //ERP order number	
+                    sb.Append("Solution centre").Append(",");                                   //Solution centre	
+                    sb.Append("Core Service").Append(",");                                  //Core Service	
+                    sb.Append("Service Delivery Chain").Append(",");                            //Service Delivery Chain
+                    sb.Append("Operational risk").Append(",");                                  //Operational risk
+                    sb.Append("Start Date").Append(",");                                        //Start Date
+                    sb.Append("Target Completion Date").Append(",");                            //Target Completion Date	
+                    sb.Append("Estimated effort").Append(",");                                  //Estimated effort
+                    sb.Append("Planned effort").Append(",");                                    //Planned effort	
+                    sb.Append("Actual effort").Append(",");                                     //Actual effort	
+                    sb.Append("Account Manager").Append(",");                                   //Account manager	
+                    sb.Append("Delivery manager").Append(",");                                  //Delivery manager	
+                    sb.Append("Test Manager").Append(",");                                      //Test manager	
+                    sb.Append("Team Lead").Append(",");                                         //Team Lead	
+                    sb.Append("Vertical").Append(",");                                          //Vertical	
+                    sb.Append("Practice").Append(",");                                          //Practice	
+                    sb.Append("Market Offering").Append(",");                                   //Market offering	
+                    sb.Append("Relevant repositories").Append(",");                             //Relevant repositories
+                    sb.Append("Modified").Append(",");                                          //Modified	
+                    sb.Append("Modified By").Append(",");                                       //Modified By	
+                    sb.Append("Description").Append(",");                                       //Description	
+                    sb.Append("\n");
+
+                    foreach (TSODTO objTSO in objTSROTOList)
+                    {
+                        // Append data                 
+                        sb.Append(objTSO.ID).Append(","); //ID
+                        sb.Append(string.IsNullOrEmpty(objTSO.Title) ? " " : objTSO.Title.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.Title) : objTSO.Title).Append(",");                             //Title
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.Client.Name) ? " " : objTSO.TSR.Client.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.Client.Name) : objTSO.TSR.Client.Name).Append(",");                 //Client
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSOStatus.Name) ? " " : objTSO.TSOStatus.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSOStatus.Name) : objTSO.TSOStatus.Name).Append(",");           //TSR Status
+                        sb.Append(objTSO.TSR.ID).Append(",");                                                                       //Related TSO
+                        if (objTSO.TSOServiceDeliveryChains.Count == 0)
+                            sb.Append(" ").Append(",");                         // CHECK FOR RELATED TASK
+                        else
+                        {
+                            StringBuilder sbTasks = new StringBuilder();
+                            foreach (var objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                            {
+                                LoginSession ls = new LoginSession();
+                                IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                                var tasks = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == objTSOServiceDeliveryChain.ID);
+
+                                foreach (var task in tasks)
+                                {
+                                    var objTask = tasks.Single(x => x.ID == task.ID);
+                                    sbTasks.Append(objTask.ID + ", ");
+                                }
+                            }
+                            if (sbTasks != null && sbTasks.Length > 0)
+                            {
+                                var strTasks = sbTasks.Remove(sbTasks.Length - 2, 2).ToString();
+                                sb.Append(string.Format("\"{0}\"", strTasks));
+                                sb.Append(",");
+                            }
+                            else
+                                sb.Append(",");
+                        }
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.Engagement.Name) ? " " : objTSO.TSR.Engagement.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.Engagement.Name) : objTSO.TSR.Engagement.Name).Append(",");         //Engagement Model
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.PricingModel.Name) ? " " : objTSO.TSR.PricingModel.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.PricingModel.Name) : objTSO.TSR.PricingModel.Name).Append(",");     //Pricing Model	
+                        {
+                            LoginSession ls = new LoginSession();
+                            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                            var projectModel = objBusinessLayer.ProjectModelRepository.GetSingle(x => x.ID == objTSO.TSR.ProjectModelID);
+                            sb.Append(projectModel == null ? " " : projectModel.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", projectModel.Name) : projectModel.Name).Append(",");       // Project Model
+                        }
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.ClientRegion.Name) ? " " : objTSO.TSR.ClientRegion.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.ClientRegion.Name) : objTSO.TSR.ClientRegion.Name).Append(",");     // Client Region
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.Account) ? " " : objTSO.TSR.Account.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.Account) : objTSO.TSR.Account).Append(",");                         // Account
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.ERPordernumber) ? " " : objTSO.TSR.ERPordernumber.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.ERPordernumber) : objTSO.TSR.ERPordernumber).Append(",");           //ERP order number
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.SolutionCentre.Name) ? " " : objTSO.TSR.SolutionCentre.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.SolutionCentre.Name) : objTSO.TSR.SolutionCentre.Name).Append(","); //Solution centre	
+                        if (objTSO.CoreService == null)
+                            sb.Append(" ").Append(",");
+                        else
+                        {
+                            if (objTSO.CoreService.Name == "N.A.")
+                                sb.Append("");
+                            else
+                                sb.Append(string.Format("\"{0}\"", objTSO.CoreService.Name.ToString()));
+                            sb.Append(",");                             // <--- CHECK FOR CORE SERVICES  //Core Service (s)
+                        }
+                        if (objTSO.TSOServiceDeliveryChains.Count == 0)
+                            sb.Append(" ").Append(",");
+                        else
+                        {
+                            LoginSession ls = new LoginSession();
+                            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                            var tsrCores = objBusinessLayer.TSOServiceDeliveryChainRepository.GetList(x => x.TSOId == objTSO.ID, x => x.ServiceDeliveryChain);
+                            StringBuilder sbTSOServiceDeliveryChains = new StringBuilder();
+                            foreach (var item in objTSO.TSOServiceDeliveryChains)
+                            {
+                                var tsrcor = tsrCores.Single(x => x.ID == item.ID);
+                                sbTSOServiceDeliveryChains.Append(tsrcor.ServiceDeliveryChain.Name + ", ");
+                            }
+                            if (sbTSOServiceDeliveryChains != null && sbTSOServiceDeliveryChains.Length > 0)
+                            {
+                                var strTSOServiceDeliveryChains = sbTSOServiceDeliveryChains.Remove(sbTSOServiceDeliveryChains.Length - 2, 2).ToString();
+                                sb.Append(string.Format("\"{0}\"", strTSOServiceDeliveryChains));
+                            }
+                            sb.Append(",");
+                        }
+                        sb.Append(objTSO.OperationalRisk.RiskNo).Append(",");                                                       //Operational risk
+                        sb.Append(objTSO.StartDate.ToString("dd-MMM-yyyy")).Append(",");                                            //Start date
+                                                                                                                                    /* sb.Append(objTSO.ActualStartDate.ToString("dd-MMM-yyyy")).Append(","); */                                     //Actual start date
+                        sb.Append(objTSO.TargetCompletionDate.ToString("dd-MMM-yyyy")).Append(",");                                 //Target Completion Date
+                        sb.Append(objTSO.EstimatedEffort).Append(",");                                                              //Estimated effort
+                        sb.Append(objTSO.PlannedEffort).Append(",");                                                                //Planned effort
+                        sb.Append(objTSO.ActualEffort).Append(",");                                                                 //Actual effort
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.AccountManager.Name) ? " " : objTSO.TSR.AccountManager.Name).Append(","); //Account Manager	
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.DeliveryManager.Name) ? " " : objTSO.TSR.DeliveryManager.Name).Append(",");// Delivery manager
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.TestManager.Name) ? " " : objTSO.TSR.TestManager.Name).Append(",");       // Test Manager	
+                        sb.Append(string.IsNullOrEmpty(objTSO.TeamLead.Name) ? " " : objTSO.TeamLead.Name).Append(",");
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.Vertical.Name ?? "") ? " " : objTSO.TSR.Vertical.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.Vertical.Name) : objTSO.TSR.Vertical.Name).Append(", ");      //Vertical	
+                        sb.Append(string.IsNullOrEmpty(objTSO.TSR.Practice.Name ?? "") ? " " : objTSO.TSR.Practice.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.Practice.Name) : objTSO.TSR.Practice.Name).Append(",");       //Practice	
+
+                        string strMarketOffering = objTSO.TSR.MarketOffering == null ? " " : objTSO.TSR.MarketOffering.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.TSR.MarketOffering.Name) : objTSO.TSR.MarketOffering.Name;
+                        if (strMarketOffering.Contains("N.A."))
+                            strMarketOffering = strMarketOffering.Replace("N.A.", " ");
+                        sb.Append(strMarketOffering).Append(",");                    // Market Offering
+                        string strReleventRepository = string.IsNullOrEmpty(objTSO.RelevantRepository.Name) ? " " : objTSO.RelevantRepository.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSO.RelevantRepository.Name) : objTSO.RelevantRepository.Name;
+                        if (strReleventRepository.Contains("N.A."))
+                            strReleventRepository = strReleventRepository.Replace("N.A.", " ");
+                        sb.Append(strReleventRepository).Append(",");     // <--- CHECK FOR RELEVANT REPOSITORIES         //Relevant repositories	
+                        sb.Append(objTSO.UpdatedOn.ToString("dd-MMM-yyyy")).Append(",");                                           // Modified	
+                        sb.Append(string.IsNullOrEmpty(objTSO.UpdatedBy) ? " " : objTSO.UpdatedBy).Append(",");                     // Modified By	                       
+                        if (string.IsNullOrEmpty(objTSO.Description))
+                            sb.Append(" ");
+                        else
+                        {
+                            StringBuilder sbDescription = new StringBuilder();
+                            if (objTSO.Description.IndexOfAny(new char[] { '"', ',' }) != -1)
+                                sbDescription.AppendFormat("\"{0}\"", objTSO.Description.Replace("\"", "\"\""));
+                            else
+                            {
+                                sbDescription.Append(objTSO.Description);
+                                sb.Append(String.Format("\"{0}\"", sbDescription));
+                            }
+                            sb.Append(",");
+                        }
+                        sb.Append("\n");
+                    }
+
+                    result.Content = new StringContent(sb.ToString(), Encoding.UTF8);
+                    result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment"); //attachment will force download
+                    result.Content.Headers.ContentDisposition.FileName = "TSOExport.csv";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(ex.Message);
+                throw ex;
+            }
+            return result;
+        }
+
+        [HttpGet, Route("v1/TSO/GetServiceDeliveryChainTasksDump")]
+        [ResponseType(typeof(HttpResponseMessage))]
+        //[SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public HttpResponseMessage GetServiceDeliveryChainTasksDump()
+        {
+            List<TSOServiceDeliveryChainTaskDTO> objTSOServiceDeliveryChainTaskDTOList = this.GetAllServiceDeliveryChainTask().ToList();
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            try
+            {
+                if (null != objTSOServiceDeliveryChainTaskDTOList)
+                {
+                    /*
+
+                     */
+                    StringBuilder sb = new StringBuilder();
+                    //Set the Headings and Orders                    
+                    sb.Append("Task ID").Append(",");                                           //ID
+                    sb.Append("Title").Append(",");                                             //Title
+                    sb.Append("Client").Append(",");                                            //Client
+                    sb.Append("Task Status").Append(",");                                       //TSO Status
+                    sb.Append("Related TSR").Append(",");                                       //Related TSR
+                    sb.Append("Related TSO").Append(",");                                       //Related Tasks	
+                    sb.Append("Engagement Model").Append(",");                                  //Engagement Model
+                    sb.Append("Pricing Model").Append(",");                                     //Pricing Model	
+                    sb.Append("Project Model").Append(",");                                     //Project Model	
+                    sb.Append("Client Region").Append(",");                                     //Client Region
+                    sb.Append("Account").Append(",");                                           //Account	
+                    sb.Append("ERP order number").Append(",");                                  //ERP order number	
+                    sb.Append("Solution centre").Append(",");                                   //Solution centre	
+                    sb.Append("Core Service (s)").Append(",");                                  //Core Service	
+                    sb.Append("Method").Append(",");                                            //Method
+                    sb.Append("Planned Processing time").Append(",");                           //Planned Processing time
+                    sb.Append("Actual Processing Time").Append(",");                            //Actual Processing Time
+                    sb.Append("Planned effort").Append(",");                                    //Planned effort	
+                    sb.Append("Actual effort").Append(",");                                     //Actual effort	
+                    sb.Append("Actual Input").Append(",");                                      //Actual Input
+                    sb.Append("Planned Input").Append(",");                                      //Planned Input
+                    sb.Append("Actual Outcome").Append(",");                                    //Actual Outcome
+                    sb.Append("Planned Outcome").Append(",");                                   //Planned Outcome
+                    sb.Append("Planned Outcome (Test Steps)").Append(",");                      //Planned Outcome (Test Steps)
+                    sb.Append("Actual Outcome (Test Steps)").Append(",");                       //Actual Outcome (Test Steps)
+                    sb.Append("Planned Outcome Ratio").Append(",");                //Planned Productivity (Input based)
+                    sb.Append("Actual Outcome Ratio").Append(",");                 //Actual Productivity (Input based)
+                    sb.Append("Planned Throughput").Append(",");                 //Planned Productivity (Time based)
+                    sb.Append("Actual Throughput").Append(",");                  //Actual Productivity (Time based)
+                    sb.Append("Planned Productivity").Append(",");               //Planned Productivity (Effort based)
+                    sb.Append("Actual Productivity").Append(",");                //Actual Productivity (Effort based)
+                    sb.Append("Planned Review Rounds").Append(",");                             //Planned Review Rounds
+                    sb.Append("Actual Review Rounds").Append(",");                              //Actual Review Rounds
+                    sb.Append("Defects Raised").Append(",");                                    //Defects Raised
+                    sb.Append("Defects Rejected").Append(",");                                  //Defects Rejected
+                    sb.Append("Defect Density").Append(",");                                    //Defect Density
+                    sb.Append("Defect Rejection Ratio").Append(",");                            //Defect Rejection Ratio
+                    sb.Append("Headcount").Append(",");                                         //Headcount
+                    sb.Append("Idle Time (Duration)").Append(",");                              //Idle Time (Duration)
+                    sb.Append("Idle Time(Effort)").Append(",");                                 //Idle Time(Effort)
+                    sb.Append("Start Date").Append(",");                                        //Start Date
+                    sb.Append("Target Completion Date").Append(",");                            //Target Completion Date	
+                    sb.Append("Account Manager").Append(",");                                   //Account manager	
+                    sb.Append("Delivery manager").Append(",");                                  //Delivery manager	
+                    sb.Append("Test Manager").Append(",");                                      //Test manager	
+                    sb.Append("Team Lead").Append(",");                                         //Team Lead	
+                    sb.Append("Vertical").Append(",");                                          //Vertical	
+                    sb.Append("Practice").Append(",");                                          //Practice	
+                    sb.Append("Modified").Append(",");                                          //Modified	
+                    sb.Append("Modified By").Append(",");                                 //Modified By Notes
+                    sb.Append("Notes").Append(",");
+                    sb.Append("Week Number");
+                    sb.Append("\n");
+
+                    List<int> appendedTask = new List<int>();
+
+                    objTSOServiceDeliveryChainTaskDTOList = objTSOServiceDeliveryChainTaskDTOList.OrderBy(x => x.TSOServiceDeliveryChainId).ToList();
+                    while (objTSOServiceDeliveryChainTaskDTOList.Count != 0)
+                    {
+                        int tsoSDCId = objTSOServiceDeliveryChainTaskDTOList[0].TSOServiceDeliveryChainId;
+                        var currentTSOCIdList = objTSOServiceDeliveryChainTaskDTOList.Where(x => x.TSOServiceDeliveryChainId == tsoSDCId).OrderBy(x => x.WeekNumber).ToList();
+                        for (int taskCount = 0; taskCount < currentTSOCIdList.Count; taskCount++)
+                        {
+
+                            TSOServiceDeliveryChainTaskDTO sdcTask = currentTSOCIdList[taskCount];
+                            TSOServiceDeliveryChainTaskDTO sdcTaskPrevious;
+
+                            double? PlannedEffort = 0;
+                            double PlannedProcessingTime = 0;
+                            double PlannedOutcome = 0;
+                            double PlannedOutcomeTestSteps = 0;
+                            double PlannedOutcomeRatio = 0;
+                            double PlannedThroughput = 0;
+                            double? PlannedProductivity = 0;
+                            double PlannedReviewRounds = 0;
+
+                            if (taskCount != 0)
+                            {
+                                sdcTaskPrevious = currentTSOCIdList[taskCount - 1];
+                                if (sdcTask.TSOServiceDeliveryChainId == sdcTaskPrevious.TSOServiceDeliveryChainId)
+                                {
+                                    PlannedEffort = sdcTaskPrevious.PlannedEffort;
+                                    PlannedProcessingTime = sdcTaskPrevious.PlannedProcessingTime;
+                                    PlannedOutcome = sdcTaskPrevious.PlannedOutcome;
+                                    PlannedOutcomeTestSteps = sdcTaskPrevious.PlannedOutcomeTestSteps;
+                                    PlannedReviewRounds = sdcTaskPrevious.PlannedReviewRounds;
+                                    PlannedOutcomeRatio = sdcTaskPrevious.PlannedInput != 0 ? PlannedOutcome / sdcTaskPrevious.PlannedInput : 0;
+                                    PlannedThroughput = PlannedProcessingTime != 0 ? PlannedOutcome / PlannedProcessingTime : 0;
+                                    PlannedProductivity = PlannedEffort != 0 ? PlannedOutcome / PlannedEffort : 0;
+                                }
+                            }
+
+                            // Append data                 
+                            sb.Append(sdcTask.ID).Append(","); //ID
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.ServiceDeliveryChain.Name) ? " " : sdcTask.TSOServiceDeliveryChain.ServiceDeliveryChain.Name.IndexOf(",") > 0 ? String.Format("\"{0}\"", sdcTask.TSOServiceDeliveryChain.ServiceDeliveryChain.Name) : sdcTask.TSOServiceDeliveryChain.ServiceDeliveryChain.Name).Append("( " + sdcTask.TSOServiceDeliveryChain.ServiceDeliveryChain.Description + " )").Append(",");                             //Title
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.Client.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.Client.Name.Replace(",", "")).Append(",");                 //Client
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSOStatus.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSOStatus.Name.Replace(",", "")).Append(",");           //TSR Status
+                            sb.Append(sdcTask.TSOServiceDeliveryChain.TSO.TSRId).Append(",");                                                                       //Related TSO
+                            sb.Append(sdcTask.TSOServiceDeliveryChain.TSOId).Append(",");                         // TSO ID
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.Engagement.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.Engagement.Name.Replace(",", "")).Append(",");         //Engagement Model
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.PricingModel.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.PricingModel.Name.Replace(",", "")).Append(",");     //Pricing Model	
+                            {
+                                LoginSession ls = new LoginSession();
+                                IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                                var projectModel = objBusinessLayer.ProjectModelRepository.GetSingle(x => x.ID == sdcTask.TSOServiceDeliveryChain.TSO.TSR.ProjectModelID);
+                                sb.Append(projectModel == null ? " " : projectModel.Name).Append(",");       // Project Model
+                            }
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.ClientRegion.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.ClientRegion.Name.Replace(",", "")).Append(",");     // Client Region
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.Account) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.Account.Replace(",", "")).Append(",");                         // Account
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.ERPordernumber) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.ERPordernumber.Replace(",", "#;")).Append(",");           //ERP order number
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.SolutionCentre.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.SolutionCentre.Name.Replace(",", "")).Append(","); //Solution centre	
+                            if (sdcTask.TSOServiceDeliveryChain.TSO.TSR.TSRCoreServices.Count == 0)
+                                sb.Append(" ").Append(",");
+                            else
+                            {
+                                LoginSession ls = new LoginSession();
+                                IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                                var tsrCores = objBusinessLayer.TSRCoreServicesRepository.GetList(x => x.TSRId == sdcTask.TSOServiceDeliveryChain.TSO.TSRId, x => x.CoreService);
+                                StringBuilder sbCoreServices = new StringBuilder();
+                                foreach (var item in sdcTask.TSOServiceDeliveryChain.TSO.TSR.TSRCoreServices)
+                                {
+                                    var tsrcor = tsrCores.Single(x => x.ID == item.ID);
+                                    sbCoreServices.Append(tsrcor.CoreService.Name + ", ");
+                                }
+                                if (sbCoreServices != null && sbCoreServices.Length > 0)
+                                {
+                                    var strCoreServices = sbCoreServices.Remove(sbCoreServices.Length - 2, 2).ToString();
+                                    sb.Append(string.Format("\"{0}\"", strCoreServices));
+                                }
+                                sb.Append(",");
+
+                            }
+                            sb.Append(sdcTask.ServiceDeliveryChainMethod == null ? " " : sdcTask.ServiceDeliveryChainMethod.Name.Replace(",", "")).Append(","); //ServiceDeliveryChainMethod
+                            sb.Append(PlannedProcessingTime).Append(",");                                                                 //PlannedProcessingTime
+                            sb.Append(sdcTask.ActualProcessingTime).Append(",");                                                                 //ActualProcessingTime
+                            sb.Append(PlannedEffort).Append(",");                                                                //Planned effort
+                            sb.Append(sdcTask.ActualEffort).Append(",");                                                                 //Actual effort
+                            sb.Append(sdcTask.ActualInput).Append(",");                                                                 //ActualInput
+                            sb.Append(sdcTask.PlannedInput).Append(",");
+                            sb.Append(sdcTask.ActualOutcome).Append(",");
+                            sb.Append(PlannedOutcome).Append(",");                                                                 //PlannedOutcome
+                            sb.Append(PlannedOutcomeTestSteps).Append(",");                                                                 //PlannedOutcomeTestSteps
+                            sb.Append(sdcTask.ActualOutcomeTestSteps).Append(",");                                                                 //ActualOutcomeTestSteps
+                            sdcTask.CalculateFields();
+                            sb.Append(PlannedOutcomeRatio).Append(",");                      //"Planned Productivity (Input based)")
+                            sb.Append(sdcTask.ActualOutcomeRatio).Append(",");                       //"Actual Productivity (Input based)").
+                            sb.Append(PlannedThroughput).Append(",");                        //"Planned Productivity (Time based)").
+                            sb.Append(sdcTask.ActualThroughput).Append(",");                         //"Actual Productivity (Time based)").A
+                            sb.Append(PlannedProductivity).Append(",");                      //"Planned Productivity (Effort based)"
+                            sb.Append(sdcTask.ActualProductivity).Append(",");                       //"Actual Productivity (Effort based)")
+                            sb.Append(PlannedReviewRounds).Append(",");                                                                 //PlannedReviewRounds
+                            sb.Append(sdcTask.ActualReviewRounds).Append(",");                                                                 //ActualReviewRounds
+                            sb.Append(sdcTask.DefectRaised).Append(",");                                                                 //DefectRaised
+                            sb.Append(sdcTask.DefectRejected).Append(",");                                                                 //DefectRaised
+
+                            sb.Append(sdcTask.DefectDensity).Append(",");                           //"Defect Density"
+                            sb.Append(sdcTask.DefectRejectionRatio).Append(",");                    //"Defect Rejection Ratio"
+
+                            sb.Append(sdcTask.Headcount).Append(",");                                                                 //Headcount
+                            sb.Append(sdcTask.IdleTimeDuration).Append(",");                                                                 //IdleTimeDuration
+                            sb.Append(sdcTask.IdleTimeEffort).Append(",");                                                                 //IdleTimeDuration 
+                            sb.Append(sdcTask.PlannedStartDate.ToString("dd-MMM-yyyy")).Append(",");                                            //Start date
+                            sb.Append(sdcTask.PlannedCompletionDate.ToString("dd-MMM-yyyy")).Append(",");                                 //Target Completion Date
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.AccountManager.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.AccountManager.Name.Replace(",", "")).Append(","); //Account Manager	
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.DeliveryManager.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.DeliveryManager.Name.Replace(",", "")).Append(",");// Delivery manager
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.TestManager.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.TestManager.Name.Replace(",", "")).Append(",");       // Test Manager	
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TeamLead.Name) ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TeamLead.Name.Replace(",", "")).Append(",");
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.Vertical.Name ?? "") ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.Vertical.Name.Replace(",", "")).Append(", ");      //Vertical	
+                            sb.Append(string.IsNullOrEmpty(sdcTask.TSOServiceDeliveryChain.TSO.TSR.Practice.Name ?? "") ? " " : sdcTask.TSOServiceDeliveryChain.TSO.TSR.Practice.Name.Replace(",", "")).Append(",");       //Practice	
+                            sb.Append(sdcTask.UpdatedOn.ToString("dd-MMM-yyyy")).Append(",");                                           // Modified	
+                            sb.Append(string.IsNullOrEmpty(sdcTask.UpdatedBy) ? " " : sdcTask.UpdatedBy).Append(",");                     // Modified By	
+                            if (string.IsNullOrEmpty(sdcTask.Notes))
+                                sb.Append(" ");
+                            else
+                            {
+                                StringBuilder sbNotes = new StringBuilder();
+                                if (sdcTask.Notes.IndexOfAny(new char[] { '"', ',' }) != -1)
+                                    sbNotes.AppendFormat("\"{0}\"", sdcTask.Notes.Replace("\"", "\"\""));
+                                else
+                                {
+                                    sbNotes.Append(sdcTask.Notes);
+                                    sb.Append(String.Format("\"{0}\"", sbNotes));
+                                }
+
+                            }
+                            sb.Append(",");
+                            sb.Append(sdcTask.WeekNumber);
+                            sb.Append("\n");
+                        }
+                        objTSOServiceDeliveryChainTaskDTOList.RemoveAll(x => x.TSOServiceDeliveryChainId == tsoSDCId);
+                    }
+                    result.Content = new StringContent(sb.ToString(), Encoding.UTF8);
+                    result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment"); //attachment will force download
+                    result.Content.Headers.ContentDisposition.FileName = "TSOExport.csv";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(ex.Message);
+                throw ex;
+            }
+            return result;
+        }
+
+        private IList<TSOServiceDeliveryChainTaskDTO> GetAllServiceDeliveryChainTask()
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            IList<TSOServiceDeliveryChainTaskDTO> objTSODTOList = null;
+            try
+            {
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetAll(x => x.TSOServiceDeliveryChain, x => x.TSOServiceDeliveryChain.TSO.TSR,
+                    x => x.TSOServiceDeliveryChain.TSO.TeamLead, x => x.TSOServiceDeliveryChain.TSO.TSR.Client,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.ClientRegion, x => x.TSOServiceDeliveryChain.TSO.TSR.SolutionCentre,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.TSRCoreServices, x => x.TSOServiceDeliveryChain.TSO.TSR.OperationalRisk,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.AccountManager, x => x.TSOServiceDeliveryChain.TSO.TSR.DeliveryManager,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.TestManager, x => x.TSOServiceDeliveryChain.TSO.TSR.Vertical,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.Practice, x => x.TSOServiceDeliveryChain.TSO.TSR.Engagement,
+                    x => x.TSOServiceDeliveryChain.TSO.TSOStatus, x => x.TSOServiceDeliveryChain.TSO.TSR.PricingModel,
+                    x => x.ServiceDeliveryChainMethod, x => x.TSOServiceDeliveryChain.ServiceDeliveryChain);
+                if (objTSOServiceDeliveryChainTaskList != null && objTSOServiceDeliveryChainTaskList.Count > 0)
+                {
+                    objTSODTOList = new List<TSOServiceDeliveryChainTaskDTO>();
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        var objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        objTSODTOList.Add(objTSOServiceDeliveryChainTaskDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSODTOList;
+
+        }
+
+        /// <summary>
+        /// SearchByTitle
+        /// </summary>
+        /// <param name="startingRecordNumber"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        [ResponseType(typeof(DataCollection))]
+        [HttpGet, Route("v1/TSO/SearchByTitleOrClient/{startingRecordNumber}/{pageSize}/{Title}/{Status}")]
+        public JsonResult<DataCollection> SearchByTitleOrClient(int startingRecordNumber, int pageSize, string Title, int Status)
+        {
+            int totalRecords = 0; DataCollection objDataCollection;
+            IList<TSODTO> objTSOList = this.GetTSOByTitleOrClient(startingRecordNumber, pageSize, Title, Status, out totalRecords);
+
+            try
+            {
+                if (objTSOList.Count != 0)
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+
+                    foreach (TSODTO objTSOType in objTSOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTSOType);
+                    }
+                }
+                else
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, Message = "No Records Found", EntitySummary = new List<IBaseObject>() };
+
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+    }
+}

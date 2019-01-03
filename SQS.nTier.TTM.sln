@@ -1,0 +1,106 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.DAL", "SQS.nTier.TTM.DAL\SQS.nTier.TTM.DAL.csproj", "{9A78DE3F-20F5-45B6-BE47-8C6800745768}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.BAL", "SQS.nTier.TTM.BAL\SQS.nTier.TTM.BAL.csproj", "{571C0F69-8364-4EF7-B490-AA5B254D1A68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.DTO", "SQS.nTier.TTM.DTO\SQS.nTier.TTM.DTO.csproj", "{C1CFE400-DDB9-4524-8C4E-D5DA5D439A45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.Encryption", "SQS.nTier.TTM.Encryption\SQS.nTier.TTM.Encryption.csproj", "{31E379CB-E659-4B77-870D-923210A61F1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.GenericFramework", "SQS.nTier.TTM.GenericFramework\SQS.nTier.TTM.GenericFramework.csproj", "{07EB885E-9E71-4454-A210-DC50DA4A2159}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A657BECC-2EEF-491E-ADE8-9C949661612F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Masters", "Masters", "{B22DA428-4C36-4121-86BF-43DF4D6849AE}"
+	ProjectSection(SolutionItems) = preProject
+		GCop.json = GCop.json
+		..\HeatMap\HeatMap.nTier.Web2\Masters\Index.html = ..\HeatMap\HeatMap.nTier.Web2\Masters\Index.html
+		..\HeatMap\HeatMap.nTier.Web2\Masters\Login.html = ..\HeatMap\HeatMap.nTier.Web2\Masters\Login.html
+		..\HeatMap\HeatMap.nTier.Web2\Masters\Verticals.html = ..\HeatMap\HeatMap.nTier.Web2\Masters\Verticals.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2D270F16-C4AF-49D1-9892-CFEBC9781458}"
+	ProjectSection(SolutionItems) = preProject
+		..\HeatMap\HeatMap.nTier.Web2\scripts\common.js = ..\HeatMap\HeatMap.nTier.Web2\scripts\common.js
+		..\HeatMap\HeatMap.nTier.Web2\scripts\dateformt.js = ..\HeatMap\HeatMap.nTier.Web2\scripts\dateformt.js
+		..\HeatMap\HeatMap.nTier.Web2\scripts\jquery-3.1.1.min.js = ..\HeatMap\HeatMap.nTier.Web2\scripts\jquery-3.1.1.min.js
+		..\HeatMap\HeatMap.nTier.Web2\scripts\strength.js = ..\HeatMap\HeatMap.nTier.Web2\scripts\strength.js
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.Web", "SQS.nTier.TTM.Web\SQS.nTier.TTM.Web.csproj", "{CC8C21ED-A0AD-4D0B-8018-5AC4CDC8E6BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.WebAPI", "SQS.nTier.TTM.WebAPI\SQS.nTier.TTM.WebAPI.csproj", "{2FF65208-B81C-4C2B-8A5E-84E09198DCF4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.Logging", "SQS.nTier.TTM.Logger\SQS.nTier.TTM.Logging.csproj", "{62D19C53-7566-4826-BFD8-C6DE9E73D1C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.DataImport", "SQS.nTier.TTM.DataImport\SQS.nTier.TTM.DataImport.csproj", "{D892EE6B-0BAC-465F-96E1-8A8552A79E71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS.nTier.TTM.UserRoleDataImport", "SQS.nTier.TTM.UserRoleDataImport\SQS.nTier.TTM.UserRoleDataImport.csproj", "{E5BAB763-76FD-40DA-92F8-EDDAA95D9772}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TTMTests", "TTMTests\TTMTests.csproj", "{6F8F83BB-5151-4777-98BF-3BF3BFB2413B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9A78DE3F-20F5-45B6-BE47-8C6800745768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A78DE3F-20F5-45B6-BE47-8C6800745768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A78DE3F-20F5-45B6-BE47-8C6800745768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A78DE3F-20F5-45B6-BE47-8C6800745768}.Release|Any CPU.Build.0 = Release|Any CPU
+		{571C0F69-8364-4EF7-B490-AA5B254D1A68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{571C0F69-8364-4EF7-B490-AA5B254D1A68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{571C0F69-8364-4EF7-B490-AA5B254D1A68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{571C0F69-8364-4EF7-B490-AA5B254D1A68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1CFE400-DDB9-4524-8C4E-D5DA5D439A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1CFE400-DDB9-4524-8C4E-D5DA5D439A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1CFE400-DDB9-4524-8C4E-D5DA5D439A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1CFE400-DDB9-4524-8C4E-D5DA5D439A45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31E379CB-E659-4B77-870D-923210A61F1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31E379CB-E659-4B77-870D-923210A61F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31E379CB-E659-4B77-870D-923210A61F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31E379CB-E659-4B77-870D-923210A61F1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07EB885E-9E71-4454-A210-DC50DA4A2159}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07EB885E-9E71-4454-A210-DC50DA4A2159}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07EB885E-9E71-4454-A210-DC50DA4A2159}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07EB885E-9E71-4454-A210-DC50DA4A2159}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC8C21ED-A0AD-4D0B-8018-5AC4CDC8E6BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC8C21ED-A0AD-4D0B-8018-5AC4CDC8E6BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC8C21ED-A0AD-4D0B-8018-5AC4CDC8E6BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC8C21ED-A0AD-4D0B-8018-5AC4CDC8E6BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FF65208-B81C-4C2B-8A5E-84E09198DCF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FF65208-B81C-4C2B-8A5E-84E09198DCF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FF65208-B81C-4C2B-8A5E-84E09198DCF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FF65208-B81C-4C2B-8A5E-84E09198DCF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62D19C53-7566-4826-BFD8-C6DE9E73D1C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62D19C53-7566-4826-BFD8-C6DE9E73D1C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62D19C53-7566-4826-BFD8-C6DE9E73D1C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62D19C53-7566-4826-BFD8-C6DE9E73D1C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D892EE6B-0BAC-465F-96E1-8A8552A79E71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D892EE6B-0BAC-465F-96E1-8A8552A79E71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D892EE6B-0BAC-465F-96E1-8A8552A79E71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D892EE6B-0BAC-465F-96E1-8A8552A79E71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5BAB763-76FD-40DA-92F8-EDDAA95D9772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5BAB763-76FD-40DA-92F8-EDDAA95D9772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5BAB763-76FD-40DA-92F8-EDDAA95D9772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5BAB763-76FD-40DA-92F8-EDDAA95D9772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F8F83BB-5151-4777-98BF-3BF3BFB2413B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F8F83BB-5151-4777-98BF-3BF3BFB2413B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F8F83BB-5151-4777-98BF-3BF3BFB2413B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F8F83BB-5151-4777-98BF-3BF3BFB2413B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B22DA428-4C36-4121-86BF-43DF4D6849AE} = {A657BECC-2EEF-491E-ADE8-9C949661612F}
+		{2D270F16-C4AF-49D1-9892-CFEBC9781458} = {A657BECC-2EEF-491E-ADE8-9C949661612F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {476D7D1E-3275-4B65-8C78-EE4C1156BF6D}
+	EndGlobalSection
+EndGlobal

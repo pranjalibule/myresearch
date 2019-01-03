@@ -1,0 +1,367 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>TSR Dashboard</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        #accordionbody {
+            display: block;
+            border: 1px solid black;
+            border-collapse: separate;
+            border-spacing: 4px;
+            /*background-color: #333;*/
+        }
+
+        .info {
+            /*background: #fff;
+            color: #222;*/
+            width: 100%;
+            height: auto;
+            padding: 1px;
+            /*padding-left: 15px;*/
+            display: block;
+            overflow: hidden;
+            box-sizing: border-box;
+            transition: .1s linear;
+        }
+
+        #divProcessing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: grey;
+            opacity: .8;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:32px; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;">
+        <div class="leftDiv" style="height:820px;padding-top:11px;">
+            <table id="tblMain">
+                <tr>
+                    <td class="leftMenuSmallPortal">
+                        <a href="#" onclick="Home();">Home</a>
+                    </td>
+                </tr>
+                <!--<tr>
+                    <td class="leftMenuSmallPortal">
+                        <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                    </td>
+                </tr>-->
+                <tr>
+                    <td class="leftMenuSmallPortal GuestClass">
+                        <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallPortal GuestClass">
+                        <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallselectPortal">
+                        <a href="#">TSR Dashboard</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallPortal GuestClass">
+                        <a href="#">Export Data</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallPortal GuestClass">
+                        <a href="#">Master Data</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallPortal">
+                        <a href="#">Wiki</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="leftMenuSmallPortal">
+                        <a href="index.html">Sign Off</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="rightDiv">
+        <div class="scrollDiv" style="height:82vh;">
+            <label class="GuestInfo" > Kindly click on ID to view TSR Details.</label>
+            <table id="TSRTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">Title</th>
+                        <th style="width:350px;" align="left">Description</th>
+                        <th style="width:160px" align="center">Status</th>                     <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                        <!--<th style="width:80px" align="left">UpdatedBy</th>-->
+                        <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                        <th style="width:100px" align="center">Planned Effort</th>
+                        <th style="width:100px" align="center">Actual Effort</th>
+                        <th style="width:100px" align="center">Modified By</th>
+                        <th style="width:100px" align="center">TSO</th>
+                        <!--<th style="width:50px" align="center"></th>-->
+                    </tr>
+                </thead>
+                <tbody id="tsrdetails"></tbody>
+            </table>
+            <div id="pager" class="pager" style="display:none">
+                <table border="0">
+                    <tr>
+                        <td valign="middle"><img src="images/first.png" class="first" /></td>
+                        <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                        <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                        <td valign="middle"><img src="images/next.png" class="next" /></td>
+                        <td valign="middle"><img src="images/last.png" class="last" /></td>
+                        <td valign="middle">
+                            <select id="pagesize">
+                                <option selected="selected" value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        CheckUser();
+
+        if (roleId == "Guest" || roleId == "guest") {
+            $(".GuestClass").hide();
+            $(".GuestInfo").show();
+        }
+        else {
+            $(".GuestClass").show();
+            $(".GuestInfo").hide();
+        }
+        $(document).ready(function () {
+            try {
+                var urlGetAll = urlPrefix + "TSR/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+                LoadData(urlGetAll);
+
+                $("#lblUser").text(userName);
+            } catch (e) {
+                hideLoader();
+                showMessageBox(e, "red");
+            }
+            $(".accordion-section-title").on("click", function () {
+                var id = $(this).attr("id");
+
+                $("#tr_" + id).toggle('fast', 'linear', function () {
+                    if ($(this).css('display') == 'block') {
+                        $(this).css('display', '');
+                    }
+                });
+
+
+            });
+        });
+
+        function LoadData(url) {
+            showLoader();
+            clearTable();
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('userid', userId);
+                },
+                async: false,
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+					EntitySummary = result.EntitySummary;
+
+                    populateTable(EntitySummary);
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (errorThrown == " Unauthorized") {
+                        textStatus = "You do not have permission to made any changes in TSR";
+                    }
+                    showMessageBox(textStatus, "red");
+                    //showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+            $("#divProcessing").hide();
+        }
+
+        function clearTable() {
+            var i = $('#tsrdetails').empty();
+        }
+
+        function populateTable(EntitySummary) {
+            showLoader();
+            var tbody = $('#tsrdetails');
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+                var description = EntitySummary[totalrecords]["Description"];
+                var stdate = new Date(EntitySummary[totalrecords]["StartDate"]);
+                var tcdate = new Date(EntitySummary[totalrecords]["TargetCompletionDate"]);
+                var sdd = stdate.getDate();
+                var smm = stdate.getMonth() + 1; //January is 0!
+                var tcdd = tcdate.getDate();
+                var tcmm = tcdate.getMonth() + 1;
+                if (sdd < 10) {
+                    sdd = '0' + sdd
+                }
+
+                if (smm < 10) {
+                    smm = '0' + smm
+                }
+
+                if (tcdd < 10) {
+                    tcdd = '0' + tcdd
+                }
+
+                if (tcmm < 10) {
+                    tcmm = '0' + tcmm
+
+                }
+                var Startdate = smm + '/' + sdd + '/' + stdate.getFullYear();
+                var TargetCompletiondate = tcmm + '/' + tcdd + '/' + tcdate.getFullYear();
+                if (description == null) {
+                    description = "";
+                }
+
+                if (roleId == "Guest" || roleId == "guest") {
+                    tbody.append("<tr id='tr" + totalrecords + "'><td align='center'><a class='accordion-section-title' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                        "</a></td><td align='left' class='leftalign'>" + EntitySummary[totalrecords]["Title"] + "</td>" +
+                        "<td align='left'  class='description'>" + description + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["TSRStatus"]["Name"] + "</td>" +
+                        //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["CreatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                        //"<td align='left' class='leftalign'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                        //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                        "<td align='center'>View</td>" +
+                         "</tr>" + //<td align='center'><a title='Refresh' href=# onclick='RefreshTSRStatus(" + EntitySummary[totalrecords]["ID"] + ")'><img style='width:20px;' src='/images/refresh.png' /></a></td>
+                        //"<td align='center'><a href=# onclick='Delete(" + EntitySummary[totalrecords]["ID"] + ")'>Delete</a></td>" +
+                       // "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='10'><table><tbody id='accordionbody'><tr><td>Title:</td><td>" + EntitySummary[totalrecords]["Title"] + "</td><td>Planned Effort:</td><td class='smallTiletd'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td><td>Estimated Effort:</td><td class='smallTiletd'>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</td><td>Actual Effort:</td><td class='info'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td><td  >Start Date:</td><td class='info'>" + Startdate + "</td></tr>" +
+                       //"<tr><td>Operational Risk:</td><td class='info'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</td><td>ERP Order Number :</td><td class='info'>" + EntitySummary[totalrecords]["ERPordernumber"] + "</td><td>Delivery manager:</td><td class='info'>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</td><td>Account Manager:</td><td class='info'>" + EntitySummary[totalrecords]["AccountManager"].Name + "</td><td>Test Manager:</td><td class='info'>" + EntitySummary[totalrecords]["TestManager"].Name + "</td></tr>" +
+                       //"<tr ><td>TSR Status:</td><td class='info'>" + EntitySummary[totalrecords]["TSRStatus"].Name + "</td><td>Vertical :</td><td class='info'>" + EntitySummary[totalrecords]["Vertical"].Name + "</td><td>TargetCompletion Date:</td><td class='info'>" + TargetCompletiondate + "</td></tr></tr></tbody></table></td></tr>");
+                        "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='11' ><table id='accordionbody' style='width:100%'><tr><td>Title</td><td>Planned Effort</td><td>Estimated Effort</td><td>Actual Effort</td><td  >Start Date:</td><td>TargetCompletion Date:</td><td>ERP Order Number</td></tr>" +
+                        "<tr><td style='width:15%'>" + EntitySummary[totalrecords]["Title"] + "</td><td>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td><td>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</td><td>" + EntitySummary[totalrecords]["ActualEffort"] + "</td><td>" + Startdate + "</td><td>" + TargetCompletiondate + "</td><td>" + EntitySummary[totalrecords]["ERPordernumber"] + "</td></tr>" +
+                        "<tr><td>Operational Risk</td><td>TSR Status</td><td>Vertical</td><td>Delivery manager</td><td>Account Manager</td><td>Test Manager</td></tr>" +
+                        "<tr><td>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</td><td>" + EntitySummary[totalrecords]["TSRStatus"].Name + "</td><td>" + EntitySummary[totalrecords]["Vertical"].Name + "</td><td>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</td><td>" + EntitySummary[totalrecords]["AccountManager"].Name + "</td><td>" + EntitySummary[totalrecords]["TestManager"].Name + "</td></tr></table></td></tr>");
+                }
+                else {
+                    tbody.append("<tr id='tr" + totalrecords + "'><td align='center'><a class='accordion-section-title' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                        "</a></td><td align='left' class='leftalign'><a href='#' onclick=CreateNewTSR('" + EntitySummary[totalrecords]["ID"] + "')>" + EntitySummary[totalrecords]["Title"] + "</a></td>" +
+                        "<td align='left'  class='description'>" + description + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["TSRStatus"]["Name"] + "</td>" +
+                        //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["CreatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                        //"<td align='left' class='leftalign'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                        //"<td align='center'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy hh:MM TT") + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                        "<td align='center'><a href=# onclick='ViewTSO(" + EntitySummary[totalrecords]["ID"] + ")'>View</a></td>" +
+                         "</tr>" + //<td align='center'><a title='Refresh' href=# onclick='RefreshTSRStatus(" + EntitySummary[totalrecords]["ID"] + ")'><img style='width:20px;' src='/images/refresh.png' /></a></td>
+                        //"<td align='center'><a href=# onclick='Delete(" + EntitySummary[totalrecords]["ID"] + ")'>Delete</a></td>" +
+                       // "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='10'><table><tbody id='accordionbody'><tr><td>Title:</td><td>" + EntitySummary[totalrecords]["Title"] + "</td><td>Planned Effort:</td><td class='smallTiletd'>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td><td>Estimated Effort:</td><td class='smallTiletd'>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</td><td>Actual Effort:</td><td class='info'>" + EntitySummary[totalrecords]["ActualEffort"] + "</td><td  >Start Date:</td><td class='info'>" + Startdate + "</td></tr>" +
+                       //"<tr><td>Operational Risk:</td><td class='info'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</td><td>ERP Order Number :</td><td class='info'>" + EntitySummary[totalrecords]["ERPordernumber"] + "</td><td>Delivery manager:</td><td class='info'>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</td><td>Account Manager:</td><td class='info'>" + EntitySummary[totalrecords]["AccountManager"].Name + "</td><td>Test Manager:</td><td class='info'>" + EntitySummary[totalrecords]["TestManager"].Name + "</td></tr>" +
+                       //"<tr ><td>TSR Status:</td><td class='info'>" + EntitySummary[totalrecords]["TSRStatus"].Name + "</td><td>Vertical :</td><td class='info'>" + EntitySummary[totalrecords]["Vertical"].Name + "</td><td>TargetCompletion Date:</td><td class='info'>" + TargetCompletiondate + "</td></tr></tr></tbody></table></td></tr>");
+                        "<tr id='tr_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='11' ><table id='accordionbody' style='width:100%'><tr><td>Title</td><td>Planned Effort</td><td>Estimated Effort</td><td>Actual Effort</td><td  >Start Date:</td><td>TargetCompletion Date:</td><td>ERP Order Number</td></tr>" +
+                        "<tr><td style='width:15%'>" + EntitySummary[totalrecords]["Title"] + "</td><td>" + EntitySummary[totalrecords]["Plannedeffort"] + "</td><td>" + EntitySummary[totalrecords]["Estimatedeffort"] + "</td><td>" + EntitySummary[totalrecords]["ActualEffort"] + "</td><td>" + Startdate + "</td><td>" + TargetCompletiondate + "</td><td>" + EntitySummary[totalrecords]["ERPordernumber"] + "</td></tr>" +
+                        "<tr><td>Operational Risk</td><td>TSR Status</td><td>Vertical</td><td>Delivery manager</td><td>Account Manager</td><td>Test Manager</td></tr>" +
+                        "<tr><td>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</td><td>" + EntitySummary[totalrecords]["TSRStatus"].Name + "</td><td>" + EntitySummary[totalrecords]["Vertical"].Name + "</td><td>" + EntitySummary[totalrecords]["DeliveryManager"].Name + "</td><td>" + EntitySummary[totalrecords]["AccountManager"].Name + "</td><td>" + EntitySummary[totalrecords]["TestManager"].Name + "</td></tr></table></td></tr>");
+                }
+            }
+            hideLoader();
+
+        }
+
+        function Delete(ID) {
+            if (!isNaN(ID) && ID != "") {
+                showDeleteConfirm("Are you sure, you want to delete?", ID);
+            }
+        }
+
+        function RefreshTSRStatus(ID) {
+            alert("RefreshTSRStatus : " + ID);
+        }
+
+        function doDelete(ID) {
+            showLoader();
+            var url = urlPrefix + "/TSR/DeleteTSR/" + ID;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox("TSR deleted successfully.", "green", null, true);
+                        //callSuccess();
+                        //$("#txtOutput").css('color', 'green');
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+
+    </script>
+</body>
+</html>

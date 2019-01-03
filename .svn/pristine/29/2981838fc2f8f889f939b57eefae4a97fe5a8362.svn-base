@@ -1,0 +1,82 @@
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.DAL
+{
+    using GenericFramework;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+
+    [Table("TSOServiceDeliveryChain")]
+    public partial class TSOServiceDeliveryChain : IBaseEntity
+    {
+        public TSOServiceDeliveryChain()
+        {
+            TSOServiceDeliveryChainActualTasks = new HashSet<TSOServiceDeliveryChainTaskActual>();
+
+            TSOServiceDeliveryChainPlannedTasks = new HashSet<TSOServiceDeliveryChainTaskPlanned>();
+        }
+
+        [Key, Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ID { get; set; }
+
+        public int? ServiceDeliveryChainMethodId { get; set; }
+
+        [StringLength(500)]
+        public string Notes { get; set; }
+
+        public DateTime PlannedStartDate { get; set; }
+
+        public DateTime PlannedCompletionDate { get; set; }
+        public int TSOId { get; set; }
+
+        public int ServiceDeliveryChainId { get; set; }
+
+        public int TaskStatusId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string CreatedBy { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string UpdatedBy { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
+
+        public int Version { get; set; }
+
+        public virtual ServiceDeliveryChain ServiceDeliveryChain { get; set; }
+
+        public virtual TSO TSO { get; set; }
+
+        public virtual ServiceDeliveryChainMethod ServiceDeliveryChainMethod { get; set; }
+
+        public virtual TaskStatus TaskStatus { get; set; }
+
+        public virtual ICollection<TSOServiceDeliveryChainTaskActual> TSOServiceDeliveryChainActualTasks { get; set; }
+
+        public virtual ICollection<TSOServiceDeliveryChainTaskPlanned> TSOServiceDeliveryChainPlannedTasks { get; set; }
+
+
+
+        [NotMapped]
+        public ObjectSate ObjectSate
+        {
+            get; set;
+        }
+    }
+}

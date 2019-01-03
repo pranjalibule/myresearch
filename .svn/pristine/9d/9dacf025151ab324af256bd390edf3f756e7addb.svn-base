@@ -1,0 +1,503 @@
+﻿using Newtonsoft.Json;
+using SQS.nTier.TTM.BAL;
+using SQS.nTier.TTM.DAL;
+using SQS.nTier.TTM.DTO;
+using SQS.nTier.TTM.GenericFramework;
+using SQS.nTier.TTM.GenericFramework.Utility;
+using SQS.nTier.TTM.WebAPI.Common;
+using SQS.nTier.TTM.WebAPI.RoleAttribute;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity.Validation;
+using System.Linq;
+using System.Text;
+using System.Web.Http;
+using System.Web.Http.Description;
+using System.Web.Http.Results;
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    [RoutePrefix("api")]
+    public class TSOServiceDeliveryChainRiskController : ApiController
+    {
+        #region Private Functions
+
+        private IList<TSOServiceDeliveryChainDTO> GetAllTSOServiceDeliveryChainRisk(int taskid, int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSOServiceDeliveryChainDTO> objTaskSDTOList = null;
+            totalRecords = 0;
+            try
+            {
+
+                IList<TSOServiceDeliveryChain> objTask = null;
+                objTask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetAllWithWhere(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords, x => x.ID == taskid,
+                    x => x.ServiceDeliveryChain,
+                    x => x.TSOServiceDeliveryChainActualRisks,
+                    x => x.TSOServiceDeliveryChainPlannedRisks,
+                    x => x.TSO, x => x.TSO.TSR.Client, x => x.TSO.TSR,
+                    x => x.TSO.TSR.SolutionCentre, x => x.TSO.TSR.Practice
+                    );
+
+
+
+
+                objTaskSDTOList = new List<TSOServiceDeliveryChainDTO>();
+                objBusinessLayer = new BusinessLayer(ls);
+                foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTask)
+                {                
+                    TSOServiceDeliveryChainActualRisk objTSOServiceDeliveryChainTaskActual = objTSOServiceDeliveryChain.TSOServiceDeliveryChainActualRisks.OrderBy(x => x.WeekNumber).ToList().LastOrDefault();
+                    TSOServiceDeliveryChainPlannedRisk objTSOServiceDeliveryChainTaskPlanned = objTSOServiceDeliveryChain.TSOServiceDeliveryChainPlannedRisks.OrderBy(x => x.WeekNumber).ToList().LastOrDefault();
+                    objBusinessLayer = new BusinessLayer(ls);
+                    TSOServiceDeliveryChainActualRisk objTSOServiceDeliveryChainTaskActuals = objBusinessLayer.TSOServiceDeliveryChainActualRiskRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTaskActual.ID, x => x.ResponsiblePerson, x => x.ActualOperationalRiskIndicator, x => x.ActualOperationalRisk);
+                    objBusinessLayer = new BusinessLayer(ls);
+                    TSOServiceDeliveryChainPlannedRisk objTSOServiceDeliveryChainTaskPlanneds = objBusinessLayer.TSOServiceDeliveryChainPlannedRiskRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTaskActual.ID,x => x.PlannedOperationalRisk, x => x.PlannedOperationalRiskIndicator);
+
+                    if (null != objTSOServiceDeliveryChainTaskActuals && null != objTSOServiceDeliveryChainTaskPlanneds)
+                    {
+                        var objResponsibleDTO = Conversions.ToDTO<UserDTO, User>(objTSOServiceDeliveryChainTaskActuals.ResponsiblePerson);
+                        var objOperationalARiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSOServiceDeliveryChainTaskActuals.ActualOperationalRisk);
+                        var objOperationalAIndicatorDTO = Conversions.ToDTO<OperationalRiskIndicatorDTO, OperationalRiskIndicator>(objTSOServiceDeliveryChainTaskActuals.ActualOperationalRiskIndicator);
+
+                        var objTSOSDeliveryChainActualDTO = Conversions.ToDTO<TSOServiceDeliveryChainActualRiskDTO, TSOServiceDeliveryChainActualRisk>(objTSOServiceDeliveryChainTaskActuals);
+                        objTSOSDeliveryChainActualDTO.ActualOperationalRisk = objOperationalARiskDTO;
+                        objTSOSDeliveryChainActualDTO.ActualOperationalRiskIndicator = objOperationalAIndicatorDTO;
+                        objTSOSDeliveryChainActualDTO.ResponsiblePerson = objResponsibleDTO;
+
+                        //planned
+                        var objOperationalPRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSOServiceDeliveryChainTaskPlanneds.PlannedOperationalRisk);
+                        var objOperationalPIndicatorDTO = Conversions.ToDTO<OperationalRiskIndicatorDTO, OperationalRiskIndicator>(objTSOServiceDeliveryChainTaskPlanneds.PlannedOperationalRiskIndicator);
+
+                        var objTSOSDeliveryChainPlannedDTO = Conversions.ToDTO<TSOServiceDeliveryChainPlannedRiskDTO, TSOServiceDeliveryChainPlannedRisk>(objTSOServiceDeliveryChainTaskPlanneds);
+                        objTSOSDeliveryChainPlannedDTO.PlannedOperationalRisk = objOperationalPRiskDTO;
+                        objTSOSDeliveryChainPlannedDTO.PlannedOperationalRiskIndicator = objOperationalPIndicatorDTO;
+
+                        var objTSOSDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSOServiceDeliveryChain);
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualRisks.Clear();
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedRisks.Clear();
+
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualRisks.Add(objTSOSDeliveryChainActualDTO);
+                       
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedRisks.Add(objTSOSDeliveryChainPlannedDTO);
+                        objTaskSDTOList.Add(objTSOSDeliveryChainDTO);
+                    }
+                    else
+                    {
+                        var objTSOSDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSOServiceDeliveryChain);
+                        objTaskSDTOList.Add(objTSOSDeliveryChainDTO);
+                    }
+                }
+                totalRecords = objTaskSDTOList.Count;
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTaskSDTOList;
+        }
+
+
+
+        private IList<TSOServiceDeliveryChainDTO> GetAllUserTASKS(int startingRecordNumber, int pageSize, string userId, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            totalRecords = 0;
+            IList<TSOServiceDeliveryChainDTO> objTaskSDTOList = null;
+
+            try
+            {
+                IList<TSOServiceDeliveryChain> objTask = null;
+                int userID = Convert.ToInt32(userId);
+                objBusinessLayer = new BusinessLayer(ls);
+                User objUser = objBusinessLayer.UserRepository.GetSingle(x => x.ID == userID, x => x.Role);
+                //Note - Currently we are showing all record in TSO dashboard as per discussion
+                if (objUser.Role.Name == "Admin" || objUser.Role.Name == "Guest")
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objTask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords,
+                     x => x.ServiceDeliveryChain,
+                     x => x.TSOServiceDeliveryChainActualRisks,
+                    x => x.TSOServiceDeliveryChainPlannedRisks,
+                    x => x.TSO, x => x.TSO.TSR.Client, x => x.TSO.TSR,
+                    x => x.TSO.TSR.SolutionCentre,
+                    x=>x.TSO.TSR.Practice
+
+                    );
+                }
+                else
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objTask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetAllWithWhere(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords,
+                    x => x.TSO.TSR.AccountManagerId == userID || x.TSO.TSR.DeliveryManagerId == userID || x.TSO.TSR.TestManagerId == userID || x.TSO.TeamLeadId == userID,
+                    x => x.ServiceDeliveryChain,
+                      x => x.TSOServiceDeliveryChainActualRisks,
+                    x => x.TSOServiceDeliveryChainPlannedRisks,
+                    x => x.TSO, x => x.TSO.TSR.Client, x => x.TSO.TSR,
+                    x => x.TSO.TSR.SolutionCentre,
+                    x => x.TSO.TSR.Practice
+                    );
+
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    List<TSRTMOUser> tmoUsers = objBusinessLayer.TSRTMOUserRepository.GetList(x => x.UserId == userID, x => x.TSR, x => x.TSR.TSRStatus, x => x.TSR.TestManager, x => x.TSR.Client, x => x.TSR.AccountManager, x => x.TSR.DeliveryManager, x => x.TSR.Engagement, x => x.TSR.OperationalRisk, x => x.TSR.Vertical, x => x.TSR.SolutionCentre, x => x.TSR.Practice, x => x.TSR.PricingModel, x => x.TSR.ClientRegion, x => x.TSR.TSRReleventRepositories, x => x.TSR.TSRCoreServices, x => x.TSR.TSRTMOUsers).ToList();
+                    foreach (var item in tmoUsers)
+                    {
+                        if (objTask.Count < pageSize)
+                        {
+                            objBusinessLayer = new BusinessLayer(ls);
+                            if (!objTask.Any(x => x.TSO.TSRId == item.TSRId))
+                            {
+                                IList<TSOServiceDeliveryChain> objSTask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetList(x => x.TSO.TSRId == item.TSRId,
+                                x => x.ServiceDeliveryChain,
+                                 x => x.TSOServiceDeliveryChainActualRisks,
+                                 x => x.TSOServiceDeliveryChainPlannedRisks,
+                                x => x.TSO, x => x.TSO.TSR.Client, x => x.TSO.TSR,
+                                x => x.TSO.TSR.SolutionCentre,
+                                x => x.TSO.TSR.Practice
+                                ).ToList();
+
+                                foreach (TSOServiceDeliveryChain objT in objSTask)
+                                {
+                                    objTask.Add(objT);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                objTaskSDTOList = new List<TSOServiceDeliveryChainDTO>();
+                List<TSOServiceDeliveryChain> taskList  = objTask.Where(x => x.ServiceDeliveryChainId == 42).ToList();
+                foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in taskList)
+                {
+
+                    TSOServiceDeliveryChainActualRisk objTSOServiceDeliveryChainTaskActual = objTSOServiceDeliveryChain.TSOServiceDeliveryChainActualRisks.OrderBy(x => x.WeekNumber).ToList().LastOrDefault();
+                    TSOServiceDeliveryChainPlannedRisk objTSOServiceDeliveryChainTaskPlanned = objTSOServiceDeliveryChain.TSOServiceDeliveryChainPlannedRisks.OrderBy(x => x.WeekNumber).ToList().LastOrDefault();
+
+                    //if (null != objTSOServiceDeliveryChainTaskActual && null != objTSOServiceDeliveryChainTaskPlanned)
+                    //{
+                    //    var objTSOSDeliveryChainActualDTO = Conversions.ToDTO<TSOServiceDeliveryChainActualRiskDTO, TSOServiceDeliveryChainActualRisk>(objTSOServiceDeliveryChainTaskActual);
+                    //    var objTSOSDeliveryChainPlannedDTO = Conversions.ToDTO<TSOServiceDeliveryChainPlannedRiskDTO, TSOServiceDeliveryChainPlannedRisk>(objTSOServiceDeliveryChainTaskPlanned);
+                    //    var objTSOSDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSOServiceDeliveryChain);
+                    //    objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualTasks.Clear();
+                    //    objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedTasks.Clear();                
+
+                    //    objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualRisks.Add(objTSOSDeliveryChainActualDTO);
+                    //    objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedRisks.Add(objTSOSDeliveryChainPlannedDTO);
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    TSOServiceDeliveryChainActualRisk objTSOServiceDeliveryChainTaskActuals = objBusinessLayer.TSOServiceDeliveryChainActualRiskRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTaskActual.ID, x => x.ResponsiblePerson, x => x.ActualOperationalRiskIndicator, x => x.ActualOperationalRisk);
+                    objBusinessLayer = new BusinessLayer(ls);
+                    TSOServiceDeliveryChainPlannedRisk objTSOServiceDeliveryChainTaskPlanneds = objBusinessLayer.TSOServiceDeliveryChainPlannedRiskRepository.GetSingle(x => x.ID == objTSOServiceDeliveryChainTaskActual.ID, x => x.PlannedOperationalRisk, x => x.PlannedOperationalRiskIndicator);
+
+                    if (null != objTSOServiceDeliveryChainTaskActuals && null != objTSOServiceDeliveryChainTaskPlanneds)
+                    {
+                        var objResponsibleDTO = Conversions.ToDTO<UserDTO, User>(objTSOServiceDeliveryChainTaskActuals.ResponsiblePerson);
+                        var objOperationalARiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSOServiceDeliveryChainTaskActuals.ActualOperationalRisk);
+                        var objOperationalAIndicatorDTO = Conversions.ToDTO<OperationalRiskIndicatorDTO, OperationalRiskIndicator>(objTSOServiceDeliveryChainTaskActuals.ActualOperationalRiskIndicator);
+
+                        var objTSOSDeliveryChainActualDTO = Conversions.ToDTO<TSOServiceDeliveryChainActualRiskDTO, TSOServiceDeliveryChainActualRisk>(objTSOServiceDeliveryChainTaskActuals);
+                        objTSOSDeliveryChainActualDTO.ActualOperationalRisk = objOperationalARiskDTO;
+                        objTSOSDeliveryChainActualDTO.ActualOperationalRiskIndicator = objOperationalAIndicatorDTO;
+                        objTSOSDeliveryChainActualDTO.ResponsiblePerson = objResponsibleDTO;
+
+                        //planned
+                        var objOperationalPRiskDTO = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSOServiceDeliveryChainTaskPlanneds.PlannedOperationalRisk);
+                        var objOperationalPIndicatorDTO = Conversions.ToDTO<OperationalRiskIndicatorDTO, OperationalRiskIndicator>(objTSOServiceDeliveryChainTaskPlanneds.PlannedOperationalRiskIndicator);
+
+                        var objTSOSDeliveryChainPlannedDTO = Conversions.ToDTO<TSOServiceDeliveryChainPlannedRiskDTO, TSOServiceDeliveryChainPlannedRisk>(objTSOServiceDeliveryChainTaskPlanneds);
+                        objTSOSDeliveryChainPlannedDTO.PlannedOperationalRisk = objOperationalPRiskDTO;
+                        objTSOSDeliveryChainPlannedDTO.PlannedOperationalRiskIndicator = objOperationalPIndicatorDTO;
+
+                        var objTSOSDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSOServiceDeliveryChain);
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualRisks.Clear();
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedRisks.Clear();
+
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainActualRisks.Add(objTSOSDeliveryChainActualDTO);
+                        objTSOSDeliveryChainDTO.TSOServiceDeliveryChainPlannedRisks.Add(objTSOSDeliveryChainPlannedDTO);
+
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objTSOSDeliveryChainDTO.TSO = Conversions.ToDTO<TSODTO, TSO>(objBusinessLayer.TSORepository.GetSingle(x => x.ID == objTSOSDeliveryChainDTO.TSOId,
+                            x => x.TSR, x => x.TSR.Client, x => x.TSR.SolutionCentre, x => x.TSR.Practice, x => x.TeamLead, x => x.TSOStatus,
+                            x => x.TSOServiceDeliveryChains, x => x.TSOProductivityInputs, x => x.TSOProductivityOutcomes, x => x.OperationalRisk,
+                            x => x.CoreService, x => x.RelevantRepository));
+                        objTaskSDTOList.Add(objTSOSDeliveryChainDTO);
+                    }
+                    else
+                    {
+                        var objTSOSDeliveryChainDTO = Conversions.ToDTO<TSOServiceDeliveryChainDTO, TSOServiceDeliveryChain>(objTSOServiceDeliveryChain);
+                        //objTSOSDeliveryChainDTO.TaskStatus = "not started";
+                        objTaskSDTOList.Add(objTSOSDeliveryChainDTO);
+                    }
+                }
+                totalRecords = objTaskSDTOList.Count;
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+
+            return objTaskSDTOList;
+        }
+
+        #endregion
+
+
+        /// <summary>
+        /// GetAllUserPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/TSOServiceDeliveryChainRisk/GetAllUserPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,TMO,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllUserPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            Encryption.CryptorEngine objCryptorEngine = new Encryption.CryptorEngine();
+            JsonResult<DataCollection> objReturn = null;
+            string userId = Request.Headers.GetValues("userid").FirstOrDefault();
+            if (!String.IsNullOrWhiteSpace(userId))
+            {
+                userId = userId.Replace("~", "=").Replace("!", "+");
+                string User = objCryptorEngine.Decrypt(userId, true);
+                bool isAdmin = User.ToLower().Contains("admin");
+                string[] usrInfo = User.Split('#');
+                User = usrInfo[usrInfo.Length - 2];
+
+
+                IList<TSOServiceDeliveryChainDTO> objTSOServiceDeliveryChainDTOList = this.GetAllUserTASKS(startingRecordNumber, pageSize, User, out totalRecords);
+
+                DataCollection objDataCollection;
+
+                try
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                    if (null != objTSOServiceDeliveryChainDTOList)
+                    {
+                        foreach (TSOServiceDeliveryChainDTO objTASK in objTSOServiceDeliveryChainDTOList)
+                        {
+                            objDataCollection.EntitySummary.Add(objTASK);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                    throw;
+                }
+
+                objReturn = Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return objReturn;
+        }
+
+
+
+
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/TSOServiceDeliveryChainRisk/GetAllPaged/{taskid}/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,TMO,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllPaged(int taskid, int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            //IList<TSOServiceDeliveryChainTaskDTO> objTASKDTOList = this.GetAllTask(tsoId, startingRecordNumber, pageSize, out totalRecords);
+            IList<TSOServiceDeliveryChainDTO> objTASK1DTOList = this.GetAllTSOServiceDeliveryChainRisk(taskid, startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objTASK1DTOList)
+                {
+                    foreach (TSOServiceDeliveryChainDTO objTASK in objTASK1DTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTASK);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+
+
+        [HttpPost, Route("v1/TSOServiceDeliveryChainRisk/CreateRiskForTask")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Team Lead,Test Manager,TMO")]
+        public JsonResult<string> CreateRiskForTask([FromBody] RiskDTO data)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                TSOServiceDeliveryChainActualRiskDTO tsoServiceDeliveryChainTaskActualDTO = new TSOServiceDeliveryChainActualRiskDTO();
+                TSOServiceDeliveryChainPlannedRiskDTO tsoServiceDeliveryChainTaskPlannedDTO = new TSOServiceDeliveryChainPlannedRiskDTO();
+
+                tsoServiceDeliveryChainTaskActualDTO.ID = data.ID;
+                tsoServiceDeliveryChainTaskActualDTO.TSOServiceDeliveryChainId = data.TSOServiceDeliveryChainId;
+                tsoServiceDeliveryChainTaskActualDTO.ResponsiblePersonId = data.ResponsiblePersonId;
+                tsoServiceDeliveryChainTaskActualDTO.ResponsiblePerson = data.ResponsiblePerson;
+                tsoServiceDeliveryChainTaskActualDTO.DueDate = data.DueDate;
+                tsoServiceDeliveryChainTaskActualDTO.CreatedBy = data.CreatedBy;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRisk = data.ActualOperationalRisk;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRiskId = data.ActualOperationalRiskId;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRiskIndicator = data.ActualOperationalRiskIndicator;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRiskIndicatorId = data.ActualOperationalRiskIndicatorId;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRiskDescription = data.ActualOperationalRiskDescription;
+                tsoServiceDeliveryChainTaskActualDTO.ActualOperationalRiskMitigation = data.ActualOperationalRiskMitigation;
+                tsoServiceDeliveryChainTaskActualDTO.WeekNumber = data.WeekNumber;
+                tsoServiceDeliveryChainTaskActualDTO.Year = DateTime.Now.Year;
+
+
+                tsoServiceDeliveryChainTaskPlannedDTO.ID = data.ID;
+                tsoServiceDeliveryChainTaskPlannedDTO.TSOServiceDeliveryChainId = data.TSOServiceDeliveryChainId;
+                tsoServiceDeliveryChainTaskPlannedDTO.CreatedBy = data.CreatedBy;
+                tsoServiceDeliveryChainTaskPlannedDTO.WeekNumber = data.WeekNumber + 1;
+                tsoServiceDeliveryChainTaskPlannedDTO.Year = DateTime.Now.Year;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRisk = data.PlannedOperationalRisk;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRiskId = data.PlannedOperationalRiskId;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRiskIndicatorId = data.PlannedOperationalRiskIndicatorId;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRiskIndicator = data.PlannedOperationalRiskIndicator;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRiskDescription = data.PlannedOperationalRiskDescription;
+                tsoServiceDeliveryChainTaskPlannedDTO.PlannedOperationalRiskMitigation = data.PlannedOperationalRiskMitigation;
+
+
+
+                result = Json(this.AddNewRisk(tsoServiceDeliveryChainTaskActualDTO, tsoServiceDeliveryChainTaskPlannedDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        private string AddNewRisk(TSOServiceDeliveryChainActualRiskDTO tsoServiceDeliveryChainTaskActualDTO, TSOServiceDeliveryChainPlannedRiskDTO tsoServiceDeliveryChainTaskPlannedDTO)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = new LoginSession();
+            ls.LoginName = tsoServiceDeliveryChainTaskActualDTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSOServiceDeliveryChainActualRisk objTSOServiceDeliveryChainActual = Conversions.ToEntity<TSOServiceDeliveryChainActualRiskDTO, TSOServiceDeliveryChainActualRisk>(tsoServiceDeliveryChainTaskActualDTO);
+                TSOServiceDeliveryChainPlannedRisk objTSOServiceDeliveryChainPlanned = Conversions.ToEntity<TSOServiceDeliveryChainPlannedRiskDTO, TSOServiceDeliveryChainPlannedRisk>(tsoServiceDeliveryChainTaskPlannedDTO);
+
+                TSOServiceDeliveryChain existstask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetSingle(x => x.ID == tsoServiceDeliveryChainTaskActualDTO.TSOServiceDeliveryChainId, x => x.TSOServiceDeliveryChainActualTasks, x => x.TSOServiceDeliveryChainPlannedTasks);
+
+                TSOServiceDeliveryChainActualRisk existstaskactual = existstask.TSOServiceDeliveryChainActualRisks.FirstOrDefault(x => x.WeekNumber == objTSOServiceDeliveryChainActual.WeekNumber);
+                int plannedweekNumber = objTSOServiceDeliveryChainActual.WeekNumber + 1;
+                TSOServiceDeliveryChainPlannedRisk existstaskplanned = existstask.TSOServiceDeliveryChainPlannedRisks.FirstOrDefault(x => x.WeekNumber == plannedweekNumber);
+
+
+                if (existstaskactual != null && existstaskplanned != null)
+                {
+                    if (existstaskactual != null)
+                    {
+                        objTSOServiceDeliveryChainActual.CreatedOn = existstaskactual.CreatedOn;
+                        objTSOServiceDeliveryChainActual.UpdatedOn = DateTime.Today;
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objBusinessLayer.TSOServiceDeliveryChainActualRiskRepository.Update(objTSOServiceDeliveryChainActual);
+                    }
+
+                    if (existstaskplanned != null)
+                    {
+                        objTSOServiceDeliveryChainPlanned.CreatedOn = existstaskplanned.CreatedOn;
+                        objTSOServiceDeliveryChainPlanned.UpdatedOn = DateTime.Today;
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objBusinessLayer.TSOServiceDeliveryChainPlannedRiskRepository.Update(objTSOServiceDeliveryChainPlanned);
+                    }
+
+                    returnMessage = "Risk updated successfully";
+                }
+                else
+                {
+                    //int week = GetWeekOfYear(DateTime.Now);
+                    //if (objTSOServiceDeliveryChainActual.WeekNumber < week)
+                    //{
+                    //    TTMLogger.Logger.LogError(String.Format("Error - {0}", "You can not create privious week data."));
+                    //    throw new Exception("You can not create previous week data.");
+                    //}                   
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objBusinessLayer.TSOServiceDeliveryChainActualRiskRepository.Add(objTSOServiceDeliveryChainActual);
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objBusinessLayer.TSOServiceDeliveryChainPlannedRiskRepository.Add(objTSOServiceDeliveryChainPlanned);
+
+                    returnMessage = "Risk saved successfully";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+    }
+}

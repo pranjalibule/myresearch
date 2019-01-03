@@ -1,0 +1,8 @@
+﻿.leftDiv {
+    width:16%;
+}
+
+.rightDiv {
+    min-height:830px;
+    width:81%;
+}

@@ -1,0 +1,1182 @@
+﻿var urlPrefix = "http://localhost:10048/api/v1/";
+
+var clientId = 'sqsAuth';
+var userId = '';
+var userName = '';
+var roleId = '';
+var AllInfoUser = '';
+
+function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.replace("#", "").slice(window.location.href.indexOf('?') + 1).split('&');
+    for (var i = 0; i < hashes.length; i++) {
+        hash = hashes[i].split('=');
+        if (hash[0].indexOf(".html") < 0) {
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }
+    }
+    return vars;
+}
+
+function bindUserPopUp() {
+    $("#userName").text("Name : " + AllInfoUser.name);
+    $("#userRole").text("Role : " + AllInfoUser.role);
+}
+
+$.fn.slideFadeToggle = function (easing, callback) {
+    return this.animate({ opacity: 'toggle', height: 'toggle' }, 'fast', easing, callback);
+};
+
+function CheckUser() {
+    var url = urlPrefix + "User/GetUser";
+
+    var objUserJSON = JSON.stringify({ userName: userId, password: '', adUser: true });
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: objUserJSON,
+        async: false,
+        success: function (result) {
+            if (result != null && parseInt(result.id) > 0) {
+                userName = result.name;
+                roleId = result.role;
+                AllInfoUser = result;
+                bindUserPopUp();
+
+                if (roleId.toLowerCase() == "account manager") {
+                    $("#trNewTSR").hide();
+                }
+                else {
+                    $("#trNewTSR").show();
+                }
+                return userName;
+            }
+            else {
+                showMessageBox("Invalid Login", "red");
+                userName = "";
+                roleId = "";
+                return userName;
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function validation(val, validateType) {
+    var isValide = true;
+    if (validateType.toLowerCase() === "length") {
+        if (val.length > 30) {
+            isValide = false;
+        }
+    }
+    else if (validateType.toLowerCase() === "digit") {
+        if (val.length > 10) {
+            isValide = false;
+        }
+    }
+    else if (validateType.toLowerCase() === "date") {
+        var re = new RegExp("^(([0-9])|([0-2][0-9])|([3][0-1]))\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\-\d{4}$");
+        if (val.match(re)) {
+            isValide = false;
+        }
+    }
+    return isValide;
+}
+
+function showMessageBox(message, color, url, isReload, controlToFocus, isUser) {
+    if ($("#modal-wait").length < 1) {
+        var dig = $('<div id="modal-wait" style="display:none" title="TTM"></div>');
+        $(dig).html('<div style="display:table-cell;padding-left:20px;color:black;text-align:justify;"><p><b>' + message + '<b></p></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "auto",
+            width: "500",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").css("width", "93%");
+                if (typeof isUser != "undefined" && isUser != "" && isUser != null) {
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                }
+                else {
+                    $(".ui-dialog-buttonpane").css("width", "96%");
+                }
+                $(".ui-widget-overlay").css("opacity", "1");
+                $(this).find(".ui-button").blur();
+            }, this),
+            position: { my: "center top", at: "center top+100" },
+            buttons: [{
+                text: "Ok",
+                click: function (event) {
+                    if (url != "" && url != null && typeof url != "undefined" && !isReload) {
+                        window.location = url;
+                    }
+                    else if (isReload) {
+                        location.reload();
+                    }
+                    else if (typeof controlToFocus != "undefined" && controlToFocus != "" && controlToFocus != null) {
+                        $("#" + controlToFocus).focus();
+                    }
+                    $(this).dialog("destroy");
+                }
+            }]
+        });
+    }
+}
+
+function showDeleteConfirm(message, ID) {
+    if ($("#modal-wait").length < 1) {
+        var dig = $('<div id="modal-wait" style="display:none" title="TTM"></div>');
+        $(dig).html('<div style="display:table-cell;padding-left:20px;color:black;text-align:justify;"><p><b>' + message + '<b></p></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "auto",
+            width: "500",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").css("width", "93%");
+                $(".ui-dialog-buttonpane").css("width", "96%");
+                $(".ui-widget-overlay").css("opacity", "1");
+            }, this),
+            position: { my: "center top", at: "center top+100" },
+            buttons: [{
+                text: "Ok",
+                click: function () {
+                    doDelete(ID);
+                    $(this).dialog("destroy");
+                }
+            },
+            {
+                text: "Cancel",
+                icon: "ui-icon-heart",
+                click: function () {
+                    $(this).dialog("destroy");
+                }
+
+            }]
+        });
+    }
+}
+
+function onlyten(e, field) {
+    var val = field.value;
+    if (val.length > 10) {
+        field.value = val.substring(0, 10);
+    }
+}
+
+function showLoader() {
+    setTimeout(function () {
+        $("#WaitCursor").html('<p>Loading....</p><div class="loader"></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "300",
+            width: "190",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-content").css("overflow-x", "hidden");
+                //$(".ui-dialog-content").css("margin-left", "25px");
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").remove();
+                $(".ui-widget-overlay").css("opacity", "1");
+            }, this),
+            position: { my: "center top", at: "center top+100" }
+        });
+    }, 0);
+}
+
+function hideLoader() {
+    setTimeout(function () {
+        try {
+            $("#WaitCursor").dialog("close");
+            $("#WaitCursor").dialog("destroy");
+        } catch (e) {
+
+        }
+    }, 200);
+}
+//debugger;
+var tsrId = getUrlVars()["tsrid"];
+
+var tsoId = getUrlVars()["tsoid"];
+
+function removerowToselect() {
+    var windowURL = window.location.href;
+    windowURL = windowURL.substring(0, windowURL.indexOf("rowToselect") - 1);
+    window.history.pushState(null, null, windowURL);
+}
+
+function GotoTSODashboard() {
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=undefined";
+}
+
+function GotoTASKDashboard() {
+    window.location = "TASKDashboard.html?user=" + encodeURI(userId) + "&tsoid=undefined";
+}
+
+
+function CreateNewTSR(tsrId) {
+    if (tsrId == '') {
+        window.location = "TSR.html?user=" + encodeURI(userId);
+    }
+    else {
+        window.location = "TSR.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+    }
+}
+
+function ViewTASK(tsoId) {
+    window.location = "TASKDashboard.html?user=" + encodeURI(userId) + "&tsoid=" + tsoId;
+}
+
+function ViewTSO(tsrId) {
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+}
+
+function Home() {
+    window.location = "Home.html?user=" + encodeURI(userId);
+}
+
+function Wiki() {
+    window.location.href = "Wiki.html?user=" + encodeURI(userId);
+}
+
+
+function CreateNewTSO(tsoId) {
+    if (tsoId == '') {
+        window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+    }
+    else {
+        window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId + "&tsoid=" + tsoId;
+    }
+}
+
+function ViewTasks(tsoId, serviceDeliveryChainId, tsoServiceDeliveryChainId) {
+    window.location = "Tasks.html?user=" + encodeURI(userId) + "&tsoid=" + tsoId + "&serviceDeliveryChainId=" + serviceDeliveryChainId + "&tsoServiceDeliveryChainId=" + tsoServiceDeliveryChainId + "&tsrid=" + tsrId;
+}
+
+function GotoTSRDashboard() {
+    window.location = "TSRDashboard.html?user=" + encodeURI(userId);
+}
+
+function sendEmail() {
+    window.location = "mailto:ttm-support@sqs.com";
+}
+
+function showHelp() {
+    window.location = "Help.html?user=" + encodeURI(userId);
+}
+
+var breadcrumb = [];
+function addToBreadcrumbArray(name, id, type, isLInk) {
+    var none = true;
+    for (i = 0; i < breadcrumb.length; i++) {
+        if (breadcrumb[i].Name == name) {
+            none = false;
+        }
+    }
+    if (none) {
+        breadcrumb.push({ "Name": name, "id": id, "Type": type, "isLink": isLInk });
+    }
+}
+
+function CreateBreadcrumb() {
+    $("#breadCrumb").show();
+    $("#breadCrumb").empty();
+    var width = $("#breadCrumb").width().toFixed(0);
+
+    var totallength = 0;
+    var maxlength = (width - breadcrumb.length * 50);
+
+    var total = 0;
+    var maxWidth = [];
+    var i;
+    for (i = 0; i < breadcrumb.length; i++) {
+        total += breadcrumb[i].Name.length;
+    }
+    var lengthPerCharacter = (maxlength / total);
+    for (i = 0; i < breadcrumb.length; i++) {
+        var l = Math.round(lengthPerCharacter * breadcrumb[i].Name.length);
+        maxWidth.push(l);
+    }
+
+
+    //namelength = span[0].offsetWidth + (breadcrumb.length * 20).toFixed(0);
+    //var perelement = ((width / breadcrumb.length) - (breadcrumb.length * 20)).toFixed(0);
+    //if (namelength < width) {
+    //    perelement = 'auto';
+    //}
+    //else {
+    //    perelement = perelement + "px";
+    //}
+    //var perelement = ((width / breadcrumb.length) - (breadcrumb.length * 20)).toFixed(0);
+    for (var i = 0; i < breadcrumb.length; i++) {
+        var linkClass = "bTitleLink";
+        if (!breadcrumb[i].isLink) {
+            linkClass = "bTitle";
+        }
+
+        var newLink = $("<div class='ellipsis " + linkClass + "' style='max-width:" + maxWidth[i] + "px !important' data-type='" + breadcrumb[i].Type + "' data-id='" + breadcrumb[i].id + "' title='" + breadcrumb[i].Name + "'>" + breadcrumb[i].Name + "</div>").on("click",
+                    function () {
+                        var objID = $(this).data("id");
+                        if ($(this).data("type") == "TSR") {
+                            CreateNewTSR(objID);
+                        }
+                        else if ($(this).data("type") == "TSO") {
+                            CreateNewTSO(objID);
+                        }
+                    });
+
+        $("#breadCrumb").append(newLink);
+        var dd = newLink[0].offsetWidth;
+        $("#breadCrumb").append("<div class='arrow-right'></div>");
+    }
+}
+
+function MasterData() {
+    window.location = "../Masters/Index.html?user=" + encodeURI(userId) + "'target': '_blank'";
+}
+
+var isFilterApply = false;
+function loadDataByRecord() {
+    showLoader();
+    var newstartingRecordNumber = 0;
+    var pageSize = $("#pagesize option:selected").text();
+    loadPagingData(newstartingRecordNumber, pageSize);
+    if (newstartingRecordNumber == 0) {
+        $("#pagedisplay").val(1);
+    }
+}
+
+function GoPrevPage() {
+    var pageDisplay = parseInt($("#pagedisplay").val());
+    if (pageDisplay == 1) {
+        //showMessageBox("Max limit reached !", "red");
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+        return false;
+    }
+    else if (pageDisplay <= allpages) {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        // var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val() - 2) + 1;
+        var newstartingRecordNumber = parseInt(pageSize) * (pageDisplay - 2);
+        $("#pagedisplay").val(pageDisplay - 1);
+        if (!isFilterApply) {
+            onLoadClear();
+            loadPagingData(newstartingRecordNumber, pageSize);
+        }
+        else {
+            callFilter();
+        }
+    }
+    else {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showMessageBox("Page number is Invalid !", "red");
+        $("#pagedisplay").val(1);
+        return false;
+    }
+
+}
+
+/* Pagination textBox validation for ristrict String & Negetive Value */
+
+$(function () {
+    $("#pagedisplay").keyup(function () {
+        var value = $(this).val();
+        value = value.replace(/^(0*)/, "");
+        $(this).val(value);
+    });
+});
+
+$(function () {
+    $("#pagedisplay").keydown(function (e) {
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+            (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode >= 35 && e.keyCode <= 40)) {
+            return;
+        }
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+});
+
+function GoNextPage() {
+    if (parseInt($("#pagedisplay").val()) == allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        $('#last').attr('disabled', true);
+        $('#next').attr('disabled', true);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else if (parseInt($("#pagedisplay").val()) <= allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        ////var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val()) + 1;
+        var pageDisplay = parseInt($("#pagedisplay").val());
+        var newstartingRecordNumber = parseInt(pageSize) * pageDisplay;
+        $("#pagedisplay").val(pageDisplay + 1);
+        if (!isFilterApply) {
+            onLoadClear();
+            loadPagingData(newstartingRecordNumber, pageSize);
+        }
+        else {
+            callFilter();
+        }
+    }
+    else {
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        showMessageBox("Page number is Invalid !", "red");
+        $("#pagedisplay").val(1);
+        return false;
+    }
+}
+
+function GoFristPage() {
+    if (parseInt($("#pagedisplay").val()) == 1) {
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        var newstartingRecordNumber = 0;
+        $("#pagedisplay").val(1);
+        if (!isFilterApply) {
+            onLoadClear();
+            loadPagingData(newstartingRecordNumber, pageSize);
+        }
+        else {
+            callFilter();
+        }
+    }
+}
+
+function GoLastPage() {
+    if (parseInt($("#pagedisplay").val()) == allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        $('#last').attr('disabled', true);
+        $('#next').attr('disabled', true);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else if (allpages == 0) {
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        $('#last').attr('disabled', true);
+        $('#next').attr('disabled', true);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        var newstartingRecordNumber = parseInt(pageSize) * parseInt(allpages - 1);
+        $("#pagedisplay").val(allpages);
+        if (!isFilterApply) {
+            onLoadClear();
+            loadPagingData(newstartingRecordNumber, pageSize);
+        }
+        else {
+            callFilter();
+        }
+    }
+}
+
+var totalRecords;
+var oldPages;
+var pages;
+var isSearch = false;
+function showPages(url) {
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('userid', userId);
+        },
+        async: false,
+        success: function (result) {
+            totalRecords = parseInt(result);
+            if (isNaN(totalRecords))
+                totalRecords = 0;
+
+
+            oldPages = totalRecords;
+            var selectedSize = $("#pagesize option:selected").text();
+            if (selectedSize != "All") {
+                totalRecords = totalRecords / parseInt(selectedSize);
+                totalRecords = totalRecords.toString();
+
+                if (totalRecords.indexOf('.') > -1) {
+                    pages = totalRecords.substring(0, totalRecords.indexOf('.'));
+                }
+                else {
+                    pages = totalRecords;
+                }
+
+                if (totalRecords > pages) {
+                    pages = parseInt(pages) + 1;
+                }
+
+                allpages = pages;
+                if (isNaN(pages) || pages == 0) {
+                    pages = 1;
+                }
+
+                var message;
+
+                if (pages == 1 || pages == 0) {
+                    $('#first').attr('disabled', true);
+                    $('#prev').attr('disabled', true);
+                    $('#last').attr('disabled', true);
+                    $('#next').attr('disabled', true);
+                    message = "page of 1 page.";
+                }
+                else {
+                    $('#first').attr('disabled', false);
+                    $('#prev').attr('disabled', false);
+                    $('#last').attr('disabled', false);
+                    $('#next').attr('disabled', false);
+                    message = "page of " + pages + " pages.";
+                }
+                $("#totalpage").text(message);
+            }
+            else {
+                $('#first').attr('disabled', true);
+                $('#prev').attr('disabled', true);
+                $('#last').attr('disabled', true);
+                $('#next').attr('disabled', true);
+                $("#totalpage").text("page of 1 page.");
+
+            }
+            //hideLoader();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+
+            hideLoader();
+            if (errorThrown == " Unauthorized") {
+                textStatus = "You do not have permission to made any changes in TSR";
+            }
+            showMessageBox(errorThrown, "red");
+            //showMessageBox(jqXHR.responseText + "--" + textStatupo's + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function showTotalpages(totalRecords) {
+    var selectedSize = $("#pagesize option:selected").text();
+    totalRecords = totalRecords / parseInt(selectedSize);
+    totalRecords = totalRecords.toString();
+
+    if (totalRecords.indexOf('.') > -1) {
+        pages = totalRecords.substring(0, totalRecords.indexOf('.'));
+    }
+    else {
+        pages = totalRecords;
+    }
+
+    if (totalRecords > pages) {
+        pages = parseInt(pages) + 1;
+    }
+
+    allpages = pages;
+    if (isNaN(pages) || pages == 0) {
+        pages = 1;
+    }
+
+    var message;
+
+    if (pages == 1 || pages == 0) {
+        message = "page of 1 page.";
+    }
+    else {
+        message = "page of " + pages + " pages.";
+    }
+    $("#totalpage").text(message);
+}
+
+function getAllPageSize() {
+    return parseInt(oldPages) * 10;
+}
+
+function getStartId() {
+    var rowId = 0;
+    if (totalRecords.indexOf('.') > -1) {
+        rowId = totalRecords.substring(0, totalRecords.indexOf('.'));
+    }
+
+    return rowId = (rowId * $("#pagesize option:selected").text()) + 1;
+}
+
+
+function notZero(e, field) {
+    var val = field.value;
+    if (val == 0) {
+        showMessageBox("Week must be greater than 0 !", "red");
+        return false;
+    }
+}
+
+function varFormat(string, arrayofStrings) {
+    for (var k = 0; k < arrayofStrings.length; k++) {
+        string = string.replace("{" + k + "}", arrayofStrings[k])
+    }
+    return string
+}
+
+function checkClose(e, field) {
+    //On-hold ,  In progress ,  Created  ,   Closed  ,  Cancelled
+    var defalutMsg = "You can not change the status from {0} to {1} !";
+    var newval = $("#" + field.id + " option:selected").text().toLowerCase();
+    var newValId = $("#" + field.id + " option:selected").val();
+    var oldVal = $("#" + field.id + " option[value='" + field.aOldValue + "']").text().toLowerCase();
+    var oldValId = $("#" + field.id + " option[value='" + field.aOldValue + "']").val();
+    if (newval == "closed" && oldVal == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "in progress" || oldVal == "on-hold" || oldVal == "closed" || oldVal == "cancelled") && newval == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "in progress") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "on-hold") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else {
+        $("#" + field.id).val(newValId);
+        return true;
+    }
+
+}
+
+function checkCloseOnSubmit(field, aOldValue) {
+    //On-hold ,  In progress ,  Created  ,   Closed  ,  Cancelled
+    var defalutMsg = "You can not change the status from {0} to {1} !";
+    var newval = $("#" + field + " option:selected").text().toLowerCase();
+    var oldVal = $("#" + field + " option[value='" + aOldValue + "']").text().toLowerCase();
+    if (newval == "closed" && oldVal == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(aOldValue);
+        return false;
+    }
+    else if ((oldVal == "in progress" || oldVal == "on-hold" || oldVal == "closed" || oldVal == "cancelled") && newval == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(aOldValue);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "in progress") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(aOldValue);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "on-hold") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(aOldValue);
+        return false;
+    }
+
+}
+
+function highLightrow(objrowId, tableID) {
+    if (typeof objrowId != "undefined" && objrowId != "" && objrowId != null) {
+        $('#' + tableID + ' > tbody  > tr').each(function () {
+            var id = $(this).find("a.accordion-section-title").attr("id");
+            if (typeof id != "undefined") {
+                if (id.indexOf(objrowId) >= 0) {
+                    $(this).addClass("rowSelect");
+                }
+            }
+        });
+    }
+}
+
+Date.prototype.getWeek = function () {
+    var onejan = new Date(this.getFullYear(), 0, 1);
+    var today = new Date(this.getFullYear(), this.getMonth(), this.getDate());
+    var dayOfYear = ((today - onejan + 86400000) / 86400000);
+    return Math.ceil(dayOfYear / 7)
+};
+
+
+function ExportExcelDump() {
+    $("#ExportExcel").dialog({
+        dialogClass: "no-close block",
+        width: "500px",
+        hight: "250px",
+        modal: true,
+        open: $.proxy(function () {
+            $(".ui-dialog-titlebar-close").remove();
+            $(".ui-dialog-titlebar").css("width", "93%");
+            $(".ui-dialog-buttonpane").css("width", "86%");
+            $(".ui-widget-overlay").css("opacity", "1");
+        }),
+        buttons: [
+                {
+                    text: "Export to csv",
+                    click: function () {
+                        var url;
+                        showLoader();
+                        var elt = document.getElementById("TypeOfExport");
+                        var today = new Date();
+                        var todaysdate = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+                        if (elt.value === "TSR") {
+                            var url = urlPrefix + "TSR/GetTSRDump/";
+                            $.ajax({
+                                method: 'GET',
+                                url: url,
+                                responseType: 'json',
+                                success: function (result) {
+                                    var filename = "iMS TSR Dashboard " + todaysdate + ".csv";
+                                    var contentType = "application/octet-stream;charset=utf-8;";
+                                    try {
+
+                                        var blob = new Blob(["\ufeff", result], { type: contentType }); //new Blob(["\ufeff", csv_content]);
+                                        //Check if user is using IE
+                                        var ua = window.navigator.userAgent;
+                                        var msie = ua.indexOf("MSIE ");
+
+                                        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                            window.navigator.msSaveBlob(blob, filename);
+                                            //alert('Please click on save to save the file');                                            
+                                        }
+                                        else  // If another browser, return 0
+                                        {
+                                            //Create a url to the blob
+                                            var url = window.URL.createObjectURL(blob);
+                                            var linkElement = document.createElement('a');
+                                            linkElement.setAttribute('href', url);
+                                            linkElement.setAttribute("download", filename);
+
+                                            //Force a download
+                                            var clickEvent = new MouseEvent("click", {
+                                                "view": window,
+                                                "bubbles": true,
+                                                "cancelable": false
+                                            });
+                                            linkElement.dispatchEvent(clickEvent);
+                                        }
+                                    } catch (ex) {
+                                        console.log(ex);
+                                    }
+                                    $(".ui-dialog-content").dialog('destroy');
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoader();
+                                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                    }
+                                    else {
+                                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                    }
+                                }
+                            });
+                        }
+                        else if (elt.value === "TSO") {
+                            url = urlPrefix + "TSO/GetTSODump/";
+                            $.ajax({
+                                method: 'GET',
+                                url: url,
+                                responseType: 'json',
+                                success: function (result) {
+                                    var today = new Date();
+                                    var filename = "iMS TSO Dashboard " + todaysdate + ".csv";
+                                    var contentType = "application/octet-stream;charset=utf-8;";
+                                    try {
+                                        var blob = new Blob(["\ufeff", result], { type: contentType });
+                                        //Check if user is using IE
+                                        var ua = window.navigator.userAgent;
+                                        var msie = ua.indexOf("MSIE ");
+
+                                        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                            window.navigator.msSaveBlob(blob, filename);
+                                            //alert('Please click on save to save the file');                                            
+                                        }
+                                        else  // If another browser, return 0
+                                        {
+                                            //Create a url to the blob
+                                            var url = window.URL.createObjectURL(blob);
+                                            var linkElement = document.createElement('a');
+                                            linkElement.setAttribute('href', url);
+                                            linkElement.setAttribute("download", filename);
+
+                                            //Force a download
+                                            var clickEvent = new MouseEvent("click", {
+                                                "view": window,
+                                                "bubbles": true,
+                                                "cancelable": false
+                                            });
+                                            linkElement.dispatchEvent(clickEvent);
+                                        }
+                                    } catch (ex) {
+                                        console.log(ex);
+                                    }
+                                    $(".ui-dialog-content").dialog('destroy');
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoader();
+                                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                    }
+                                    else {
+                                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                    }
+                                }
+                            });
+                        }
+                        else if (elt.value === "Tasks") {
+                            var txtStartDate = $('#txtStartDate').val()
+                            var txtEndDate = $('#txtEndDate').val()
+                            url = urlPrefix + "TSO/GetServiceDeliveryChainTasksDump/";
+                            tdata = { startDate: txtStartDate, endDate: txtEndDate };
+                            $.ajax({
+                                method: 'GET',
+                                url: url,
+                                responseType: 'json',
+                                data: tdata,
+                                success: function (result) {
+                                    var filename = "iMS TASK Dashboard " + todaysdate + ".csv";
+                                    var contentType = "application/octet-stream;charset=utf-8;";
+                                    try {
+                                        var blob = new Blob(["\ufeff", result], { type: contentType });
+                                        //Check if user is using IE
+                                        var ua = window.navigator.userAgent;
+                                        var msie = ua.indexOf("MSIE ");
+
+                                        if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                            window.navigator.msSaveBlob(blob, filename);
+                                            //alert('Please click on save to save the file');                                            
+                                        }
+                                        else  // If another browser, return 0
+                                        {
+                                            //Create a url to the blob
+                                            var url = window.URL.createObjectURL(blob);
+                                            var linkElement = document.createElement('a');
+                                            linkElement.setAttribute('href', url);
+                                            linkElement.setAttribute("download", filename);
+
+                                            //Force a download
+                                            var clickEvent = new MouseEvent("click", {
+                                                "view": window,
+                                                "bubbles": true,
+                                                "cancelable": false
+                                            });
+                                            linkElement.dispatchEvent(clickEvent);
+                                        }
+                                    } catch (ex) {
+                                        console.log(ex);
+                                    }
+                                    $(".ui-dialog-content").dialog('destroy');
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    hideLoader();
+                                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                    }
+                                    else {
+                                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                    }
+                                }
+                            });
+                        }
+                    }
+                },
+                {
+                    text: "Cancel",
+                    click: function () {
+                        $(this).dialog("close");
+                    }
+                }
+
+        ]
+    });
+}
+
+function menuhighlight(middle) {
+    var last = middle.substring(middle.indexOf('-'), middle.length);
+    //$('#top' + last).css('background-color', '#F7B36F');
+    $('#' + middle).css('background-color', '#fb8c20');
+    //$('#bottom' + last).css('background-color', '#F7B36F');
+}
+
+function menuRemove(middle) {
+    var last = middle.substring(middle.indexOf('-'), middle.length);
+
+    if (middle == "middel-8") {
+        //$('#top' + last).css('background-color', '#F7B36F');
+        $('#' + middle).css('background-color', '#fb8c20');
+        //$('#bottom' + last).css('background-color', '#F7B36F');
+    }
+    else {
+        //$('#top' + last).css('background-color', '');
+        $('#' + middle).css('background-color', '');
+        // $('#bottom' + last).css('background-color', '');
+
+        //$('#top-2').css('background-color', '');
+        $('#middel-2').css('background-color', '');
+        // $('#bottom-2').css('background-color', '');
+
+        //$('#top-8').css('background-color', '');
+        $('#middel-8').css('background-color', '');
+        //$('#bottom-8').css('background-color', '');
+
+        //if ($('.child_list:visible').length > 0) {
+        //    $(".child_list").css("display", "none");
+        //}
+
+        if ($('.user_list:visible').length > 0) {
+            // $(".user_list").css("display", "none");
+        }
+    }
+}
+
+function hideAllMenu() {
+    if ($('.user_list:visible').length > 0) {
+        $(".user_list").css("display", "none");
+    }
+
+    //$('#top-2').css('background-color', '');
+    $('#middel-2').css('background-color', '');
+    //$('#bottom-2').css('background-color', '');
+
+    // $('#top-8').css('background-color', '');
+    $('#middel-8').css('background-color', '');
+    //$('#bottom-8').css('background-color', '');
+}
+
+var fileds = [];
+var dataString = { "strid": 0, "strtitle": "none", "strclient": "none", "strcenter": "none", "strstatus": 0 };
+function filterTable(tDeatilbody) {
+    $('[id^=filter_]').each(function () {
+        var index = $(this).attr('id');
+        index = index.substring(index.indexOf("_") + 1, index.length);
+        if ($(this).val().trim() != "") {
+            var updateRow = null;
+            var isadd = true;
+            for (var i = 0; i < fileds.length; i++) {
+                if (fileds[i][0] == index) {
+                    updateRow = i;
+                    isadd = false;
+                    break;
+                }
+            }
+
+            if (isadd) {
+                fileds.push([index, $(this).val().trim()]);
+            }
+
+            if (updateRow != null) {
+                fileds[updateRow][1] = $(this).val().trim();
+            }
+        }
+        else {
+            if (fileds.length > 0) {
+                for (var i = 0; i < fileds.length; i++) {
+                    if (fileds[i][0] == index) {
+                        fileds.splice(i, 1);
+                        if ("str" + index.toLowerCase().trim() == "strid" || "str" + index.toLowerCase().trim() == "strstatus")
+                        {
+                            dataString["str" + index.toLowerCase().trim()] = 0;
+                        }
+                        else {
+                            dataString["str" + index.toLowerCase().trim()] = "none";
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+function Filter(url) {
+    if (fileds.length > 0) {
+        showLoader();
+        var fullurl = url;
+        for (var p = 0; p < fileds.length; p++) {
+            if (fileds[p][1].toLowerCase().trim() != "select status") {
+                dataString["str" + fileds[p][0].toLowerCase().trim()] = fileds[p][1].toLowerCase().trim();
+            }
+        }
+        
+        fullurl = fullurl + "/" + dataString["strcenter"];
+        fullurl = fullurl + "/" + dataString["strclient"];
+        fullurl = fullurl + "/" + dataString["strid"];
+        fullurl = fullurl + "/" + dataString["strtitle"];
+        fullurl = fullurl + "/" + dataString["strstatus"];
+
+        LoadSearchData(fullurl);
+        isFilterApply = true;
+    }
+}
+
+function showFilterPages(url) {
+    var fullurl = url;
+    fullurl = fullurl + "/" + dataString["strcenter"];
+    fullurl = fullurl + "/" + dataString["strclient"];
+    fullurl = fullurl + "/" + dataString["strid"];
+    fullurl = fullurl + "/" + dataString["strtitle"];
+    fullurl = fullurl + "/" + dataString["strstatus"];
+
+    showPages(fullurl);
+}
+
+function clearFilter(tDeatilbody) {
+    if (checkFilter()) {
+        showLoader();
+        $('input[id^=filter_]').val("");
+        $('#filter_Status').val("Select Status");
+        filterTable(tDeatilbody, "", 0);
+        fileds = [];
+        isFilterApply = false;
+        var pageSize = $("#pagesize option:selected").text();
+        var rNumber = parseInt(pageSize) * parseInt(1);
+        loadPagingData(rNumber, pageSize);
+    }
+}
+
+function onLoadClear() {
+    $('input[id^=filter_]').val("");
+    $('#filter_Status').val("Select Status");
+}
+
+//function AdSearch(pageType) {
+//    $("#AdvancedSearch").dialog({
+//        dialogClass: 'ui-dialog-notitlebar',
+//        height: "380",
+//        width: "400",
+//        modal: true,
+//        closeOnEscape: false,
+//        draggable: false,
+//        resizable: false,
+//        open: $.proxy(function () {
+//            $(".ui-dialog-content").css("overflow-x", "hidden");
+//            //$(".ui-dialog-content").css("margin-left", "25px");
+//            $(".ui-dialog-titlebar-close").remove();
+//            $(".ui-dialog-titlebar").css("width", "91.5%");
+//            $(".ui-widget-overlay").css("opacity", "1");
+//            $(".ui-dialog-buttonpane").css("width", "95%");
+//        }, this),
+//        position: { my: "center top", at: "center top+100" },
+//        buttons: [{
+//            text: "Search",
+//            click: $.proxy(function () {
+//                showLoader();
+//                var searchData = [];
+//                $('[id^=filter_]').each(function () {
+//                    var index = $(this).attr('id');
+//                    index = index.substring(index.indexOf("_") + 1, index.length);
+//                    var type = $(this).prop('type');
+//                    if (type == "text") {
+//                        var strTitleOrClient = $(this).val();
+//                        searchData.push([index, strTitleOrClient]);
+//                    }
+//                    else if (type == "select-one") {
+//                        searchData.push([index, this.options[this.selectedIndex].index]);
+//                    }
+//                });
+//                var startingRecordNumber = 0;
+//                var pageSize = $("#pagesize option:selected").text();
+//                //pageType == "TSR";
+//                // close the dialog
+//                $(this).dialog("destroy");
+//                hideLoader();
+//            }, this)
+//        },
+//        {
+//            text: "Cancel",
+//            click: function () {
+//                $(this).dialog("destroy");
+//            }
+//        }]
+//    });
+//}
+
+function gotoMaster() {
+    location.href('../Masters/Index.html?user=' + encodeURI(userId));
+}
+
+function gotoWiki() {
+    location.href('../Portal/Wiki.html?user=' + encodeURI(userId));
+}
+
+function checkFilter() {
+    var checkUpdate = false;
+    $('[id^=filter_]').each(function () {
+        var dd = $(this).val().trim();
+        if ($(this).val().trim() != "" && $(this).val().trim() != "Select Status") {
+            checkUpdate = true;
+        }
+    });
+
+    if ($("#filter_Status option:selected").text() != "Select Status") {
+        checkUpdate = true;
+    }
+    return checkUpdate;
+}
+
+function showRecord() {
+    showLoader();
+    var pageSize = $("#pagesize option:selected").text();
+    ////var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val()) + 1;
+    var pageDisplay = parseInt($("#pagedisplay").val());
+    var newstartingRecordNumber = parseInt(pageSize) * (pageDisplay - 1);
+    if (!isFilterApply) {
+        onLoadClear();
+        loadPagingData(newstartingRecordNumber, pageSize);
+    }
+    else {
+        callFilter();
+    }
+}

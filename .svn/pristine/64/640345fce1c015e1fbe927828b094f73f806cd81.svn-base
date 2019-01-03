@@ -1,0 +1,918 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>TSO Dashboard</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+
+        var tsrId = getUrlVars()["tsrid"];
+
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        #accordionbody {
+            display: block;
+            border: 1px solid black;
+            border-collapse: separate;
+            border-spacing: 4px;
+            /*background-color: #333;*/
+        }
+
+
+        #divProcessing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: grey;
+            opacity: .8;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div id="lblUser" style="display:none;"></div>
+    <div class="leftDiv">
+        <div id="tblMain">
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="top-1">
+                </div>
+                <div class="toomenu " id="top-2">
+                </div>
+                <div class="toomenu" id="top-7">
+                </div>
+                <div class="toomenu" id="top-10">
+                </div>
+                <div class="GuestClass toomenu" id="top-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-5">
+                </div>
+                <div class="toomenu" id="top-6">
+                </div>
+                <div class="toomenu" id="top-8" style="width:47px;padding:0;float:right; margin-right:5px;">
+                </div>
+                <div class="toomenu" id="top-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+
+            <div class="smallRow">
+                <div class="small menu" style="padding:5px 10px;" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="Home();">
+                    <a href="#" title="Home" class="home"></a>
+                </div>
+                <div class="menu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSRDashboard('');" title="TSR Dashboard">
+                    <a href="#">TSR Dashboard</a>
+                </div>
+                <div class="menu selectedMenu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" title="TSO Dashboard">
+                    <a href="#">TSO Dashboard</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTASKDashboard('');" title="TASK Dashboard">
+                    <a href="#">TASK Dashboard</a>
+                </div>
+                <div class="AdminClass menu" id="middel-10" style="display:none;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" title="Delivery Excellence">
+                    <a href="http://192.168.96.196:5601" target="_blank">iMS Analytics</a>
+                </div>
+                <!--<td>
+                    <a href="#" onclick="GotoTSODashboard('');" title="TSO Dashboard">TSO Dashboard</a>
+                </td>-->
+                <div class="GuestClass menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="CreateNewTSR('');" title="Create New TSR">
+                    <a href="#">Create New TSR</a>
+                </div>
+                <div class="AdminClass menu" style="display:none;" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="ExportExcelDump();" title="Export Data">
+                    <a href="#">Export Data</a>
+                </div>
+                <!--<td class="AdminClass" style="display:none;">
+                    <a href="#" onclick="this.href = 'http://192.168.96.196:5601'" target="_blank" title="Delivery Excellence Dashboard">iMS Analytics</a>
+                </td>-->
+                <div class="AdminClass menu" style="display:none;" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoMaster();" target="_blank" title="Master Data">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#">Master Data</a>
+                </div>
+                <div class="menu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoWiki();" target="_blank" title="Wiki">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#'>Wiki</a>
+                </div>
+                <div class="menu" id="middel-11" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="index.html" class="SignOff" title="Sign Off"></a>
+                </div>
+                <!--<div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="index.html" title="Sign Off">Sign Off</a>
+                </div>-->
+                <div class="small menu" id="middel-8" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <div class="UserLogo">
+                    </div>
+                    <ul class="user_list" style="display:none;">
+                        <li id="userName"></li>
+                        <li id="userRole"></li>
+                    </ul>
+                </div>
+                <div class="small menu" id="middel-9" style="padding:5px 10px;float:right;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="sendEmail();">
+                    <div class="ContactUs">
+                    </div>
+                </div>
+            </div>
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="bottom-1">
+                </div>
+                <div class="toomenu " id="bottom-2">
+                </div>
+                <div class="toomenu" id="bottom-7">
+                </div>
+                <div class="toomenu" id="bottom-10">
+                </div>
+                <div class="GuestClass toomenu" id="bottom-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-5">
+                </div>
+                <div class="toomenu" id="bottom-6">
+                </div>
+                <div class="toomenu" id="bottom-8" style="width:47px;padding:0;float:right;margin-right:5px;">
+                </div>
+                <div class="toomenu" id="bottom-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+
+        </div>
+    </div>
+    <div class="rightDiv" style="display:none;">
+        <div id="breadCrumb" style="display:none;">
+        </div>
+        <div id="pager" class="pager" style="width:100%; text-align:center;height:33px;">
+            <input type="button" value="Create New TSO" id="CreateNewTSO" onclick="CreateNewTSO('');" />
+            Search :
+            <input type="text" id="txtTitle" title="Search TSO or Client or Solution center" placeholder="Search TSO or Client or Solution center" onkeyup="DoSearch(event)" style="float:none;width:250px;" />
+            <select id="ddlStatus" name="ddlStatus" title="Select Status" style="width:110px;margin-right:5px;">
+                <option value="">Select Status</option>
+            </select>
+            <input type="button" id="btnSearch" title="Search" value="Search" onclick="Search();" style="margin:0px!important;float:none;" />
+        </div>
+        <div id="txtOutput"></div>
+        <div class="scrollDiv" style="height: auto; max-height: 80vh;">
+            <table id="TSOTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">TSO</th>
+                        <th style="width:80px" align="left">Client</th>
+                        <th style="width:80px" align="left">Solution Center</th>
+                        <!--<th style="width:350px;" align="left">Description</th>-->
+                        <th style="width:100px" align="center">Practice</th>
+                        <th style="width:100px" align="center">Operational Risk</th>
+                        <th style="width:160px" align="center">Status</th>
+                        <th style="width:100px" align="center">Planned Start Date</th>
+                        <th style="width:100px" align="center">Planned Completion Date</th>
+                        <!--<th style="width:80px;" align="left">CreatedBy</th>-->
+                        <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                        <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                        <th style="width:100px" align="center">Planned Effort</th>
+                        <th style="width:100px" align="center">Actual Effort</th>
+                        <!--<th style="width:80px" align="left">Updated By</th>-->
+                        <th style="width:100px" align="center">TASK</th>
+                        <!--<th style="width:100px" align="center">Action</th>-->
+                        <!--<th style="width:50px" align="center"></th>-->
+                    </tr>
+                    <tr>
+                        <th style="width:50px" class="filterRow" align="center">
+                            <input type="text" id="filter_ID" style="width:85%  !important; text-align:center;" placeholder="ID" onkeyup="filterTable('tsodetails');" />
+                        </th>
+                        <th style="width:200px;" class="filterRow" align="left">
+                            <input type="text" id="filter_Title" style="width:97%  !important; text-align:center;" placeholder="Name" onkeyup="filterTable('tsodetails');" />
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <input type="text" id="filter_Client" style="width:94% !important; text-align:center;" placeholder="Client" onkeyup="filterTable('tsodetails');" />
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <input type="text" id="filter_Center" style="width:93%  !important; text-align:center;" placeholder="Sol. Center" onkeyup="filterTable('tsodetails');" />
+                        </th>
+                        <th style="width:160px" class="filterRow" align="center">
+                            <!--<input type="text" id="filter_4" style="width:96%  !important; text-align:center;" placeholder="By Practice" onkeyup="filterTable('tsodetails');" />-->
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <!--<input type="text" id="filter_5" style="width:93%  !important; text-align:center;" placeholder="By Risk" onkeyup="filterTable('tsodetails');" />-->
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <select id="filter_Status" name="ddlSearchStatus" title="Select Status" style="width:110px;margin-right:5px;" onchange="filterTable('tsodetails');">
+                                <option value="Select Status">Select Status</option>
+                            </select>
+                            <!--<input type="text" id="filter_Status" style="width:95%  !important; text-align:center;" placeholder="By Status" onkeyup="filterTable('tsodetails');" />-->
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center"></th>
+                        <th style="width:100px" class="filterRow" align="center"></th>
+                        <th style="width:100px" class="filterRow" align="center"></th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <!--<input type="button" class="GuestClass" id="Filter" value="Filter" onclick="callFilter();" style="float:none;margin:0 5px;" />-->
+                        </th>
+                        <th style="width:100px" class="filterRow" align="center">
+                            <input type="button" class="GuestClass" id="clearFilter" value="Clear Filter" onclick="clearFilter('tsodetails');" style="float:none;margin:0 5px;" />
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tsodetails"></tbody>
+            </table>
+        </div>
+        <div id="pager" class="pager" style="width:100%; text-align:center;padding-top:5px;">
+            <input type="button" id="first" value="First" style="width:70px;float:none;" title="Go to first page" onclick="GoFristPage();" />
+            <input type="button" id="prev" value="Prev" style="width:70px;float:none;" title="Go to previous page" onclick="GoPrevPage();" />
+            <input type="text" id="pagedisplay" style="float:none; text-align:center;" size="5" />
+            <label id="totalpage" style="width:70px;float:none;">of 0</label>
+            <input type="button" id="next" value="Next" style="width:70px;float:none;" title="Go to next page" onclick="GoNextPage();" />
+            <input type="button" id="last" value="Last" style="width:70px;float:none;" title="Go to last page" onclick="GoLastPage();" />
+            Show
+            <select id="pagesize" style="float:none;width:50px;" onchange="loadDataByRecord();">
+                <option selected="selected" value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+                <!--<option value="All">All</option>-->
+            </select>
+            records per page
+        </div>
+    </div>
+    <div class="myfooter">
+        By - SQS Development Team
+    </div>
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        showLoader();
+        var startingRecordNumber = 0;
+        var pageSize = $("#pagesize option:selected").text();
+        var allpages;
+
+        function loadPagingData(newstartingRecordNumber, newpageSize) {
+            startingRecordNumber = newstartingRecordNumber;
+            pageSize = newpageSize;
+            if (pageSize == "All") {
+                pageSize = getAllPageSize();
+            }
+            if (!isSearch) {
+                var urlGetAll;
+                if (tsrId === 'undefined') {
+                    urlGetAll = urlPrefix + "TSO/GetAllUserPaged/" + startingRecordNumber + "/" + pageSize;
+                    showPages(urlPrefix + "TSO/GetTSOCount/none/0/0");
+                }
+                else {
+                    urlGetAll = urlPrefix + "TSO/GetAllPaged/" + tsrId + "/" + startingRecordNumber + "/" + pageSize;
+                    showPages(urlPrefix + "TSO/GetTSOCount/none/0/" + tsrId);
+                }
+                LoadData(urlGetAll);
+            }
+            else {
+                Search();
+            }
+        }
+
+
+        $(document).ready(function () {
+            onLoadClear();
+            LoadTSOStatus();
+            $("#pagesize select").val("10");
+            showLoader();
+            if (userName == "") {
+                CheckUser();
+            }
+            try {
+                var rowToselect = getUrlVars()["rowToselect"];
+                if (typeof rowToselect != "undefined") {
+                    if (rowToselect != null || rowToselect != "")
+                        startingRecordNumber = getStartId();
+                }
+
+                var urlGetAll;
+                if (tsrId === 'undefined') {
+                    $("#CreateNewTSO").hide();
+
+                    urlGetAll = urlPrefix + "TSO/GetAllUserPaged/" + startingRecordNumber + "/" + pageSize;
+                    LoadData(urlGetAll);
+                    showPages(urlPrefix + "TSO/GetTSOCount/none/0/0");
+                }
+                else {
+                    urlGetAll = urlPrefix + "TSO/GetAllPaged/" + tsrId + "/" + startingRecordNumber + "/" + pageSize;
+                    LoadData(urlGetAll);
+                    LoadTSR(tsrId);
+                    showPages(urlPrefix + "TSO/GetTSOCount/none/0/" + tsrId);
+                }
+
+                if (startingRecordNumber == 0) {
+                    $("#pagedisplay").val(1);
+                }
+                else if (typeof rowToselect != "undefined") {
+                    if (rowToselect != null || rowToselect != "")
+                        $("#pagedisplay").val(allpages);
+                }
+                $("#lblUser").text(userName);
+
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+
+            $("#ddlStatus").change(function () {
+                startingRecordNumber = 0;
+            });
+
+            $("#txtTitle").change(function () {
+                startingRecordNumber = 0;
+            });
+
+            $(document).on('click', '.accordion-section-title', function () {
+                //$(".accordion-section-title").on("click", function () {
+                var id = $(this).attr("id");
+
+                $("#ts_" + id).toggle('fast', 'linear', function () {
+                    if ($(this).css('display') == 'block') {
+                        $(this).css('display', '');
+                    }
+                });
+            });
+            bindUserPopUp();
+
+            if (roleId == "Guest" || roleId == "guest")
+                $(".GuestClass").hide();
+            else if (roleId.toLowerCase() == "account manager") {
+                $("#trNewTSR").hide();
+            }
+            else {
+                $(".GuestClass").show();
+                $("#trNewTSR").show();
+            }
+            if (roleId == "Admin" || roleId == "admin") {
+                $(".AdminClass").removeAttr('style');
+            }
+
+            $(".UserLogo").on("click", function () {
+                if ($('.user_list:visible').length == 0) {
+                    $(".user_list").css("display", "block");
+                }
+                else {
+                    $(".user_list").css("display", "none");
+                }
+            });
+
+            $(".rightDiv").on("click", function () {
+                hideAllMenu();
+            });
+
+            $("[id^=filter_]").keypress(function (e) {
+                if (e.which == 13) {
+                    if (checkFilter()) {
+                        showLoader();
+                        callFilter();
+                    }
+                }
+            });
+
+            $("#pagedisplay").keypress(function (e) {
+                if (e.which == 13) {
+                    showRecord();
+                }
+            });
+        });
+
+
+        function LoadTSOStatus() {
+            var url = urlPrefix + "TSOStatus/GetAllIDName";
+            LoadTSOData(url, 'ddlStatus');
+            LoadTSOData(url, 'filter_Status');
+        }
+
+        function callFilter() {
+            if (checkFilter()) {
+                var pageNumber = $("#pagedisplay").val();
+                if (tsrId === 'undefined') {
+                    Filter(urlPrefix + "TSO/GetTSOByAdvanceSearch/" + pageNumber + "/" + pageSize + "/" + 0);
+                    showFilterPages(urlPrefix + "TSO/GetTSOByAdvanceSearchCount/" + 0 + "/");
+                }
+                else {
+                    Filter(urlPrefix + "TSO/GetTSOByAdvanceSearch/" + pageNumber + "/" + pageSize + "/" + tsrId);
+                    showFilterPages(urlPrefix + "TSO/GetTSOByAdvanceSearchCount/" + tsrId + "/");
+                }
+            }
+            else {
+                loadPagingData(0, $("#pagesize option:selected").text());
+            }
+        }
+
+        function LoadData(url) {
+            clearTable();
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader('userid', userId);
+                },
+                dataType: "json",
+                contentType: 'application/json; charset=UTF-8',
+                success: function (result) {
+                    $(".rightDiv").removeAttr('style');
+                    $("#tblMain").removeAttr('style');
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+                    clearTable();
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+
+                    var rowToselect = getUrlVars()["rowToselect"];
+                    if (typeof rowToselect != "undefined") {
+                        if (rowToselect != null || rowToselect != "")
+                            highLightrow(rowToselect, "TSOTable");
+                    }
+                    hideLoader();
+                    addToBreadcrumbArray("TSO Dashboard", 0, "TSO Dashboard", false);
+                    CreateBreadcrumb();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $(".rightDiv").removeAttr('style');
+                    $("#tblMain").removeAttr('style');
+                    hideLoader();
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                    addToBreadcrumbArray("TSO Dashboard", 0, "TSO Dashboard", false);
+                    CreateBreadcrumb();
+                }
+            });
+        }
+        function LoadSearchData(url) {
+            clearTable();
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader('userid', userId);
+                },
+                dataType: "json",
+                contentType: 'application/json; charset=UTF-8',
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+                    clearTable();
+                    if (totalRecords == 0) {
+                        showMessageBox(result.Message, "green");
+                    }
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+        function LoadTSOData(url, dropdown) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader("userid", userId);
+                },
+                dataType: "json",
+                async: false,
+                success: function (result) {
+                    var totalRecords = result.length;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        PopulateDropdown(result, dropdown);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+        function PopulateDropdown(result, dropdown) {
+            $.each(result, function (i, item) {
+                $('#' + dropdown).append($('<option>', {
+                    value: item.ID,
+                    text: item.Name
+                }));
+            });
+        }
+        function clearTable() {
+            var i = $('#tsodetails').empty();
+        }
+        function DoSearch(event) {
+            if (event.keyCode === 13) {
+                Search();
+                return true;
+            }
+        }
+        function Search() {
+            showLoader();
+            isSearch = true;
+            var strTitleOrClient = $("#txtTitle").val().trim();
+            var Status = $("#ddlStatus option:selected").text().trim();
+
+            var e = document.getElementById("ddlStatus");
+            var tsostatus = e.options[e.selectedIndex].value;
+
+            if (strTitleOrClient == "") {
+                strTitleOrClient = "none";
+            }
+            if (Status == "Select Status") {
+                Status = "All";
+                tsostatus = 0;
+            }
+            if (!strTitleOrClient && !tsostatus) {
+                return false;
+            }
+            //$("#txtTitle").val(strTitleOrClient);
+            var urlGetAll = urlPrefix + "TSO/SearchByTitleOrClient/" + startingRecordNumber + "/" + pageSize + "/" + strTitleOrClient.trim() + "/" + tsostatus;
+            var searchCountUrl = urlPrefix + "TSO/GetTSOCount/" + strTitleOrClient + "/" + tsostatus;
+            if (tsrId !== 'undefined') {
+                searchCountUrl = searchCountUrl + "/" + tsrId;
+            }
+            else {
+                searchCountUrl = searchCountUrl + "/0";
+            }
+            showPages(searchCountUrl);
+            LoadSearchData(urlGetAll);
+            $("#ddlStatus option:selected").val(tsostatus);
+            if (strTitleOrClient == "none") {
+                $("#txtTitle").val('');
+            } else {
+
+                $("#txtTitle").val(strTitleOrClient);
+            }
+            $("#pagedisplay").val(1);
+        }
+        function LoadTSR(tsrId) {
+            var url = urlPrefix + "TSR/GetById/" + tsrId;
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                beforeSend: function (request) {
+                    request.setRequestHeader('userid', userId);
+                },
+                dataType: "json",
+                contentType: 'application/json; charset=UTF-8',
+                success: function (result) {
+                    if (null != result) {
+                        addToBreadcrumbArray(result.Title, result.ID, "TSR", true);
+                        CreateBreadcrumb();
+                        $("#lblTSR").html(result.Title);
+                        if (result.TSRStatus.Name == "Closed" || result.TSRStatus.Name == "Cancelled") {
+                            $("#CreateNewTSO").hide();
+                            $("#Submit").hide();
+
+                            $("#txtTitle").attr('disabled', true);
+                            $("#txtDescription").attr('disabled', true);
+                            $("#ddlTSOStatus").attr('disabled', true);
+                            $("#ddlOperationalrisk").attr('disabled', true);
+
+                            $("#txtTeamLead").attr('disabled', true);
+                            $("#ddlCoreServices").attr('disabled', true);
+                            $("#ddlRelevantRepositories").attr('disabled', true);
+                            $("#AddServiceDeliveryChain").attr('disabled', true);
+                            $("#RemoveServiceDeliveryChain").attr('disabled', true);
+
+                            $("#txtStartDate").attr('disabled', true);
+                            $("#txtActualStartDate").attr('disabled', true);
+                            $("#txtTargetCompletionDate").attr('disabled', true);
+                            $("#txtActualCompletionDate").attr('disabled', true);
+                            $("#txtEstimatedEffort").attr('disabled', true);
+                            $("#txtPlannedEffort").attr('disabled', true);
+                            $("#txtSpId").attr('disabled', true);
+                            $("#SubmitTSO").attr('disabled', true);
+                        }
+                        else {
+                            $("#CreateNewTSO").show();
+                            $("#Submit").show();
+                        }
+
+
+                        $("#lblTSR").prop("title", "Delivery Manager: " + result.DeliveryManager.Name +
+                            "\nTest Manager: " + result.TestManager.Name +
+                            "\nAccount Manager: " + result.AccountManager.Name +
+                            "\nVertical: " + result.Vertical.Name +
+                            "\nPractice: " + result.Practice.Name +
+                            "\nSolution Centre: " + result.SolutionCentre.Name +
+                            "\nClient Region: " + result.ClientRegion.Name +
+                            "\nClient: " + result.Client +
+                            "\nAccount: " + result.Account +
+                            "\nEngagement: " + result.Engagement +
+                            "\nERPordernumber: " + result.ERPordernumber +
+                            //"\nMarketOffering: " + result.MarketOffering.Name +
+                            "\nStartDate: " + dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+                            "\nTargetCompletionDate: " + dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy") +
+                            "\nEstimatedeffort: " + result.Estimatedeffort + " days" +
+                            "\nPlannedeffort: " + result.Plannedeffort + " days"
+                        );
+
+                        //    $("#txtStartDate").val(dateFormat(result.StartDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+                        //    $("#txtTargetCompletionDate").val(dateFormat(result.TargetCompletionDate.replace("T00:00:00", ""), "isoDateddMonyyyy"));
+
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function populateTable(EntitySummary) {
+            var tbody = $('#tsodetails');
+
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+
+                var description = EntitySummary[totalrecords]["Description"];
+                var stdate = new Date(EntitySummary[totalrecords]["StartDate"]);
+                var tcdate = new Date(EntitySummary[totalrecords]["TargetCompletionDate"]);
+                var sdd = stdate.getDate();
+                var smm = stdate.getMonth() + 1; //January is 0!
+                var tcdd = tcdate.getDate();
+                var tcmm = tcdate.getMonth() + 1;
+                if (sdd < 10) {
+                    sdd = '0' + sdd
+                }
+
+                if (smm < 10) {
+                    smm = '0' + smm
+                }
+
+                if (tcdd < 10) {
+                    tcdd = '0' + tcdd
+                }
+
+                if (tcmm < 10) {
+                    tcmm = '0' + tcmm
+                }
+                var Startdate = smm + '/' + sdd + '/' + stdate.getFullYear();
+                var TargetCompletiondate = tcmm + '/' + tcdd + '/' + tcdate.getFullYear();
+                if (description == null) {
+                    description = "";
+                }
+
+                var strCoreServiceName = ""; var ActualEffort = 0; var strSoutionCenterName = "";
+                var strServiceDeliveryChain = ""; var strRelevantRepositories = ""; var strPracticeName = "";
+                if (null != EntitySummary[totalrecords]["CoreService"]) {
+                    strCoreServiceName = EntitySummary[totalrecords]["CoreService"].Name;
+                }
+
+                if (null != EntitySummary[totalrecords]["TSR"]["SolutionCentre"]) {
+                    strSoutionCenterName = EntitySummary[totalrecords]["TSR"]["SolutionCentre"].Name;
+                }
+                if (null != EntitySummary[totalrecords]["TSR"]["Practice"]) {
+                    strPracticeName = EntitySummary[totalrecords]["TSR"]["Practice"].Name;
+                }
+
+                for (var sdchain = 0; sdchain < EntitySummary[totalrecords]["TSOServiceDeliveryChains"].length; sdchain++) {
+                    strServiceDeliveryChain += EntitySummary[totalrecords]["TSOServiceDeliveryChains"][sdchain]["ServiceDeliveryChain"].Name + ", ";
+                }
+                if (null != EntitySummary[totalrecords]["RelevantRepository"]) {
+                    strRelevantRepositories = EntitySummary[totalrecords]["RelevantRepository"].Name;
+                }
+                strServiceDeliveryChain = strServiceDeliveryChain.substring(0, strServiceDeliveryChain.length - 2);
+                if (null != EntitySummary[totalrecords]["ActualEffort"]) {
+                    ActualEffort = EntitySummary[totalrecords]["ActualEffort"];
+                }
+                else {
+                    ActualEffort = 0;
+                }
+                var status = "";
+                if (EntitySummary[totalrecords]["Version"] != 1) {
+                    if (null != EntitySummary[totalrecords]["TSOStatus"]) {
+                        status = EntitySummary[totalrecords]["TSOStatus"]["Name"];
+                    }
+                }
+                else {
+                    //  status = "Created";
+                    status = EntitySummary[totalrecords]["TSOStatus"]["Name"];
+                }
+
+                //var linksTSOServiceDeliveryChains = DisplayTasks(EntitySummary[totalrecords]["TSOServiceDeliveryChains"], status);
+
+                if (roleId == "Guest" || roleId == "guest") {
+                    tbody.append("<tr id='ts" + totalrecords + "'><td align='center'><a class='accordion-section-title' href='#' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                                    "</a></td><td align='left' class='leftalign ellipsis'>" + EntitySummary[totalrecords]["Title"] + "</td>" +
+                                    "<td align='center'>" + EntitySummary[totalrecords]["TSR"]["Client"]["Name"] + "</td>" +
+                                    "<td align='center'>" + EntitySummary[totalrecords]["TSR"]["SolutionCentre"]["Name"] + "</td>" +
+                                   //"<td align='left' class='description ellipsis'>" + description + "</td>" +
+                                     "<td align='center' class='ellipsis'>" + strPracticeName + "</td>" +
+                              "<td align='center' class='ellipsis'>" + EntitySummary[totalrecords]["OperationalRisk"]["RiskNo"] + "</td>" +
+                                     "<td align='center'>" + status + "</td>" +
+                                      "<td align='center' class='ellipsis'>" + Startdate + "</td>" +
+                                      "<td align='center' class='ellipsis'>" + TargetCompletiondate + "</td>" +
+                                    "<td align='center'>" + EntitySummary[totalrecords]["PlannedEffort"] + "</td>" +
+                                    "<td align='center'>" + ActualEffort.toFixed(0) + "</td>" +
+                                   //"<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                                    "<td align='center'><a href=# title='Click Manage to TASK Dashboard' onclick='ViewTASK(" + EntitySummary[totalrecords]["ID"] + ")'>Manage</a></td>" +
+                                    "</tr>" +   //<td align='center'><a title='Refresh' href=# onclick='RefreshTSOStatus(" + EntitySummary[totalrecords]["ID"] + ")'><img style='width:20px;' src='/images/refresh.png' /></a></td>
+                                   "<tr id='ts_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='12'>" +
+                             "<div class='acRow'><div class='actitle'>TSO</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + EntitySummary[totalrecords]["Title"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Team lead</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["TeamLead"].Name + "</div>" +
+                             "<div class='actitle'>Core Service</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strCoreServiceName + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Relevant Repository</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strRelevantRepositories + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Service Delivery Chain</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strServiceDeliveryChain + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Planned Start Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + Startdate + "</div>" +
+                             "<div class='actitle'>Planned Completion Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + TargetCompletiondate + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Estimated Effort</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["EstimatedEffort"] + "</div>" +
+                             "<div class='actitle'>Operational Risk</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</div></div>" +
+                             "</td></tr>");
+                }
+                else {
+
+                    tbody.append("<tr id='ts" + totalrecords + "'><td align='center'><a class='accordion-section-title' href='#' id='accordion_" + EntitySummary[totalrecords]["ID"] + "'>" + EntitySummary[totalrecords]["ID"] +
+                        "</a></td><td align='left' class='leftalign ellipsis'><a href='#' onclick=CreateNewTSO('" + EntitySummary[totalrecords]["ID"] + "')>" + EntitySummary[totalrecords]["Title"] + "</a></td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["TSR"]["Client"]["Name"] + "</td>" +
+                        "<td align='center'>" + EntitySummary[totalrecords]["TSR"]["SolutionCentre"]["Name"] + "</td>" +
+                       //"<td align='left' class='description ellipsis'>" + description + "</td>" +
+                        "<td align='center' class='ellipsis'>" + strPracticeName + "</td>" +
+                              "<td align='center' class='ellipsis'>" + EntitySummary[totalrecords]["OperationalRisk"]["RiskNo"] + "</td>" +
+                                     "<td align='center'>" + status + "</td>" +
+                                      "<td align='center' class='ellipsis'>" + Startdate + "</td>" +
+                            "<td align='center' class='ellipsis'>" + TargetCompletiondate + "</td>" +
+                                    "<td align='center'>" + EntitySummary[totalrecords]["PlannedEffort"] + "</td>" +
+                                    "<td align='center'>" + ActualEffort.toFixed(0) + "</td>" +
+                                   //"<td align='center'>" + EntitySummary[totalrecords]["UpdatedBy"] + "</td>" +
+                                    "<td align='center'><a href=# title='Click Manage to TASK Dashboard' onclick='ViewTASK(" + EntitySummary[totalrecords]["ID"] + ")'>Manage</a></td>" +
+                        "</tr>" +   //<td align='center'><a title='Refresh' href=# onclick='RefreshTSOStatus(" + EntitySummary[totalrecords]["ID"] + ")'><img style='width:20px;' src='/images/refresh.png' /></a></td>
+                       "<tr id='ts_accordion_" + EntitySummary[totalrecords]["ID"] + "' style='display: none;'><td colspan='12'>" +
+                             "<div class='acRow'><div class='actitle'>TSO</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal' style='width:80%;'>" + EntitySummary[totalrecords]["Title"] + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Team lead</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["TeamLead"].Name + "</div>" +
+                             "<div class='actitle'>Core Service</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strCoreServiceName + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Relevant Repository</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strRelevantRepositories + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Service Delivery Chain</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + strServiceDeliveryChain + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Planned Start Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + Startdate + "</div>" +
+                             "<div class='actitle'>Planned Completion Date</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + TargetCompletiondate + "</div></div>" +
+                             "<div class='acRow'><div class='actitle'>Estimated Effort</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["EstimatedEffort"] + "</div>" +
+                             "<div class='actitle'>Operational Risk</div><div class='seprator' style='padding:2px 3px;'>:</div><div class='acVal'>" + EntitySummary[totalrecords]["OperationalRisk"].RiskNo + "</div></div>" +
+                             "</td></tr>");
+                }
+            }
+            hideLoader();
+        }
+
+        function Delete(ID) {
+            if (!isNaN(ID) && ID != "") {
+                showDeleteConfirm("Are you sure, you want to delete?", ID);
+            }
+        }
+
+        function RefreshTSOStatus(ID) {
+            alert("RefreshTSOStatus : " + ID);
+        }
+
+        function doDelete(ID) {
+            showLoader();
+            var url = urlPrefix + "/TSO/DeleteTSO/" + ID;
+
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                contentType: 'application/json; charset=UTF-8',
+                success: function (response) {
+                    //$("#txtOutput").html("<b>" + response + "</b>");
+                    if (response.indexOf("Error") == 0) {
+                        showMessageBox(response, "red");
+                        //$("#txtOutput").css('color', 'red');
+                    }
+                    else {
+                        showMessageBox("TSO deleted successfully.", "green", null, true);
+                        //location.reload();
+                        //$("#txtOutput").css('color', 'green');
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+
+        function CreateNewTSO(tsoId) {
+            if (tsoId == '') {
+                window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+            }
+            else {
+                window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId + "&tsoid=" + tsoId;
+            }
+        }
+
+        function DisplayTasks(TSOServiceDeliveryChains, status) {
+            var strTasks = "";
+            var arrServiceDeliveryChain = [];
+            var tsoServiceDeliveryChainId = [];
+            var tsoId;
+            var arrTSOServiceDeliveryChainWithTaskStatus = [];
+            if (null != TSOServiceDeliveryChains && TSOServiceDeliveryChains.length > 0) {
+                for (var iTSOServiceDeliveryChains = 0; iTSOServiceDeliveryChains < TSOServiceDeliveryChains.length; iTSOServiceDeliveryChains++) {
+                    var objTSOServiceDeliveryChain = TSOServiceDeliveryChains[iTSOServiceDeliveryChains];
+                    arrTSOServiceDeliveryChainWithTaskStatus.push(objTSOServiceDeliveryChain);
+
+                    tsoId = objTSOServiceDeliveryChain.TSOId;
+                    tsoServiceDeliveryChainId.push(objTSOServiceDeliveryChain.ID);
+
+                    if (null != objTSOServiceDeliveryChain && null != objTSOServiceDeliveryChain.ServiceDeliveryChain) {
+                        arrServiceDeliveryChain.push(objTSOServiceDeliveryChain.ServiceDeliveryChain);
+                    }
+                }
+
+                if (arrServiceDeliveryChain != null && arrServiceDeliveryChain.length > 0) {
+                    arrServiceDeliveryChain.sort(SortByDisplayOrder);
+
+                    for (var iServiceDeliveryChain = 0; iServiceDeliveryChain < arrServiceDeliveryChain.length; iServiceDeliveryChain++) {
+                        var objServiceDeliveryChain = arrServiceDeliveryChain[iServiceDeliveryChain];
+                        var id = tsoServiceDeliveryChainId[iServiceDeliveryChain];
+                        // if (status != 'Closed' && status != 'Cancelled' && status != 'On Hold') {
+                        strTasks += "<a style='margin:0px 2px;' href='#' title='" + objServiceDeliveryChain.Description + "' onclick=ViewTasks('" + tsoId + "','" + objServiceDeliveryChain.ID + "','" + id + "')>" + objServiceDeliveryChain.Name + "</a><br />";
+
+                        // }
+                        //else
+                        //{
+                        //        strTasks += objServiceDeliveryChain.Name + "<br />";
+                        //}
+                    }
+
+                    //strTasks += "<a style='margin:0px 2px;' href='#' title='" + "Click Manage to Task Dashboard" + "' onclick=ViewTASK('" + tsoId + "')>" + "Manage" + "</a><br />";
+
+                    //for (var iTSOServiceDeliveryChainWithTaskStatus = 0; iTSOServiceDeliveryChainWithTaskStatus < arrTSOServiceDeliveryChainWithTaskStatus.length; iTSOServiceDeliveryChainWithTaskStatus++) {
+                    //    var objTSOServiceDeliveryChainWithTaskStatus = arrTSOServiceDeliveryChainWithTaskStatus[iTSOServiceDeliveryChainWithTaskStatus];
+                    //    //for (var iServiceDeliveryChain = 0; iServiceDeliveryChain < arrServiceDeliveryChain.length; iServiceDeliveryChain++) {
+                    //    var objServiceDeliveryChain = objTSOServiceDeliveryChainWithTaskStatus.ServiceDeliveryChain;
+                    //    var id = tsoServiceDeliveryChainId[iTSOServiceDeliveryChainWithTaskStatus];
+                    //        if (status != 'Closed' && status != 'Cancelled' && status != 'On Hold') {
+                    //            if (objTSOServiceDeliveryChainWithTaskStatus.TaskStatus != 'closed' && objTSOServiceDeliveryChainWithTaskStatus.TaskStatus != 'cancelled' && objTSOServiceDeliveryChainWithTaskStatus.TaskStatus != 'on-hold') {
+                    //                strTasks += "<a style='margin:0px 2px;' href='#' title='" + objServiceDeliveryChain.Description + "' onclick=ViewTasks('" + tsoId + "','" + objServiceDeliveryChain.ID + "','" + id + "')>" + objServiceDeliveryChain.Name + "</a><br />";
+                    //            }
+                    //            else {
+                    //                strTasks += objServiceDeliveryChain.Name + "<br />";
+                    //            }
+                    //        }
+                    //        else {
+                    //            strTasks += objServiceDeliveryChain.Name + "<br />";
+                    //        }
+
+                    //   // }
+                    //}
+                }
+            }
+
+            return strTasks;
+        }
+
+        function SortByDisplayOrder(a, b) {
+            var firstDisplay = parseInt(a.DisplayOrder);
+            var secondDisplay = parseInt(b.DisplayOrder);
+            return ((firstDisplay < secondDisplay) ? -1 : ((firstDisplay > secondDisplay) ? 1 : 0));
+        }
+
+
+    </script>
+</body>
+</html>

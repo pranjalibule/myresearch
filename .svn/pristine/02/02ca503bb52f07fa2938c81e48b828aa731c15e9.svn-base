@@ -1,0 +1,405 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                                  *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * TRB  05May2018   Created the class
+ * 
+ *******************************************************************************/
+
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using RoleAttribute;
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity.Validation;
+    using System.Linq;
+    using System.Text;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// ServiceDeliveryChainTask
+    /// </summary>
+    [RoutePrefix("api")]
+    public class ServiceDeliveryChainTaskController : ApiController
+    {
+        #region Private Functions
+        /// <summary>
+        /// GetAllTask
+        /// </summary>
+        /// <returns>IList<Tasks>></returns>
+        private IList<TSOServiceDeliveryChainTaskDTO> GetAllTask(int tsoId, int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSOServiceDeliveryChainTaskDTO> objTaskDTOList = null;
+            totalRecords = 0;
+            try
+            {
+                IList<TSOServiceDeliveryChainTask> objTSOTASKList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetAllWithWhere(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords, x => x.TSOServiceDeliveryChain.TSOId == tsoId, x => x.TSOServiceDeliveryChain.TSO.TSR,
+                    x => x.TSOServiceDeliveryChain.TSO.TeamLead, x => x.TSOServiceDeliveryChain.TSO.TSR.Client,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.ClientRegion, x => x.TSOServiceDeliveryChain.TSO.TSR.SolutionCentre,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.TSRCoreServices, x => x.TSOServiceDeliveryChain.TSO.TSR.OperationalRisk,
+                    x => x.TSOServiceDeliveryChain.TSO.TSOStatus, x => x.TSOServiceDeliveryChain.TSO.TSR.PricingModel,
+                    x => x.ServiceDeliveryChainMethod, x => x.TSOServiceDeliveryChain.ServiceDeliveryChain,
+                    x => x.TaskStatus);
+                if (objTSOTASKList != null && objTSOTASKList.Count > 0)
+                {
+                    objTaskDTOList = new List<TSOServiceDeliveryChainTaskDTO>();
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOTASKList)
+                    {
+
+                        var objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        objTaskDTOList.Add(objTSOServiceDeliveryChainTaskDTO);
+
+                    }
+
+                }
+                totalRecords = objTaskDTOList.Count;
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTaskDTOList;
+        }
+
+        private IList<TSOServiceDeliveryChainTaskDTO> GetAllUserTASK(int startingRecordNumber, int pageSize, string userId, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            totalRecords = 0;
+            IList<TSOServiceDeliveryChainTaskDTO> objTSOTASKDTOList = null;
+            try
+            {
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetAll(x => x.TSOServiceDeliveryChain, x => x.TSOServiceDeliveryChain.TSO.TSR,
+                    x => x.TSOServiceDeliveryChain.TSO.TeamLead, x => x.TSOServiceDeliveryChain.TSO.TSR.Client,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.ClientRegion, x => x.TSOServiceDeliveryChain.TSO.TSR.SolutionCentre,
+                    x => x.TSOServiceDeliveryChain.TSO.TSR.TSRCoreServices, x => x.TSOServiceDeliveryChain.TSO.TSR.OperationalRisk,
+                    x => x.TSOServiceDeliveryChain.TSO.TSOStatus, x => x.TSOServiceDeliveryChain.TSO.TSR.PricingModel,
+                    x => x.ServiceDeliveryChainMethod, x => x.TSOServiceDeliveryChain.ServiceDeliveryChain,
+                    x => x.TaskStatus);
+
+
+
+                if (objTSOServiceDeliveryChainTaskList != null && objTSOServiceDeliveryChainTaskList.Count > 0)
+                {
+                    objTSOTASKDTOList = new List<TSOServiceDeliveryChainTaskDTO>();
+                    // TSOServiceDeliveryChainTaskDTO objTSOTASKDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>();
+                    //objTSODTO.CoreService = objCoreServiceDTO;
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+
+                        var objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        objTSOTASKDTOList.Add(objTSOServiceDeliveryChainTaskDTO);
+
+                    }
+                }
+                totalRecords = objTSOTASKDTOList.Count;
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+            return objTSOTASKDTOList;
+
+        }
+
+
+        /// <summary>
+        /// GetTSOTASKById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <param name="loadEntities">bool</param>
+        /// <returns>Tasks</returns>
+        private TSOServiceDeliveryChainTaskDTO GetTSOTASKById(int id, bool loadEntities = true)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            // IList<TSOServiceDeliveryChainTaskDTO> objTSOTaskDTOList = null;
+            TSOServiceDeliveryChainTaskDTO objTaskDTOList = null;
+            try
+            {
+                TSOServiceDeliveryChain objTask = null;
+
+                if (loadEntities)
+                {
+                    objTask = objBusinessLayer.TSOServiceDeliveryChainRepository.GetSingle(x => x.TSOId == id,
+                        x => x.ServiceDeliveryChain,
+                        x => x.TSOServiceDeliveryChainTasks,
+                        x => x.TSO
+
+                        );
+                }
+
+                objBusinessLayer = new BusinessLayer(ls);
+                IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == objTask.ServiceDeliveryChainId, x => x.TSOServiceDeliveryChain, x => x.TSOServiceDeliveryChain.TSO.TSR,
+                   x => x.TSOServiceDeliveryChain.TSO.TeamLead, x => x.TSOServiceDeliveryChain.TSO.TSR.Client,
+                   x => x.ServiceDeliveryChainMethod, x => x.TSOServiceDeliveryChain.ServiceDeliveryChain);
+
+                if (objTSOServiceDeliveryChainTaskList != null && objTSOServiceDeliveryChainTaskList.Count > 0)
+                {
+                    objTaskDTOList = new TSOServiceDeliveryChainTaskDTO();
+                    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                    {
+                        var objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        objTaskDTOList = objTSOServiceDeliveryChainTaskDTO;
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTaskDTOList;
+        }
+
+
+        #endregion
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/ServiceDeliveryChainTask/GetAllPaged/{tsoId}/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllPaged(int tsoId, int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<TSOServiceDeliveryChainTaskDTO> objTASKDTOList = this.GetAllTask(tsoId, startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objTASKDTOList)
+                {
+                    foreach (TSOServiceDeliveryChainTaskDTO objTASK in objTASKDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTASK);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+
+        /// <summary>
+        /// GetAllUserPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/ServiceDeliveryChainTask/GetAllUserPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Account Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllUserPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            Encryption.CryptorEngine objCryptorEngine = new Encryption.CryptorEngine();
+            JsonResult<DataCollection> objReturn = null;
+            string userId = Request.Headers.GetValues("userid").FirstOrDefault();
+            if (!String.IsNullOrWhiteSpace(userId))
+            {
+                userId = userId.Replace("~", "=").Replace("!", "+");
+                string User = objCryptorEngine.Decrypt(userId, true);
+                bool isAdmin = User.ToLower().Contains("admin");
+                string[] usrInfo = User.Split('#');
+                User = usrInfo[usrInfo.Length - 2];
+
+                IList<TSOServiceDeliveryChainTaskDTO> objTSOServiceDeliveryChainTaskDTOList = this.GetAllUserTASK(startingRecordNumber, pageSize, User, out totalRecords);
+
+                DataCollection objDataCollection;
+
+                try
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                    if (null != objTSOServiceDeliveryChainTaskDTOList)
+                    {
+                        foreach (TSOServiceDeliveryChainTaskDTO objTASK in objTSOServiceDeliveryChainTaskDTOList)
+                        {
+                            objDataCollection.EntitySummary.Add(objTASK);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                    throw;
+                }
+
+                objReturn = Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return objReturn;
+        }
+
+
+        /// <summary>
+        /// GetTASKCount
+        /// </summary>
+        /// <param name="strTitleOrClient"></param>
+        /// <param name="status"></param>
+        /// <param name="tsoId"></param>
+        /// <returns></returns>
+        [HttpGet, Route("v1/ServiceDeliveryChainTask/GetTASKCount/{strTitleOrClient}/{status}/{tsoId}")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<string> GetTASKCount(string strTitleOrClient, int status, int tsoId = 0)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            LoginSession ls = new LoginSession();
+            IList<TSOServiceDeliveryChainTask> objTSOServiceDeliveryChainTaskList = null;
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSOServiceDeliveryChain objTASK = null;
+                Encryption.CryptorEngine objCryptorEngine = new Encryption.CryptorEngine();
+                string userId = Request.Headers.GetValues("userid").FirstOrDefault();
+                if (!String.IsNullOrWhiteSpace(userId))
+                {
+                    userId = userId.Replace("~", "=").Replace("!", "+");
+                    string User = objCryptorEngine.Decrypt(userId, true);
+                    bool isadmin = User.ToLower().Contains("admin");
+                    string[] usrInfo = User.Split('#');
+                    User = usrInfo[usrInfo.Length - 2];
+
+                    int userID = Convert.ToInt32(User);
+
+                    if (tsoId > 0)
+                    {
+                        objTASK = objBusinessLayer.TSOServiceDeliveryChainRepository.GetSingle(x => x.TSOId == tsoId, x => x.ServiceDeliveryChain);
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objTSOServiceDeliveryChainTaskList = objBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == objTASK.ServiceDeliveryChainId, x => x.TSOServiceDeliveryChain, x => x.TSOServiceDeliveryChain.TSO.TSR,
+                           x => x.TSOServiceDeliveryChain.TSO.TeamLead, x => x.TSOServiceDeliveryChain.TSO.TSR.Client,
+                           x => x.ServiceDeliveryChainMethod, x => x.TSOServiceDeliveryChain.ServiceDeliveryChain);
+
+                        //if (objTSOServiceDeliveryChainTaskList != null && objTSOServiceDeliveryChainTaskList.Count > 0)
+                        //{
+                        //    objTaskDTOList = new TSOServiceDeliveryChainTaskDTO();
+                        //    foreach (TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask in objTSOServiceDeliveryChainTaskList)
+                        //    {
+                        //        var objTSOServiceDeliveryChainTaskDTO = Conversions.ToDTO<TSOServiceDeliveryChainTaskDTO, TSOServiceDeliveryChainTask>(objTSOServiceDeliveryChainTask);
+
+                        //        objTaskDTOList = objTSOServiceDeliveryChainTaskDTO;
+                        //    }
+                        //}
+                    }
+                    else
+                    {
+                        //objTASKList = objBusinessLayer.TSOServiceDeliveryChainRepository.GetAll();
+                    }
+
+                }
+
+                result = Json(objTSOServiceDeliveryChainTaskList.Count().ToString(), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/ServiceDeliveryChainTask/GetById/{id}")]
+        [ResponseType(typeof(TSOServiceDeliveryChainTaskDTO))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager,Team Lead, Guest")]
+        public JsonResult<TSOServiceDeliveryChainTaskDTO> GetById(int id)
+        {
+            //JsonResult<IList<TSOServiceDeliveryChainTaskDTO>> result = null; -- JsonResult<IList<TSOServiceDeliveryChainTaskDTO>> 
+            // IList<TSOServiceDeliveryChainTaskDTO> objTSOTasksDTO;
+            JsonResult<TSOServiceDeliveryChainTaskDTO> result = null;
+            TSOServiceDeliveryChainTaskDTO objTSOTasksDTO;
+            try
+            {
+                objTSOTasksDTO = this.GetTSOTASKById(id);
+
+                result = Json(objTSOTasksDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+    }
+}

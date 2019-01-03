@@ -1,0 +1,618 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Service Order (TSO)</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 2) {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        if (CheckUser() == "") {
+            window.location = "index.html?page=TSRDashboard.html";
+        }
+
+        function NavigateTo(page) {
+            window.location = page;
+        }
+
+        var startDate;
+        var targetCompletionDate;
+
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:3.5vh; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="Home();">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSRDashboard();">TSR Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr id="trNewTSR">
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="ExportExcelDump('');">Export Data</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="MasterData()">Master Data</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <!--<a href="Wiki.html" target="_blank">Wiki</a>-->
+                    <a href='#' onclick="this.href='Wiki.html?user='+ encodeURI(userId)" target="_blank">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv">
+        <div id="breadCrumb">
+        </div>
+        <div class="scrollDiv" style="height:85vh;">
+            <table cellpadding="5" class="tsoPage">
+                <tr hidden="hidden">
+                    <td class="smallTiletd">
+                        TSR
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field">
+                        <div id="lblTSR" style="font:bold"></div>                      
+                        <input type="hidden" id="TSRStartDate" />
+                        <input type="hidden" id="TSRTargetCompletionDate" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:98%;">
+                            <legend style="font-weight:bold">TSO Information</legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        <input type="hidden" value="" id="txtID" />
+                                        TSO
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width28imp">
+                                        <input id="txtTitle" type="text" size="36" maxlength="150" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Description
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" colspan="3">
+                                        <textarea id="txtDescription" rows="5" cols="92" maxlength="500"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        TSO Status
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="width28imp">
+                                        <select id="ddlTSOStatus" style="width:248px"></select>
+                                        <input id="txtStatus" type="text" size="36" maxlength="150" disabled />
+                                    </td>
+                                    <td class="smallTiletd required" style="width:18.7% !important;padding:5px 0px;">
+                                        Operational Risk
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select id="ddlOperationalrisk" style="width:250px"></select>
+                                        <div class="waterInfo">Scale: 0 (no risk) - 10 (highest risk)</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Team Lead
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" style="width:28% !important;padding:0px 4px;">
+                                        <input id="txtTeamLead" type="text" size="36" maxlength="150" />
+                                        <input id="lblTeamLeadMail" type="hidden" />
+                                        <input id="lblTeamLeadId" type="hidden" />
+                                    </td>
+
+                                    <!--<td class="titletd required" style="width:18.7% !important;padding:5px 0px;">
+                                        Sp_Id
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtSpId" onkeyup="NumAndTwoDecimals(event, this)" ; type="text" size="36" maxlength="150" />
+                                    </td>-->
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Core Service(s)
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select id="ddlCoreServices" style="width:250px"></select>
+                                    </td>
+                                    <td class="titletd required" style="width:18.7% !important;padding:5px 0px;">
+                                        Relevant Repositories
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select id="ddlRelevantRepositories" style="width:250px"></select>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Service Delivery Chain
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <select multiple id="listServiceDeliveryChain" style="width:250px;height:100px"></select>
+                                    </td>
+                                    <td class="titletd" style="width:13.7% !important;padding:16px 56px 16px 0px;">
+                                        <input type="button" id="AddServiceDeliveryChain" value="Add" style="width:130px" title="Add Service Delivery Chain" /><br /> <br />
+                                        <input type="button" id="RemoveServiceDeliveryChain" value="Remove" style="width:130px" title="Remove Service Delivery Chain" />
+                                    </td>
+                                    <td class="seprator"></td>
+                                    <td class="field width28imp">
+                                        <select multiple id="listServiceDeliveryChainSelected" style="width:250px;height:100px"></select>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <fieldset style="width:98%;">
+                            <legend style="font-weight:bold">TSO Progress</legend>
+                            <table cellpadding="0" cellspacing="0" class="tsotop">
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Start Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtStartDate" type="text" size="36" maxlength="150" />
+                                    </td>
+
+                                    <td class="titletd width18TSOimp required">
+                                        Actual Start Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td>
+                                        <input id="txtActualStartDate" type="text" size="36" maxlength="150" />
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Completion Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field width28imp">
+                                        <input id="txtTargetCompletionDate" type="text" size="36" maxlength="150" />
+                                    </td>
+
+                                    <td class="titletd width18TSOimp required">
+                                        Actual Completion Date
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td>
+                                        <input id="txtActualCompletionDate" type="text" size="36" maxlength="150" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="titletd width18TSOimp required">
+                                        Estimated Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" style="width:28% !important;padding:0px 4px;">
+                                        <input id="txtEstimatedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                        <div class="waterInfo">Person days</div>
+                                    </td>
+                                    <td class="titletd width18TSOimp required">
+                                        Planned Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" style="width:28% !important;padding:0px 4px;">
+                                        <input id="txtPlannedEffort" onkeyup="NumAndTwoDecimals(event, this); onlyten(event, this);" type="text" size="36" maxlength="100" />
+                                        <div class="waterInfo">Person days</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="smallTiletd" style="width:18.7% !important;">
+                                        Actual Effort
+                                    </td>
+                                    <td class="seprator">:</td>
+                                    <td class="field" style="width:28% !important;padding:0px 4px;">
+                                        <input id="txtActualEffort" type="text" size="36" maxlength="100" disabled />
+                                        <div class="waterInfo">Person days</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+            <table class="tsoPage">
+                <tr>
+                    <td colspan="2" align="center">
+                        <input type="button"  id="Submit" value="Submit" onclick="Save();" style="float:none;" />
+                        <input type="button" value="Cancel" onclick="Cancel();" style="float:none;" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="pager" class="pager" style="display:none">
+            <table border="0">
+                <tr>
+                    <td valign="middle"><img src="images/first.png" class="first" /></td>
+                    <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                    <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                    <td valign="middle"><img src="images/next.png" class="next" /></td>
+                    <td valign="middle"><img src="images/last.png" class="last" /></td>
+                    <td valign="middle">
+                        <select id="pagesize">
+                            <option selected="selected" value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+
+    <script type="text/javascript" src="/scripts/tso.js"></script>
+    <script type="text/javascript">
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        $(".scrollDiv").scroll(function () {
+            $("#txtStartDate").datepicker("hide");
+            $("#txtTargetCompletionDate").datepicker("hide");
+        });
+
+        $(document).ready(function () {
+            try {
+                CheckUser();
+                LoadOperationalRisk();
+                LoadServiceDeliveryChain();
+                LoadTSOStatus();
+
+                if (tsrId != 'undefined') {
+                    //LoadTSR(tsrId);
+                    LoadCoreServices();
+                    LoadReliventRepositories();
+                }
+
+                if (null != tsoId) {
+                    LoadTSO(tsoId);
+                    $("#txtStatus").hide();
+                    $("#ddlTSOStatus").show();
+                }
+                else
+                {
+                    $("#txtActualEffort").val(0);
+                    $("#txtStatus").show();
+                    $("#ddlTSOStatus").hide();
+                    $("#txtStatus").val("Created");
+                }               
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+
+                $("#lblUser").text(userName);
+
+                //Set Auto complete options for AD user and display
+                SetAutoCompleteForAD("txtTeamLead", "lblTeamLeadMail");
+
+                $("#txtTeamLead").keyup(function () {
+                    if ($(this).val() == "") {
+                        $("#lblTeamLeadId").val("");
+                    }
+                });
+
+                $("#txtStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtActualStartDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtTargetCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+                $("#txtActualCompletionDate").datepicker({
+                    dateFormat: 'dd-M-yy', showButtonPanel: true, changeMonth: true, changeYear: true, buttonImage: "/images/calendar.gif", buttonImageOnly: true, inline: true
+                });
+            } catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+        function ExportExcelDump() {
+            $("#ExportExcel").dialog({
+                dialogClass: "no-close block",
+                width: "500px",
+                hight: "250px",
+                modal: true,
+                open: $.proxy(function () {
+                    $(".ui-dialog-titlebar-close").remove();
+                    $(".ui-dialog-titlebar").css("width", "93%");
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                    $(".ui-widget-overlay").css("opacity", "1");
+                }),
+                buttons: [
+                        {
+                            text: "Export to csv",
+                            click: function () {
+                                var url;
+                                showLoader();
+                                var elt = document.getElementById("TypeOfExport");
+                                if (elt.value === "TSR") {
+                                    var url = urlPrefix + "TSR/GetTSRDump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSR Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "TSO") {
+                                    url = urlPrefix + "TSO/GetTSODump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSO Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "Tasks") {
+                                    var txtStartDate = $('#txtStartDate').val()
+                                    var txtEndDate = $('#txtEndDate').val()
+                                    url = urlPrefix + "TSO/GetServiceDeliveryChainTasks/";
+                                    tdata = { startDate: txtStartDate, endDate: txtEndDate };
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        data: tdata,
+                                        success: function (result) {
+                                            var filename = "iMS TASK Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        {
+                            text: "Cancel",
+                            click: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+
+                ]
+            });
+        }
+
+    </script>
+
+</body>
+</html>

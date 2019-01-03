@@ -1,0 +1,12 @@
+﻿.leftDiv {
+    width:16%;
+}
+
+.rightDiv {
+    height:88vh !important;
+    width:81%;
+}
+
+.scrollDiv {
+    height:50%;
+}

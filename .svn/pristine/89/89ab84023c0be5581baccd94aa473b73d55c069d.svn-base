@@ -1,0 +1,726 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 18Sep2017 Created the class
+ *******************************************************************************/
+namespace SQS.nTier.TTM.GenericFramework
+{
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+
+    /// <summary>
+    /// GenericDataRepository
+    /// </summary>
+    /// <typeparam name="T">class</typeparam>
+    [System.Runtime.InteropServices.Guid("C5F0F41A-BEBA-4DB4-BAE1-9C76FAC31AD5")]
+    public partial class GenericDataRepository<T> : IGenericDataRepository<T> where T : class, IBaseObject
+    {
+        #region private variables
+
+        private readonly DbContext context;
+        private readonly DbSet<T> dbSet;
+        private IUnitOfWork unitOfWork;
+
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// Parameterized constructor
+        /// </summary>
+        /// <param name="context">HeatMapContext</param>
+        public GenericDataRepository(DbContext context, IUnitOfWork unitOfWork)
+        {
+            this.context = context;
+            UnitOfWork = unitOfWork;
+            this.dbSet = context.Set<T>();
+        }
+
+        #endregion
+
+        #region Interface Implementation
+
+        /// <summary>
+        /// UnitOfWork
+        /// </summary>
+        public IUnitOfWork UnitOfWork
+        {
+            get
+            {
+                return unitOfWork;
+            }
+
+            set
+            {
+                unitOfWork = value;
+            }
+        }
+
+        /// <summary>
+        /// DbContext
+        /// </summary>
+        public DbContext DbContext
+        {
+            get
+            {
+                return context;
+            }
+        }
+
+        /// <summary>
+        /// GetWithRawSql
+        /// </summary>
+        /// <param name="query">string</param>
+        /// <param name="parameters">parameters</param>
+        /// <returns></returns>
+        public virtual IList<T> GetWithRawSql(string query, params object[] parameters)
+        {
+            IList<T> objList = null;
+            try
+            {
+                objList = dbSet.SqlQuery(query, parameters).ToList();
+            }
+            catch
+            {
+                throw;
+            }
+
+            return objList;
+        }
+
+        /// <summary>
+        /// GetAll
+        /// </summary>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList</returns>
+        public virtual IList<T> GetAll(params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+
+                    list = dbQuery
+                        .AsNoTracking()
+                        .ToList<T>();
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetAll
+        /// </summary>
+        /// <param name="startingRecordNumber">int</param>
+        /// <param name="pageSize">int</param>
+        /// <param name="orderBy">Expression<Func<T, bool>></param>
+        /// <param name="totalRecords">int</param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList<T></returns>
+        public virtual IList<T> GetAll<TOrderBy>(int startingRecordNumber, int pageSize, Expression<Func<T, TOrderBy>> orderBy, bool descending, out int totalRecords, params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    totalRecords = dbQuery.Count();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+
+                    if (!descending)
+                    {
+                        list = dbQuery.OrderBy(orderBy)
+                            .Skip(startingRecordNumber)
+                            .Take(pageSize)
+                            .AsNoTracking()
+                            .ToList<T>();
+                    }
+                    else
+                    {
+                        list = dbQuery.OrderByDescending(orderBy)
+                           .Skip(startingRecordNumber)
+                           .Take(pageSize)
+                           .AsNoTracking()
+                           .ToList<T>();
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetAll
+        /// </summary>
+        /// <param name="startingRecordNumber">int</param>
+        /// <param name="pageSize">int</param>
+        /// <param name="orderBy">Expression<Func<T, bool>></param>
+        /// <param name="totalRecords">int</param>
+        /// <param name="where"></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList<T></returns>
+        public virtual IList<T> GetAllWithWhere<TOrderBy>(int startingRecordNumber, int pageSize, Expression<Func<T, TOrderBy>> orderBy, bool descending, out int totalRecords, Expression<Func<T, bool>> where = null, params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    totalRecords = dbQuery.Count();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+
+                    if (!descending)
+                    {
+                        if (null != where)
+                        {
+                            list = dbQuery.Where(where).OrderBy(orderBy)
+                           .Skip(startingRecordNumber)
+                           .Take(pageSize)
+                           .AsNoTracking()
+                           .ToList<T>();
+                        }
+                        else
+                        {
+                            list = dbQuery.OrderBy(orderBy)
+                            .Skip(startingRecordNumber)
+                            .Take(pageSize)
+                            .AsNoTracking()
+                            .ToList<T>();
+                        }
+                    }
+                    else
+                    {
+                        if (null != where)
+                        {
+                            list = dbQuery.Where(where).OrderByDescending(orderBy)
+                           .Skip(startingRecordNumber)
+                           .Take(pageSize)
+                           .AsNoTracking()
+                           .ToList<T>();
+                        }
+                        else
+                        {
+                            list = dbQuery.OrderByDescending(orderBy)
+                           .Skip(startingRecordNumber)
+                           .Take(pageSize)
+                           .AsNoTracking()
+                           .ToList<T>();
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return list;
+        }
+
+
+        /// <summary>
+        /// GetPartial
+        /// </summary>
+        /// <typeparam name="TResult">Expression<Func<T, TResult>></typeparam>
+        /// <param name="columns"></param>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <returns>List<TResult></returns>
+        public virtual IList<TResult> GetPartial<TResult>(Expression<Func<T, TResult>> columns, Expression<Func<T, bool>> where = null)
+        {
+            IList<TResult> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    if (null != where)
+                    {
+                        list = dbQuery.Where(where).AsNoTracking()
+                            .Select<T, TResult>(columns)
+                            .ToList();
+                    }
+                    else
+                    {
+                        list = dbQuery.AsNoTracking().Select<T, TResult>(columns)
+                            .ToList();
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList</returns>
+        public virtual IList<T> GetList(Expression<Func<T, bool>> where,
+             params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+                    if (null != where)
+                    {
+                        list = dbQuery.Where(where).AsQueryable()
+                            .ToList<T>();
+                    }
+                    else
+                    {
+                        list = dbQuery
+                            .ToList<T>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>IList</returns>
+        public virtual IList<T> GetListWithOrder<TOrderBy>(Expression<Func<T, bool>> where,
+            Expression<Func<T, TOrderBy>> orderBy,
+             params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+                    if (null != where)
+                    {
+                        list = dbQuery.Where(where).AsQueryable()
+                            .OrderBy(orderBy)
+                            .ToList<T>();
+                    }
+                    else
+                    {
+                        list = dbQuery
+                            .OrderBy(orderBy)
+                            .ToList<T>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="startingRecordNumber">int</param>
+        /// <param name="pageSize">int</param>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="navigationProperties">params Expression<Func<T, object>>[]</param>
+        public virtual IList<T> GetList<TOrderBy>(int startingRecordNumber,
+            int pageSize,
+            Expression<Func<T, bool>> where,
+            Expression<Func<T, TOrderBy>> orderBy,
+            bool descending,
+            out int totalRecords,
+             params Expression<Func<T, object>>[] navigationProperties)
+        {
+            List<T> list;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    totalRecords = dbQuery.Where(where).Count();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+
+                    if (!descending)
+                    {
+                        list = dbQuery
+                            .Where(where)
+                            .OrderBy(orderBy)
+                            .Skip(startingRecordNumber)
+                            .Take(pageSize)
+                            .ToList<T>();
+                    }
+                    else
+                    {
+                        list = dbQuery
+                            .Where(where)
+                            .OrderByDescending(orderBy)
+                            .Skip(startingRecordNumber)
+                            .Take(pageSize)
+                            .ToList<T>();
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// GetList
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        /// <param name="navigationProperties"></param>
+        /// <returns>T</returns>
+        public virtual T GetSingle(Expression<Func<T, bool>> where,
+             params Expression<Func<T, object>>[] navigationProperties)
+        {
+            T item = null;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+
+                    item = dbQuery.Where(where).AsQueryable()
+                        .AsNoTracking() //Don't track any changes for the selected item
+                        .FirstOrDefault(); //Apply where clause
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return item;
+        }
+
+        public T GetSingle<TOrderBy>(Expression<Func<T, bool>> where, Expression<Func<T, TOrderBy>> orderBy, bool descending, params Expression<Func<T, object>>[] navigationProperties)
+        {
+            T item = null;
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    //Apply eager loading
+                    foreach (Expression<Func<T, object>> navigationProperty in navigationProperties)
+                        dbQuery = dbQuery.Include<T, object>(navigationProperty).DefaultIfEmpty();
+                    if (!descending)
+                    {
+                        item = dbQuery.Where(where).AsQueryable()
+                        .OrderBy(orderBy)
+                        .AsNoTracking() //Don't track any changes for the selected item
+                        .FirstOrDefault(); //Apply where clause
+                    }
+                    else
+                    {
+                        item = dbQuery.Where(where).AsQueryable()
+                        .OrderByDescending(orderBy)
+                        .AsNoTracking() //Don't track any changes for the selected item                        
+                        .FirstOrDefault(); //Apply where clause
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            return item;
+        }
+
+        #endregion
+
+        #region CRUD
+
+        /// <summary>
+        /// GetByID
+        /// </summary>
+        /// <param name="id">object</param>
+        /// <returns>T</returns>
+        public virtual T GetByID(object id)
+        {
+            dynamic objValue = null;
+
+            try
+            {
+                objValue = dbSet.Find(id);
+            }
+            catch
+            {
+                throw;
+            }
+
+            return objValue;
+        }
+
+        /// <summary>
+        /// SetLoggingProperties
+        /// </summary>
+        /// <param name="entityToAdd">IEntity</param>
+        private void SetAdderLoggingProperties(IBaseEntity entityToAdd)
+        {
+            try
+            {
+                ((IBaseEntity)entityToAdd).CreatedBy = unitOfWork.LoginSession.LoginName;
+                ((IBaseEntity)entityToAdd).CreatedOn = DateTime.Now;
+                ((IBaseEntity)entityToAdd).Version = 1;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// SetModifierLoggingProperties
+        /// </summary>
+        /// <param name="entityToUpdate"></param>
+        /// <param name="changeVerion">bool</param>
+        private void SetModifierLoggingProperties(IBaseEntity entityToUpdate, bool changeVerion = false)
+        {
+            ((IBaseEntity)entityToUpdate).UpdatedBy = unitOfWork.LoginSession.LoginName;
+            ((IBaseEntity)entityToUpdate).UpdatedOn = DateTime.Now;
+            if (changeVerion)
+            {
+                ((IBaseEntity)entityToUpdate).Version += 1;
+            }
+        }
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="entityToAdd">T</param>
+        public virtual void Add(T entityToAdd)
+        {
+            try
+            {
+                if (entityToAdd.ObjectSate != ObjectSate.Manual)
+                {
+                    SetAdderLoggingProperties((IBaseEntity)entityToAdd);
+                    SetModifierLoggingProperties((IBaseEntity)entityToAdd);
+                }
+
+                entityToAdd = dbSet.Add(entityToAdd);
+
+                foreach (PropertyInfo objPropertyInfo in entityToAdd.GetType().GetProperties())
+                {
+                    if (objPropertyInfo.MemberType == MemberTypes.Property && typeof(IEnumerable<IBaseObject>).IsAssignableFrom(objPropertyInfo.PropertyType))
+                    {
+                        var objCollection = (IEnumerable)objPropertyInfo.GetValue(entityToAdd);
+
+                        if (null != objCollection)
+                        {
+                            foreach (var item in objCollection)
+                            {
+                                SetAdderLoggingProperties((IBaseEntity)item);
+                                SetModifierLoggingProperties((IBaseEntity)item);
+                            }
+                        }
+                    }
+                }
+                entityToAdd.ObjectSate = ObjectSate.Added;
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Add
+        /// </summary>
+        /// <param name="items">params T[] </param>
+        public virtual void Add(params T[] entitiesToAdd)
+        {
+            if (entitiesToAdd.Count() > 0)
+            {
+                foreach (T item in entitiesToAdd)
+                {
+                    Add(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entityToUpdate">T</param>
+        public virtual void Update(T entityToUpdate)
+        {
+            try
+            {
+                SetModifierLoggingProperties((IBaseEntity)entityToUpdate, true);
+
+                context.Entry(entityToUpdate).State = EntityState.Modified;
+
+                foreach (PropertyInfo objPropertyInfo in entityToUpdate.GetType().GetProperties())
+                {
+                    if (objPropertyInfo.MemberType == MemberTypes.Property && typeof(IEnumerable<IBaseObject>).IsAssignableFrom(objPropertyInfo.PropertyType))
+                    {
+                        var objCollection = (IEnumerable)objPropertyInfo.GetValue(entityToUpdate);
+                        if (null != objCollection)
+                        {
+                            foreach (var item in objCollection)
+                            {
+                                SetModifierLoggingProperties((IBaseEntity)item, true);
+                            }
+                        }
+                    }
+                }
+
+                entityToUpdate.ObjectSate = ObjectSate.Modified;
+                context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="entitiesToUpdate">params T[] </param>
+        public virtual void Update(params T[] entitiesToUpdate)
+        {
+            if (entitiesToUpdate.Count() > 0)
+            {
+                foreach (T item in entitiesToUpdate)
+                {
+                    Update(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="id">object</param>
+        public virtual void Delete(object id)
+        {
+            T entityToDelete = dbSet.Find(id);
+            if (null != entityToDelete)
+                Delete(entityToDelete);
+            else
+                throw new Exception("Invalid ID");
+        }
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="entitiesToDelete">params T[] </param>
+        public virtual void Delete(params T[] entitiesToDelete)
+        {
+            if (entitiesToDelete.Count() > 0)
+            {
+                foreach (T item in entitiesToDelete)
+                {
+                    Delete(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="entity">T</param>
+        public virtual void Delete(T entity)
+        {
+            dbSet.Attach(entity);
+            dbSet.Remove(entity);
+            entity.ObjectSate = ObjectSate.Deleted;
+            context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Delete
+        /// </summary>
+        /// <param name="where">Expression<Func<T, bool>></param>
+        public void Delete(Expression<Func<T, bool>> where)
+        {
+            List<T> list;
+
+            try
+            {
+                using (context)
+                {
+                    IQueryable<T> dbQuery = context.Set<T>();
+
+                    list = dbQuery.Where(where).AsQueryable()
+                            .ToList<T>();
+
+                    if (null != list && list.Count > 0)
+                    {
+                        Delete(list.ToArray<T>());
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        #endregion
+    }
+}

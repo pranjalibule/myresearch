@@ -1,0 +1,1321 @@
+﻿/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * AKS 04Oct2017 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using RoleAttribute;
+    using System;
+    using System.Collections.Generic;
+    using System.Configuration;
+    using System.Data.Entity.Validation;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
+    using System.Text;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+    /// <summary>
+    /// TSRController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class TSRController : ApiController
+    {
+        //public object TTMLogger { get; private set; }
+
+        public TSRDTO GetTSR(int id)
+        {
+            TSRDTO tsrDto = this.GetTSRById(id);
+            return tsrDto;
+        }
+
+        #region Private Functions
+
+        /// <summary>
+        /// GetTSRById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <param name="loadEntities">bool</param>
+        /// <returns>TSR</returns>
+        private TSRDTO GetTSRById(int id, bool loadEntities = true)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            TSRDTO objTSRDTO = null;
+
+            try
+            {
+                TSR objTSR = null;
+
+
+                if (loadEntities)
+                {
+                    objTSR = objBusinessLayer.TSRRepository.GetSingle(x => x.ID == id,
+                    x => x.DeliveryManager,
+                    x => x.TestManager,
+                    x => x.AccountManager,
+                    x => x.Vertical,
+                    x => x.Practice,
+                    x => x.SolutionCentre,
+                    x => x.ClientRegion,
+                    x => x.MarketOffering,
+                    x => x.OperationalRisk,
+                    x => x.TSRCoreServices,
+                    x => x.TSRReleventRepositories,
+                    x => x.TSRFiles,
+                    x => x.TSOes,
+                    x => x.TSRStatus);
+
+                }
+                else
+                {
+                    objTSR = objBusinessLayer.TSRRepository.GetSingle(x => x.ID == id,
+                    x => x.TSRCoreServices,
+                    x => x.TSRReleventRepositories,
+                    x => x.TSRFiles,
+                    x => x.TSOes);
+                }
+
+                if (null != objTSR)
+                {
+                    objTSRDTO = new TSRDTO();
+                    objTSRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSR);
+                    objTSRDTO.FilePaths = new List<string>();
+
+                    String fileUploadPath = ConfigurationManager.AppSettings["fileUploadPath"].ToString();
+
+                    foreach (TSRFileUpload files in objTSR.TSRFiles)
+                    {
+                        var ext = files.Path.Substring(files.Path.IndexOf("."));
+                        objTSRDTO.FilePaths.Add(fileUploadPath + files.GUID + ext);
+                    }
+                }
+
+                if (objTSR != null)
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == objTSR.ID, x => x.TSOServiceDeliveryChains, x => x.TSR);
+                    int tsoCC = 0;
+                    int taskCC = 0;
+                    int taskCount = 0;
+                    bool canClose = false;
+                    foreach (TSO tso in objTSOList)
+                    {
+                        if (tso.TSOStatusID == 2 && tso.TSOStatusID == 4)
+                        {
+                            tsoCC++;
+                        }
+                        if (tso.TSOServiceDeliveryChains != null && tso.TSOServiceDeliveryChains.Count > 0)
+                        {
+                            foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in tso.TSOServiceDeliveryChains)
+                            {
+                                IBusinessLayer oldobjBusinessLayer = new BusinessLayer(ls);
+                                int outPa = 0;
+                                TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask = oldobjBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(0, 1, x => x.TSOServiceDeliveryChainId == objTSOServiceDeliveryChain.ID, x => x.ID, true, out outPa).FirstOrDefault();
+
+                                if (objTSOServiceDeliveryChainTask != null)
+                                {
+                                    taskCount++;
+                                    objTSRDTO.ActualEffort = objTSRDTO.ActualEffort + objTSOServiceDeliveryChainTask.ActualEffort;
+                                    if (objTSOServiceDeliveryChainTask.TaskStatusId == 2 || objTSOServiceDeliveryChainTask.TaskStatusId == 3)
+                                    {
+                                        taskCC++;
+                                    }
+                                }
+                            }
+
+                            if (taskCC == taskCount)
+                            {
+                                canClose = true;
+                            }
+                        }
+                    }
+
+                    if (tsoCC == objTSOList.Count)
+                    {
+                        canClose = true;
+                    }
+                    objTSRDTO.CanClose = canClose;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSRDTO;
+        }
+
+        /// <summary>
+        /// GetAllTSR
+        /// </summary>
+        /// <returns>IList<TSR>></returns>
+        private IList<TSRDTO> GetAllTSR(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSRDTO> objTSRDTOList = null;
+            try
+            {
+                IList<TSR> objTSRList = objBusinessLayer.TSRRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords, x => x.TSRStatus, x => x.TestManager, x => x.Client, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical,x=>x.SolutionCentre);
+
+                if (objTSRList != null && objTSRList.Count > 0)
+                {
+                    objTSRDTOList = new List<TSRDTO>();
+
+                    foreach (TSR objTSR in objTSRList)
+                    {
+                        double ActualEffort = 0;
+                        double PlannedEffort = 0;
+
+                        //objBusinessLayer = new BusinessLayer(ls);
+                        //objTSR.Engagement = objBusinessLayer.EngagementRepostory.GetByID(objTSR.EngagementId);
+
+                        objBusinessLayer = new BusinessLayer(ls);
+                        IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == objTSR.ID, x => x.TSOServiceDeliveryChains, x => x.TSR);
+
+                        if (objTSOList != null && objTSOList.Count > 0)
+                        {
+                            foreach (TSO objTSO in objTSOList)
+                            {
+                                PlannedEffort = PlannedEffort + objTSO.PlannedEffort;
+                                if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                                {
+                                    foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                                    {
+                                        IBusinessLayer oldobjBusinessLayer = new BusinessLayer(ls);
+                                        TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask = oldobjBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(0, 1, x => x.TSOServiceDeliveryChainId == objTSOServiceDeliveryChain.ID, x => x.ID, true, out totalRecords).FirstOrDefault();
+
+                                        if (objTSOServiceDeliveryChainTask != null)
+                                        {
+                                            ActualEffort = ActualEffort + objTSOServiceDeliveryChainTask.ActualEffort;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        TSRDTO objTSRDTO = new TSRDTO();
+                        objTSRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSR);
+                        objTSRDTO.ActualEffort = ActualEffort;
+                        objTSRDTO.Plannedeffort = PlannedEffort;
+                        objTSRDTOList.Add(objTSRDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSRDTOList;
+        }
+
+        /// <summary>
+        /// GetAllTSR
+        /// </summary>
+        /// <returns>IList<TSR>></returns>
+        private IList<TSRDTO> GetAllTSR()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSRDTO> objTSRDTOList = null;
+            try
+            {
+                IList<TSR> objTSRList = objBusinessLayer.TSRRepository.GetAll(x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+
+                if (objTSRList != null && objTSRList.Count > 0)
+                {
+                    objTSRDTOList = new List<TSRDTO>();
+
+                    foreach (TSR objTSR in objTSRList)
+                    {
+                        double ActualEffort = 0;
+                        float PlannedEffort = 0;
+
+                        objBusinessLayer = new BusinessLayer(ls);
+                        IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == objTSR.ID, x => x.TSOServiceDeliveryChains, x => x.TSR);
+
+                        if (objTSOList != null && objTSOList.Count > 0)
+                        {
+                            foreach (TSO objTSO in objTSOList)
+                            {
+                                PlannedEffort = PlannedEffort + (float)objTSO.PlannedEffort;
+                                if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                                {
+                                    foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                                    {
+                                        IBusinessLayer oldobjBusinessLayer = new BusinessLayer(ls);
+                                        TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask = oldobjBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == objTSOServiceDeliveryChain.ID).FirstOrDefault();
+
+                                        if (objTSOServiceDeliveryChainTask != null)
+                                        {
+                                            ActualEffort = ActualEffort + objTSOServiceDeliveryChainTask.ActualEffort;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        TSRDTO objTSRDTO = new TSRDTO();
+                        objTSRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSR);
+                        objTSRDTO.ActualEffort = ActualEffort;
+                        objTSRDTO.Plannedeffort = PlannedEffort;
+                        objTSRDTOList.Add(objTSRDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSRDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new TSR 
+        /// </summary>
+        /// <param name="objTSR"></param>
+        /// <returns></returns>
+        private string AddNewTSR(TSRDTO objTSRDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = objTSRDTO.CreatedBy;
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSR objTSR = null;
+                objTSR = objBusinessLayer.TSRRepository.GetSingle(x => x.Title == objTSRDTO.Title);
+
+                if (objTSR != null)
+                {
+                    returnMessage = "Error: TSR title already exists.";
+                }
+                else
+                {
+                    objBusinessLayer = new BusinessLayer(ls);
+                    string strDefaultTSRStatusText = ConfigurationManager.AppSettings["DefaultTSRStatusText"].ToString();
+                    TSRStatus objTSRStatus = objBusinessLayer.TSRStatusRepository.GetSingle(x => x.Name == strDefaultTSRStatusText);
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    objTSRDTO.TSRStatusID = objTSRStatus.ID;
+                    objTSRDTO.ProjectModelID = 1;
+                    objTSR = Conversions.ToEntity<TSRDTO, TSR>(objTSRDTO);
+                    objBusinessLayer.TSRRepository.Add(objTSR);
+
+                    if (null != objTSR && objTSR.ID > 0)
+                    {
+                        if (!String.IsNullOrWhiteSpace(objTSRDTO.TSRCoreServicesArr))
+                        {
+                            //Add core services to TSR
+                            foreach (string tsrCoreService in objTSRDTO.TSRCoreServicesArr.Split(','))
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+
+                                TSRCoreService tSRCoreService = new TSRCoreService { CoreServiceId = int.Parse(tsrCoreService), TSRId = objTSR.ID };
+
+                                objBusinessLayer.TSRCoreServicesRepository.Add(tSRCoreService);
+                            }
+                        }
+
+                        if (!String.IsNullOrWhiteSpace(objTSRDTO.TSTRelevantRepositoriesArr))
+                        {
+                            //Add relevant repositories to TSR
+                            foreach (string tsrRelevantRepository in objTSRDTO.TSTRelevantRepositoriesArr.Split(','))
+                            {
+                                objBusinessLayer = new BusinessLayer(ls);
+
+                                TSRRelevantRepository tsrReleventRepority = new TSRRelevantRepository { RelevantRepositoryId = int.Parse(tsrRelevantRepository), TSRId = objTSR.ID };
+
+                                objBusinessLayer.TSRRelevantRepositoriesRepository.Add(tsrReleventRepority);
+                            }
+                        }
+                    }
+
+
+                    UserController user = new UserController();
+                    user.UserAssignmentAndSendMail(objTSR.TestManagerId, "Test Service Request", objTSRDTO.Title);
+                    user.UserAssignmentAndSendMail(objTSR.DeliveryManagerId, "Test Service Request", objTSRDTO.Title);
+                    user.UserAssignmentAndSendMail(objTSR.AccountManagerId, "Test Service Request", objTSRDTO.Title);
+
+                    returnMessage = objTSR.ID.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// Function to update TSR 
+        /// </summary>
+        /// <param name="objTSR"></param>
+        /// <returns></returns>
+        private string ModifyTSR(int ID, TSRDTO objTSRDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                TSR chkTSR = null;
+                chkTSR = objBusinessLayer.TSRRepository.GetSingle(x => x.Title == objTSRDTO.Title && x.ID != ID);
+
+                if (chkTSR != null)
+                {
+                    returnMessage = "Error: TSR title already exists.";
+                }
+                else
+                {
+                    TSRDTO objTSRDTOById = this.GetTSRById(ID, false);
+
+                    if (objTSRDTOById != null)
+                    {
+                        ls = new LoginSession();
+                        ls.LoginName = objTSRDTO.UpdatedBy;
+
+                        objTSRDTOById.Title = objTSRDTO.Title;
+                        objTSRDTOById.DeliveryManagerId = objTSRDTO.DeliveryManagerId;
+                        objTSRDTOById.Description = objTSRDTO.Description;
+                        objTSRDTOById.ERPOrderDescription = objTSRDTO.ERPOrderDescription;
+                        objTSRDTOById.TestManagerId = objTSRDTO.TestManagerId;
+                        objTSRDTOById.VerticalId = objTSRDTO.VerticalId;
+                        objTSRDTOById.PracticeId = objTSRDTO.PracticeId;
+                        objTSRDTOById.SolutionCentreId = objTSRDTO.SolutionCentreId;
+                        objTSRDTOById.ClientRegionId = objTSRDTO.ClientRegionId;
+                        objTSRDTOById.Account = objTSRDTO.Account;
+                        objTSRDTOById.AccountManagerId = objTSRDTO.AccountManagerId;
+                        objTSRDTOById.ERPordernumber = objTSRDTO.ERPordernumber;
+                        objTSRDTOById.MarketOfferingId = objTSRDTO.MarketOfferingId;
+                        objTSRDTOById.StartDate = objTSRDTO.StartDate;
+                        objTSRDTOById.TargetCompletionDate = objTSRDTO.TargetCompletionDate;
+                        objTSRDTOById.ActualStartDate = objTSRDTO.ActualStartDate;
+                        objTSRDTOById.ActualCompletionDate = objTSRDTO.ActualCompletionDate;
+                        objTSRDTOById.Estimatedeffort = objTSRDTO.Estimatedeffort;
+                        objTSRDTOById.Plannedeffort = objTSRDTO.Plannedeffort;
+                        objTSRDTOById.OperationalRiskId = objTSRDTO.OperationalRiskId;
+                        objTSRDTOById.ProjectModelID = objTSRDTO.ProjectModelID;
+                        objTSRDTOById.ClientId = objTSRDTO.ClientId;
+                        objTSRDTOById.EngagementId = objTSRDTO.EngagementId;
+                        objTSRDTOById.PricingModelId = objTSRDTO.PricingModelId;
+                        objTSRDTOById.TSRStatusID = objTSRDTO.TSRStatusID;
+                        objTSRDTOById.SP_Id = objTSRDTO.SP_Id;
+                        //objTSRDTOById.Name = objTSRDTO.Name;
+                        //objTSRDTOById.Description = objTSRDTO.Description;
+
+                        TSR objTSR = Conversions.ToEntity<TSRDTO, TSR>(objTSRDTOById);
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objBusinessLayer.TSRRepository.Update(objTSR);
+
+                        if (null != objTSR && objTSR.ID > 0)
+                        {
+                            //Delete TSR Core Services
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objTSRDTOById = this.GetTSRById(ID);
+
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objBusinessLayer.TSRCoreServicesRepository.Delete(x => x.TSRId == objTSRDTOById.ID);
+
+                            if (!String.IsNullOrWhiteSpace(objTSRDTO.TSRCoreServicesArr))
+                            {
+                                if (objTSRDTO.TSRCoreServicesArr.IndexOf(",") <= 0)
+                                {
+                                    objBusinessLayer = new BusinessLayer(ls);
+
+                                    TSRCoreService tSRCoreService = new TSRCoreService { CoreServiceId = int.Parse(objTSRDTO.TSRCoreServicesArr), TSRId = objTSR.ID };
+
+                                    objBusinessLayer.TSRCoreServicesRepository.Add(tSRCoreService);
+                                }
+                                else
+                                {
+                                    //Add core services to TSR
+                                    foreach (string tsrCoreService in objTSRDTO.TSRCoreServicesArr.Split(','))
+                                    {
+                                        objBusinessLayer = new BusinessLayer(ls);
+
+                                        TSRCoreService tSRCoreService = new TSRCoreService { CoreServiceId = int.Parse(tsrCoreService), TSRId = objTSR.ID };
+
+                                        objBusinessLayer.TSRCoreServicesRepository.Add(tSRCoreService);
+                                    }
+                                }
+                            }
+
+                            //Delete TSR Relevant Repository
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objBusinessLayer.TSRRelevantRepositoriesRepository.Delete(x => x.TSRId == objTSR.ID);
+
+                            if (!String.IsNullOrWhiteSpace(objTSRDTO.TSTRelevantRepositoriesArr))
+                            {
+                                if (objTSRDTO.TSTRelevantRepositoriesArr.IndexOf(",") <= 0)
+                                {
+                                    objBusinessLayer = new BusinessLayer(ls);
+
+                                    TSRRelevantRepository tsrReleventRepority = new TSRRelevantRepository { RelevantRepositoryId = int.Parse(objTSRDTO.TSTRelevantRepositoriesArr), TSRId = objTSR.ID };
+
+                                    objBusinessLayer.TSRRelevantRepositoriesRepository.Add(tsrReleventRepority);
+                                }
+                                else
+                                {
+                                    //Add relevant repositories to TSR
+                                    foreach (string tsrRelevantRepository in objTSRDTO.TSTRelevantRepositoriesArr.Split(','))
+                                    {
+                                        objBusinessLayer = new BusinessLayer(ls);
+
+                                        TSRRelevantRepository tsrReleventRepority = new TSRRelevantRepository { RelevantRepositoryId = int.Parse(tsrRelevantRepository), TSRId = objTSR.ID };
+
+                                        objBusinessLayer.TSRRelevantRepositoriesRepository.Add(tsrReleventRepority);
+                                    }
+                                }
+                            }
+                        }
+                        returnMessage = objTSR.ID.ToString();
+                    }
+                    else
+                    {
+                        returnMessage = "TSR do not exists.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveTSR
+        /// </summary>
+        /// <param name="ID">int</param>
+        private string RemoveTSR(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                TSRDTO objTSRDTOById = this.GetTSRById(ID, false);
+
+                if (objTSRDTOById != null)
+                {
+                    if (objTSRDTOById.TSOes != null && objTSRDTOById.TSOes.Count > 0)
+                    {
+                        returnMessage = "Error: Can not delete TSR as tso's exists for it.";
+                    }
+                    else
+                    {
+                        ls = new LoginSession();
+                        ls.LoginName = "Admin";
+
+                        TSR objTSR = Conversions.ToEntity<TSRDTO, TSR>(objTSRDTOById);
+                        if (objTSR.TSRCoreServices.Count > 0)
+                        {
+                            //Delete TSR Core Service if exist
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objBusinessLayer.TSRCoreServicesRepository.Delete(x => x.TSRId == ID);
+                        }
+
+                        if (objTSR.TSRReleventRepositories.Count > 0)
+                        {
+                            //Delete TSR Relevant Repository if exist
+                            objBusinessLayer = new BusinessLayer(ls);
+                            objBusinessLayer.TSRRelevantRepositoriesRepository.Delete(x => x.TSRId == ID);
+                        }
+
+                        if (objTSR.TSRFiles.Count > 0)
+                        {
+                            //Delete TSR Relevant Repository if exist
+                            //objBusinessLayer = new BusinessLayer(ls);
+                            RemoveTSRFile(ID.ToString());
+                            //objBusinessLayer.TSRFileUploadRepository.Delete(x => x.TSRId == ID);
+                        }
+
+                        //now Delete TSR
+                        objBusinessLayer = new BusinessLayer(ls);
+                        objTSR = objBusinessLayer.TSRRepository.GetByID(ID);
+                        objBusinessLayer.TSRRepository.Delete(objTSR);
+                        returnMessage = "TSR deleted successfully.";
+                    }
+                }
+                else
+                {
+                    returnMessage = "TSR do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// GetTSRByTitleOrClient
+        /// </summary>
+        /// <param name="startingRecordNumber"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="title"></param>
+        /// <param name="status"></param>
+        /// <param name="totalRecords"></param>
+        /// <returns></returns>
+        private IList<TSRDTO> GetTSRByTitleOrClient(int startingRecordNumber, int pageSize, string strTitleOrClient, int status, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<TSR> objTSRList = null; totalRecords = 0;
+            IList<TSRDTO> objTSRDTOList = new List<TSRDTO>();
+            try
+            {
+
+                if (strTitleOrClient != "none")
+                {
+                    if (status != 0)
+                    {
+                        objTSRList = objBusinessLayer.TSRRepository.GetList(startingRecordNumber, pageSize, x => x.TSRStatusID == status && (x.Title.ToLower().Contains(strTitleOrClient) || x.Client.Name.ToLower().Contains(strTitleOrClient)), x => x.ID, false, out totalRecords, x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+                    }
+                    else
+                    {
+
+                        objTSRList = objBusinessLayer.TSRRepository.GetList(startingRecordNumber, pageSize, x => ((x.Title.ToLower().Contains(strTitleOrClient)) || x.Client.Name.ToLower().Contains(strTitleOrClient)), x => x.ID, false, out totalRecords, x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+                    }
+                }
+                else
+                {
+                    if (status != 0)
+                    {
+                        objTSRList = objBusinessLayer.TSRRepository.GetList(startingRecordNumber, pageSize, x => x.TSRStatusID == status, x => x.ID, false, out totalRecords, x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+
+                    }
+                    else
+                    {
+                        objTSRList = objBusinessLayer.TSRRepository.GetList(startingRecordNumber, pageSize, x => x.ID != 0, x => x.ID, false, out totalRecords, x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+
+                    }
+                }
+
+                TSRDTO objTSRDTO = new TSRDTO();
+                foreach (TSR objTSR in objTSRList)
+                {
+                    double ActualEffort = 0;
+                    float PlannedEffort = 0;
+
+                    TSRStatusDTO objTSRStatusDTO = Conversions.ToDTO<TSRStatusDTO, TSRStatus>(objTSR.TSRStatus);
+                    objTSRDTO = Conversions.ToDTO<TSRDTO, TSR>(objTSR);
+                    objTSRDTO.TSRStatus = objTSRStatusDTO;
+
+                    objTSRDTO.TestManager = Conversions.ToDTO<UserDTO, User>(objTSR.TestManager);
+                    objTSRDTO.AccountManager = Conversions.ToDTO<UserDTO, User>(objTSR.AccountManager);
+                    objTSRDTO.DeliveryManager = Conversions.ToDTO<UserDTO, User>(objTSR.DeliveryManager);
+
+                    objTSRDTO.Engagement = Conversions.ToDTO<EngagementDTO, Engagement>(objTSR.Engagement);
+                    objTSRDTO.OperationalRisk = Conversions.ToDTO<OperationalRiskDTO, OperationalRisk>(objTSR.OperationalRisk);
+                    objTSRDTO.Vertical = Conversions.ToDTO<VerticalDTO, Vertical>(objTSR.Vertical);
+                    objTSRDTO.Practice = Conversions.ToDTO<PracticeDTO, Practice>(objTSR.Practice);
+                    objTSRDTO.SolutionCentre = Conversions.ToDTO<SolutionCentreDTO, SolutionCentre>(objTSR.SolutionCentre);
+                    objTSRDTO.Client = Conversions.ToDTO<ClientDTO, Client>(objTSR.Client);
+                    objTSRDTO.ClientRegion = Conversions.ToDTO<ClientRegionDTO, ClientRegion>(objTSR.ClientRegion);
+                    objTSRDTO.PricingModel = Conversions.ToDTO<PricingModelDTO, PricingModel>(objTSR.PricingModel);
+                    objTSRDTO.MarketOffering = Conversions.ToDTO<MarketOfferingDTO, MarketOffering>(objTSR.MarketOffering);
+                    // objTSRDTO.TSRReleventRepositories = Conversions.ToDTO<TSRRelevantRepositoryDTO, RelevantRepository>(objTSR.TSRReleventRepositories);
+                    // objTSRDTO.TSRCoreServices = Conversions.ToDTO<TSRCoreServiceDTO, TSRCoreService>(objTSR.TSRCoreServices);
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    IList<TSO> objTSOList = objBusinessLayer.TSORepository.GetList(x => x.TSRId == objTSR.ID, x => x.TSOServiceDeliveryChains, x => x.TSR);
+
+                    if (objTSOList != null && objTSOList.Count > 0)
+                    {
+                        foreach (TSO objTSO in objTSOList)
+                        {
+                            PlannedEffort = PlannedEffort + (float)objTSO.PlannedEffort;
+                            if (objTSO.TSOServiceDeliveryChains != null && objTSO.TSOServiceDeliveryChains.Count > 0)
+                            {
+                                foreach (TSOServiceDeliveryChain objTSOServiceDeliveryChain in objTSO.TSOServiceDeliveryChains)
+                                {
+                                    IBusinessLayer oldobjBusinessLayer = new BusinessLayer(ls);
+                                    TSOServiceDeliveryChainTask objTSOServiceDeliveryChainTask = oldobjBusinessLayer.TSOServiceDeliveryChainTaskRepository.GetList(x => x.TSOServiceDeliveryChainId == objTSOServiceDeliveryChain.ID).FirstOrDefault();
+
+                                    if (objTSOServiceDeliveryChainTask != null)
+                                    {
+                                        ActualEffort = ActualEffort + objTSOServiceDeliveryChainTask.ActualEffort;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    objTSRDTO.ActualEffort = ActualEffort;
+                    objTSRDTO.Plannedeffort = PlannedEffort;
+
+                    objTSRDTOList.Add(objTSRDTO);
+                }
+                totalRecords = objTSRList.Count();
+
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+            return objTSRDTOList;
+        }
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetTSRIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetTSRIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objTSRList = null;
+            try
+            {
+                objTSRList = objBusinessLayer.TSRRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Title, Other = x.Description });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objTSRList;
+        }
+
+        #endregion
+
+        [HttpGet, Route("v1/TSR/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objTSRList = null;
+
+            try
+            {
+                objTSRList = this.GetTSRIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw ex;
+            }
+            return Json(objTSRList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// Get
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/TSR/GetById/{id}")]
+        [ResponseType(typeof(TSR))]
+        // [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager")]
+        public JsonResult<TSRDTO> GetById(int id)
+        {
+            JsonResult<TSRDTO> result = null;
+            TSRDTO objTSRDTO;
+
+            try
+            {
+                objTSRDTO = this.GetTSRById(id);
+
+                result = Json(objTSRDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <param name="pageSize">int</param>
+        /// <param name="startingRecordNumber">int</param>
+        /// <returns>JsonResult<DataCollection>></returns>
+        [HttpGet, Route("v1/TSR/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<TSRDTO> objTSRDTOList = this.GetAllTSR(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objTSRDTOList)
+                {
+                    foreach (TSRDTO objTSR in objTSRDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTSR);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(ex.Message);
+                throw ex;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// GetTSRDump
+        /// </summary>
+        /// <returns>HttpResponseMessage</returns>
+        [HttpGet, Route("v1/TSR/GetTSRDump")]
+        [ResponseType(typeof(HttpResponseMessage))]
+        //[SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public HttpResponseMessage GetTSRDump()
+        {
+            IList<TSRDTO> objTSRDTOList = this.GetAllTSR();
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            try
+            {
+                if (null != objTSRDTOList)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    //Set the Headings and Orders                    
+                    sb.Append("TSRID").Append(",");
+                    sb.Append("Title").Append(",");
+                    sb.Append("Client").Append(",");
+                    sb.Append("TSR Status").Append(",");
+                    sb.Append("Related TSO").Append(",");
+                    sb.Append("Engagement Model").Append(",");
+                    sb.Append("Pricing Model").Append(",");
+                    sb.Append("Project Model").Append(",");
+                    sb.Append("Client Region").Append(",");
+                    sb.Append("Account").Append(",");
+                    sb.Append("ERP order number").Append(",");
+                    sb.Append("Solution centre").Append(",");
+                    sb.Append("Core Service (s)").Append(",");
+                    sb.Append("Estimated effort").Append(",");
+                    sb.Append("Planned effort").Append(",");
+                    sb.Append("Actual effort").Append(",");
+                    sb.Append("Operational risk").Append(",");
+                    sb.Append("Start date").Append(",");
+                    sb.Append("Actual start date").Append(",");
+                    sb.Append("Target Completion Date").Append(",");
+                    sb.Append("Actual completion date").Append(",");
+                    //sb.Append("Planned processing time").Append(",");
+                    //sb.Append("Actual processing time").Append(",");
+                    sb.Append("Version").Append(",");
+                    sb.Append("Account Manager").Append(",");
+                    sb.Append("Delivery manager").Append(",");
+                    sb.Append("Test Manager").Append(",");
+                    sb.Append("Vertical").Append(",");
+                    sb.Append("Practice").Append(",");
+                    sb.Append("Market Offering").Append(",");
+                    sb.Append("Relevant repositories").Append(",");
+                    sb.Append("Modified").Append(",");
+                    sb.Append("Modified By").Append(",");
+                    sb.Append("Description").Append(",");
+                    sb.Append("\n");
+                    foreach (TSRDTO objTSR in objTSRDTOList)
+                    {
+                        // Append data                 
+                        sb.Append(objTSR.ID).Append(","); //ID
+                        sb.Append(string.IsNullOrEmpty(objTSR.Title) ? "-" : objTSR.Title.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSR.Title) : objTSR.Title).Append(",");                             //Title
+                        sb.Append(string.IsNullOrEmpty(objTSR.Client.Name) ? "-" : objTSR.Client.Name).Append(",");                 //Client
+                        sb.Append(string.IsNullOrEmpty(objTSR.TSRStatus.Name) ? "-" : objTSR.TSRStatus.Name).Append(",");           //TSR Status
+                        sb.Append("-").Append(",");                             // <--- CHECK FOR TSO                                   Related TSO
+                        sb.Append(string.IsNullOrEmpty(objTSR.Engagement.Name) ? "-" : objTSR.Engagement.Name).Append(",");         //Engagement Model
+                        sb.Append(string.IsNullOrEmpty(objTSR.PricingModel.Name) ? "-" : objTSR.PricingModel.Name).Append(",");     //Pricing Model	
+                        {
+                            LoginSession ls = new LoginSession();
+                            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                            var projectModel = objBusinessLayer.ProjectModelRepository.GetSingle(x => x.ID == objTSR.ProjectModelID);
+                            sb.Append(projectModel == null ? "-" : projectModel.Name).Append(",");       // Project Model
+                        }
+                        sb.Append(string.IsNullOrEmpty(objTSR.ClientRegion.Name) ? "-" : objTSR.ClientRegion.Name).Append(",");     // Client Region
+                        sb.Append(string.IsNullOrEmpty(objTSR.Account) ? "-" : objTSR.Account).Append(",");                         // Account
+                        sb.Append(string.IsNullOrEmpty(objTSR.ERPordernumber) ? "-" : objTSR.ERPordernumber).Append(",");           //ERP order number
+                        sb.Append(string.IsNullOrEmpty(objTSR.SolutionCentre.Name) ? "-" : objTSR.SolutionCentre.Name).Append(","); //Solution centre	
+                        if (objTSR.TSRCoreServices.Count == 0)
+                            sb.Append("-").Append(",");
+                        else
+                        {
+                            LoginSession ls = new LoginSession();
+                            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                            var tsrCores = objBusinessLayer.TSRCoreServicesRepository.GetAll(x => x.CoreService);
+                            foreach (var item in objTSR.TSRCoreServices)
+                            {
+                                var tsrcor = tsrCores.Single(x => x.ID == item.ID);
+                                sb.Append(tsrcor.CoreService.Name + "#;");
+                            }
+                            sb.Append(",");                             // <--- CHECK FOR CORE SERVICES  //Core Service (s)
+                        }
+                        sb.Append(objTSR.Estimatedeffort).Append(",");                                                              //Estimated effort
+                        sb.Append(objTSR.Plannedeffort).Append(",");                                                                //Planned effort
+                        sb.Append(objTSR.ActualEffort).Append(",");                                                                 //Actual effort
+                        sb.Append(objTSR.OperationalRisk.RiskNo).Append(",");                                                       //Operational risk
+                        sb.Append(objTSR.StartDate.ToString("dd-MMM-yyyy")).Append(",");                                            //Start date
+                        sb.Append(objTSR.ActualStartDate.ToString("dd-MMM-yyyy")).Append(",");                                      //Actual start date
+                        sb.Append(objTSR.TargetCompletionDate.ToString("dd-MMM-yyyy")).Append(",");                                 //Target Completion Date
+                        sb.Append(objTSR.ActualCompletionDate.ToString("dd-MMM-yyyy")).Append(",");                                 //Actual completion date
+                        //sb.Append("-").Append(",");                             // <--- CHECK FOR PLANNED PROCESSING TIME           //Planned processing time	
+                        //sb.Append("-").Append(",");                             // <--- CHECK FOR ACTUAL PROCESSING TIME            //Actual processing time
+                        sb.Append(objTSR.Version).Append(",");                                                                      //Version
+                        sb.Append(string.IsNullOrEmpty(objTSR.AccountManager.Name) ? "-" : objTSR.AccountManager.Name).Append(","); //Account Manager	
+                        sb.Append(string.IsNullOrEmpty(objTSR.DeliveryManager.Name) ? "-" : objTSR.DeliveryManager.Name).Append(",");// Delivery manager
+                        sb.Append(string.IsNullOrEmpty(objTSR.TestManager.Name) ? "-" : objTSR.TestManager.Name).Append(",");       // Test Manager	
+                        sb.Append(string.IsNullOrEmpty(objTSR.Vertical.Name ?? "") ? "-" : objTSR.Vertical.Name).Append(", ");      //Vertical	
+                        sb.Append(string.IsNullOrEmpty(objTSR.Practice.Name ?? "") ? "-" : objTSR.Practice.Name).Append(",");       //Practice	
+                        sb.Append(objTSR.MarketOffering == null ? "-" : objTSR.MarketOffering.Name).Append(",");                    // Market Offering
+                        if (objTSR.TSRReleventRepositories.Count == 0)
+                            sb.Append("-").Append(",");
+                        else
+                        {
+                            LoginSession ls = new LoginSession();
+                            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+                            var tsrCores = objBusinessLayer.TSRRelevantRepositoriesRepository.GetAll(x => x.RelevantRepository);
+                            foreach (var item in objTSR.TSRReleventRepositories)
+                            {
+                                var tsrcor = tsrCores.Single(x => x.ID == item.ID);
+                                sb.Append(tsrcor.RelevantRepository.Name + "#;");
+                            }
+                            sb.Append(",");
+                        }     // <--- CHECK FOR RELEVANT REPOSITORIES         //Relevant repositories	
+                        sb.Append(objTSR.UpdatedOn.ToString("dd-MMM-yyyy")).Append(",");                                           // Modified	
+                        sb.Append(string.IsNullOrEmpty(objTSR.UpdatedBy) ? "-" : objTSR.UpdatedBy).Append(",");                     // Modified By	
+                        sb.Append(string.IsNullOrEmpty(objTSR.Description) ? "-" : objTSR.Description.IndexOf(",") > 0 ? String.Format("\"{0}\"", objTSR.Description.Replace("\n", string.Empty)) : objTSR.Description.Replace("\n", string.Empty)).Append(",");                 // Description	
+                        sb.Append("\n");
+                    }
+
+                    result.Content = new StringContent(sb.ToString());
+                    result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment"); //attachment will force download
+                    result.Content.Headers.ContentDisposition.FileName = "TSRExport.csv";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(ex.Message);
+                throw ex;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// CreateTSR
+        /// </summary>
+        /// <param name="tsrDTO">TSRDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/TSR/CreateTSR")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager")]
+        public JsonResult<string> CreateTSR([FromBody]TSRDTO tsrDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewTSR(tsrDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// CreateTSR
+        /// </summary>
+        /// <param name="tsrDTO">TSRDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpGet, Route("v1/TSR/GetTSRCount")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin,Account Manager,Delivery Manager,Test Manager,Team Lead,PQM,Guest")]
+        public JsonResult<string> GetTSRCount()
+        {
+            JsonResult<string> result = Json(string.Empty);
+            LoginSession ls = new LoginSession();
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                IList<TSR> objTSRList = objBusinessLayer.TSRRepository.GetAll(x => x.TSRStatus, x => x.TestManager, x => x.AccountManager, x => x.DeliveryManager, x => x.Engagement, x => x.OperationalRisk, x => x.Vertical, x => x.Practice, x => x.SolutionCentre, x => x.Client, x => x.ClientRegion, x => x.PricingModel, x => x.MarketOffering, x => x.OperationalRisk, x => x.TSRReleventRepositories, x => x.TSRCoreServices);
+
+                result = Json(objTSRList.Count.ToString(), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (DbEntityValidationException eve)
+            {
+                StringBuilder objSB = new StringBuilder();
+                foreach (var objEve in eve.EntityValidationErrors)
+                {
+                    objSB.Append(String.Format("Entity of type \"{0}\" in state \"{1}\" has the following validation errors:", objEve.Entry.Entity.GetType().Name, objEve.Entry.State));
+                    objSB.Append("\n");
+                    foreach (var ve in objEve.ValidationErrors)
+                    {
+                        objSB.Append(String.Format("- Property: \"{0}\", Error: \"{1}\"", ve.PropertyName, ve.ErrorMessage));
+                        objSB.Append("\n");
+                    }
+                }
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", objSB.ToString()));
+                result = Json(String.Format("Error - {0}", objSB.ToString()), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// UpdateTSR
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="tsrDTO">TSRDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/TSR/UpdateTSR/{ID}")]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager")]
+        public JsonResult<string> UpdateTSR(int ID, [FromBody]TSRDTO tsrDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyTSR(ID, tsrDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// DeleteTSR
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpDelete, Route("v1/TSR/DeleteTSR/{ID}")]
+        [ResponseType(typeof(string))]
+        [SessionAuthorize(Roles = "Admin")]
+        public JsonResult<string> DeleteTSR(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveTSR(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// TSRFileUpload
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>Files</returns>
+        [HttpPost, Route("v1/TSR/TSRFileUpload")]
+        //[ResponseType(typeof(string))]
+        public string TSRFileUpload()//int id,
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            TSRDTO objTSRDTO = null;
+            string returnMessage = string.Empty;
+            try
+            {
+                TSR objTSR = null;
+                // objTSR = objBusinessLayer.TSRRepository.GetSingle(x => x.ID == id);
+
+
+                if (objTSR != null)
+                {
+                    returnMessage = "Error: TSR title already exists.";
+                }
+                else
+                {
+                    TSRDTO objTSRDTOById = this.GetTSRById(Convert.ToInt32(System.Web.HttpContext.Current.Request.Params["id"]), false);
+
+                    if (objTSRDTOById != null)
+                    {
+                        ls = new LoginSession();
+                        ls.LoginName = objTSRDTOById.UpdatedBy;
+                        var keys = System.Web.HttpContext.Current.Request.Files.AllKeys;
+                        for (int file = 0; file < keys.Length; file++)
+                        {
+                            bool tobeAdded = true;
+                            var files = System.Web.HttpContext.Current.Request.Files[keys[file]];
+                            System.Web.HttpPostedFileBase filebase = new System.Web.HttpPostedFileWrapper(files);
+                            var fileName = System.IO.Path.GetFileName(filebase.FileName);
+
+                            IList<TSRFileUpload> tsrFileUploads = objBusinessLayer.TSRFileUploadRepository.GetList(x => x.TSRId == objTSRDTOById.ID);
+                            foreach (TSRFileUpload singlefile in tsrFileUploads)
+                            {
+                                if (singlefile.Path == fileName)
+                                {
+                                    tobeAdded = false;
+                                }
+                            }
+
+                            if (tobeAdded)
+                            {
+                                string ext = System.IO.Path.GetExtension(filebase.FileName);
+                                Guid obj = Guid.NewGuid();
+                                string FilePath = AppDomain.CurrentDomain.BaseDirectory + "\\Attachments\\" + obj.ToString() + ext;
+
+                                files.SaveAs(FilePath);
+
+                                //System.IO.File.Copy(FilePath, files.ToString());
+
+                                objTSR = Conversions.ToEntity<TSRDTO, TSR>(objTSRDTO);
+
+                                objBusinessLayer = new BusinessLayer(ls);
+
+                                TSRFileUpload tsrFileUpload = new TSRFileUpload
+                                {
+                                    Path = fileName,
+                                    TSRId = objTSRDTOById.ID,
+                                    GUID = obj.ToString()
+                                };
+                                objBusinessLayer.TSRFileUploadRepository.Add(tsrFileUpload);
+                            }
+                        }
+                        returnMessage = "TSR created successfully.";
+                    }
+                    else
+                    {
+                        returnMessage = "TSR do not exists.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                //objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveTSRFile
+        /// </summary>
+        /// <param name="guidString">int</param>
+        [HttpPost, Route("v1/TSR/RemoveTSRFile/{guidString}")]
+        [SessionAuthorize(Roles = "Admin,Delivery Manager,Test Manager")]
+        public string RemoveTSRFile(string guidString)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                objBusinessLayer = new BusinessLayer(ls);
+                Guid guidOutput;
+                bool isValid = Guid.TryParse(guidString, out guidOutput);
+                if (isValid)
+                {
+                    objBusinessLayer.TSRFileUploadRepository.Delete(x => x.GUID == guidString);
+                }
+                else
+                {
+                    objBusinessLayer.TSRFileUploadRepository.Delete(x => x.TSRId == Convert.ToInt32(guidString));
+                }
+
+                string[] files = System.IO.Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory + "\\Attachments\\");
+
+                foreach (string file in files)
+                {
+                    if (file.Contains(guidString))
+                    {
+                        System.IO.File.Delete(file);
+                    }
+                }
+
+                //now Delete TSR
+                objBusinessLayer = new BusinessLayer(ls);
+                returnMessage = "TSR deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// SearchByTitle
+        /// </summary>
+        /// <param name="startingRecordNumber"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        [ResponseType(typeof(DataCollection))]
+        [HttpGet, Route("v1/TSR/SearchByTitleOrClient/{startingRecordNumber}/{pageSize}/{Title}/{Status}")]
+        public JsonResult<DataCollection> SearchByTitleOrClient(int startingRecordNumber, int pageSize, string Title, int Status)
+        {
+            int totalRecords = 0; DataCollection objDataCollection;
+            IList<TSRDTO> objTSRList = this.GetTSRByTitleOrClient(startingRecordNumber, pageSize, Title, Status, out totalRecords);
+
+            try
+            {
+                if (objTSRList.Count != 0)
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, Message = "No Records Found", EntitySummary = new List<IBaseObject>() };
+
+                    foreach (TSRDTO objTSRType in objTSRList)
+                    {
+                        objDataCollection.EntitySummary.Add(objTSRType);
+                    }
+                }
+                else
+                {
+                    objDataCollection = new DataCollection { TotalRecords = totalRecords, Message = "No Records Found", EntitySummary = new List<IBaseObject>() };
+
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+
+
+    }
+}

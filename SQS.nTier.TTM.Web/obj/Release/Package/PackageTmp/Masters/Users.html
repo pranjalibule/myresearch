@@ -1,0 +1,807 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Users</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link href="/styles/Master.css" rel="stylesheet" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        showLoader();
+        userId = decodeURI(getLocalStorage("user"));
+
+        function NavigateTo(page) {
+            window.location = page;
+        }
+    </script>
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .scrollDiv {
+            height: 80vh;
+        }
+        /*.no-close .ui-dialog-titlebar-close {
+            display: none;
+        }*/
+        /*.ui-dialog .ui-dialog-title{
+            width:250px;
+        }*/
+
+        .ui-dialog .ui-dialog-buttonpane {
+            border-top-width: 0px;
+            /*padding-left: 3em;*/
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="leftDiv">
+        <div id="tblMain">
+            <div class="smallRow" style="margin-bottom:5px;">
+                <div class="menu" title="Client" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Client.html');">
+                    <a href="#">Client</a>
+                </div>
+                <div class="menu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ClientRegion.html');" title="Client Region">
+                    <a href="#">Client Region</a>
+                </div>
+                <div class="menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('CoreService.html');" title="Core Service">
+                    <a href="#">Core Service</a>
+                </div>
+                <div class="menu" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Engagement.html');" title="Engagement Model">
+                    <a href="#">Engagement Model</a>
+                </div>
+                <div class="menu" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('MarketOffering.html');" title="Market Offering">
+                    <a href="#">Market Offering</a>
+                </div>
+                <div class="menu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Method.html');" title="Method">
+                    <a href="#">Method</a>
+                </div>
+                <div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('OperationalRisk.html');" title="Operational Risk">
+                    <a href="#">Operational Risk</a>
+                </div>
+                <div class="menu" id="middel-23" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('OperationalRiskIndicator.html');" title="Operational Risk Indicator">
+                    <a href="#">Category</a>
+                </div>
+                <div class="menu" id="middel-8" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Practice.html');" title="Practice">
+                    <a href="#">Practice</a>
+                </div>
+                <div class="menu" id="middel-9" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('PricingModel.html');" title="Pricing Model">
+                    <a href='#'>Pricing Model</a>
+                </div>
+                <div class="menu" id="middel-10" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProjectModel.html');" title="Project Model">
+                    <a href='#'>Project Model</a>
+                </div>
+                <div class="menu" id="middel-11" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Roles.html');" title="Roles">
+                    <a href='#'>Role</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProductivityInput.html');" title="ProductivityInput">
+                    <a href='#'>Input</a>
+                </div>
+            </div>
+            <div class="smallRow">
+                <div class="menu" id="middel-13" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ProductivityOutcome.html');" title="ProductivityOutcome">
+                    <a href='#'>Outcome</a>
+                </div>
+                <div class="menu" id="middel-14" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('RelevantRepository.html');" title="Relevant Repository">
+                    <a href="#">Relevant Repository</a>
+                </div>
+                <div class="menu" id="middel-15" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('ServiceDeliveryChain.html');" title="Service Delivery Chain">
+                    <a href="#">Service Delivery Chain</a>
+                </div>
+                <div class="menu" id="middel-16" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('SolutionCentre.html');" title="Solution Centre">
+                    <a href="#">Solution Centre</a>
+                </div>
+                <div class="menu" id="middel-17" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TaskStatus.html');" title="Task Status">
+                    <a href="#">Task Status</a>
+                </div>
+                <div class="menu" id="middel-18" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TSOStatus.html');" title="TSO Status">
+                    <a href="#">TSO Status</a>
+                </div>
+                <div class="menu" id="middel-19" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('TSRStatus.html');" title="TSR Status">
+                    <a href="#">TSR Status</a>
+                </div>
+                <div class="menu selectedMenu" id="middel-20" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="#">User</a>
+                </div>
+                <div class="menu" id="middel-21" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('Vertical.html');" title="Vertical">
+                    <a href='#'>Vertical</a>
+                </div>
+                <div class="menu" id="middel-24" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="NavigateTo('RiskStatus.html');" title="Risk Status">
+                    <a href='#'>Risk Status</a>
+                </div>
+                <div class="menu" id="middel-22" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="LogOff(false);">
+                    <a class="SignOff" title="Sign Off"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="rightDiv">
+        <table cellpadding="0" cellspacing="0" class="tsotop">
+            <tr>
+                <td class="width28imp" style="width:25% !important;">
+                    <input type="text" id="txtSearch" title="Search by Name,UserId or EmailID" placeholder="Search by Name,UserId or EmailID" maxlength="70" style="margin-top:5px; padding:4.5px 2px; width:250px;" />
+                </td>
+                <td class="field">
+                    <input type="button" value="Search" onclick="Search();" />
+                    <input type="button" id="btnAddUser" title="Add user from Active directory" value="Add User" onclick="AddUserFromActiveDirectory();" />
+                    <input type="button" id="btnInActiveUsers" title="Get inactive or active users" value="InActive Users" onclick="GetInActiveUsers();" />
+                    <!--<input type="button" id="btnLockedUsers" title="Get locked or unlocked users" value="Locked Users" onclick="GetLockedUsers();" />-->
+                    <input type="button" value="Clear Search" onclick="ClearSearch();" />
+                    <div id="txtOutput"></div>
+                </td>
+            </tr>
+        </table>
+
+        <div id="AddUserDialogue" title="Add user from Active directory" style="display:none">
+            <table cellpadding="5" class="tsoPage">
+                <tr>
+                    <td class="width32imp required">
+                        Select role
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field width28imp">
+                        <select id="NewUserRole" name="NewUserRole" style="width:246px"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="width32imp required">
+                        Enter UserId/Email
+                    </td>
+                    <td class="seprator">:</td>
+                    <td class="field width28imp">
+                        <input id="newADUserID" type="text" size="29" autofocus />
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <table id="UpdateUserDetails" style="visibility:hidden;display:none">
+            <tr>
+                <td colspan="2" style="width:98.7%;">
+                    <div id="txtOutput"></div>
+                    <fieldset style="width:85%;">
+                        <legend style="font-weight:bold" id="tdOperation">Update User</legend>
+                        <table cellpadding="0" cellspacing="0" class="tsotop">
+                            <tr>
+                                <td class="smallTiletd">
+                                    <input type="hidden" value="" id="txtID" />
+                                    User ID
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field">
+                                    <input id="txtuserid" type="text" width="250" size="100" maxlength="150" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="smallTiletd">
+                                    Email
+                                </td>
+                                <td class="seprator">:</td>
+                                <td class="field">
+                                    <input id="txtemail" type="text" width="250" size="100" maxlength="150" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" align="center">
+                                    <input type="button" value="Update" onclick="UpdateUser();" />&nbsp;&nbsp;
+                                    <input type="button" value="Cancel" onclick="CancelAll();">&nbsp;&nbsp;&nbsp;&nbsp;
+                                </td>
+                            </tr>
+                        </table>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+        <br /> <div style="margin-left:10px">Note: Double click on the row to update the record.</div> <br />
+        <div class="scrollDiv" style="height:90% !important;">
+            <table id="UserTypeTable" cellspacing="0" cellpadding="2" class="table">
+                <thead>
+                    <tr>
+                        <th style="width:50px" align="center">ID</th>
+                        <th style="width:200px;" align="left">Name</th>
+                        <th style="width:200px;" align="left">User Id</th>
+                        <th style="width:200px;" align="left">EmailId</th>
+                        <!--<th style="width:120px" align="center">User Type</th>-->
+                        <th style="width:90px" align="center">Active</th>
+                        <!--<th style="width:90px" align="center">Locked</th>-->
+                        <th style="width:80px" align="left">Role</th>
+                        <!--<th style="width:170px" align="center">CreatedOn</th>-->
+                        <!--<th style="width:80px" align="left">Delivery Manager</th>
+                        <th style="width:80px" align="left">Test Manager</th>
+                        <th style="width:80px" align="left">Team Lead</th>
+                        <th style="width:80px" align="left">PQM</th>
+                        <th style="width:80px" align="left">Admin</th>-->
+                        <!--<th style="width:170px" align="center">UpdatedOn</th>-->
+                    </tr>
+                </thead>
+                <tbody id="userDetails"></tbody>
+            </table>
+            <div id="pager" class="pager" style="display:none">
+                <table border="0">
+                    <tr>
+                        <td valign="middle"><img src="images/first.png" class="first" /></td>
+                        <td valign="middle"><img src="images/prev.png" class="prev" /></td>
+                        <td valign="middle"><input type="text" id="pagedisplay" size="5" />&nbsp; of <div id="totalPages"></div></td>
+                        <td valign="middle"><img src="images/next.png" class="next" /></td>
+                        <td valign="middle"><img src="images/last.png" class="last" /></td>
+                        <td valign="middle">
+                            <select id="pagesize">
+                                <option selected="selected" value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        showLoader();
+
+        var startingRecordNumber = 0;
+        var pageSize = 500;
+        var active = false;
+        var locked = true;
+        var userTypeResult;
+        var RoleResult;
+
+        function GetLoadUrl() {
+            try {
+                var urlGetAll = urlPrefix + "User/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+                LoadData(urlGetAll);
+            } catch (e) {
+                hideLoader();
+                showMessageBox(e, "red");
+            }
+        }
+
+        function ClearSearch() {
+            $("#btnInActiveUsers").val("InActive Users");
+            $("#btnLockedUsers").val("Locked Users");
+
+            active = false;
+            locked = true;
+
+            GetLoadUrl();
+        }
+
+        $(document).on("keypress", "#txtSearch", function (e) {
+            if (e.which == 13) {
+                Search();
+            }
+        });
+
+        $(document).ready(function () {
+            CheckUser();
+          
+            showLoader();
+            GetUserTypes();
+            GetRoles();
+            GetLoadUrl();
+        });
+
+        function GetUserTypes() {
+            var url = urlPrefix + "UserType/GetAllIDName";
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    if (null != result) {
+                        userTypeResult = result;
+                        //GetLoadUrl();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                        //window.location = "Index.html";
+                    }
+                }
+            });
+        }
+
+        function GetRoles() {
+            var url = urlPrefix + "Role/GetAllIDName";
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    if (null != result) {
+                        RoleResult = result;
+                        //GetLoadUrl();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                        //window.location = "Index.html";
+                    }
+                }
+            });
+        }
+
+        function LoadData(url) {
+            clearTable();
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    var totalRecords = result.TotalRecords,
+                    EntitySummary = result.EntitySummary;
+
+                    if (!isNaN(totalRecords) && parseInt(totalRecords) > 0) {
+                        populateTable(EntitySummary);
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                        //window.location = "Index.html";
+                    }
+                }
+            });
+        }
+
+        function clearTable() {
+            var i = $('#userDetails').empty();
+            $("#txtSearch").val("");
+        }
+
+        function Search() {
+            var txtSearchVal = $("#txtSearch").val();
+            if (txtSearchVal != "") {
+                $("#txtOutput").html("");
+                var urlGetAll = urlPrefix + "User/SearchByNameOrEmail/" + startingRecordNumber + "/" + pageSize + "/" + txtSearchVal;
+                LoadData(urlGetAll);
+                $("#txtSearch").val(txtSearchVal);
+            }
+            else {
+                showMessageBox("Please enter first name or last name or email to search.", "red", "", false, "", "Yes");
+            }
+        }
+
+        function GetInActiveUsers() {
+            var urlGetAll = urlPrefix + "User/SearchActiveUsers/" + startingRecordNumber + "/" + pageSize + "/" + active;
+            LoadData(urlGetAll);
+
+            if (!active) {
+                $("#btnInActiveUsers").val("Active Users");
+            }
+            else {
+                $("#btnInActiveUsers").val("InActive Users");
+            }
+
+            active = !active;
+        }
+
+        function GetLockedUsers() {
+            var urlGetAll = urlPrefix + "User/SearchLockedUsers/" + startingRecordNumber + "/" + pageSize + "/" + locked;
+            LoadData(urlGetAll);
+
+            if (locked) {
+                $("#btnLockedUsers").val("Unlocked Users");
+            }
+            else {
+                $("#btnLockedUsers").val("Locked Users");
+            }
+
+            locked = !locked;
+        }
+
+        var isAdmin = false;
+
+        function populateTable(EntitySummary) {
+            var tbody = $('#userDetails');
+
+            for (var totalrecords = 0; totalrecords < EntitySummary.length; totalrecords++) {
+                var getUserTypeDropDown = GetUserTypeDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["UserTypeID"]);
+                var getRoleDropDown = GetRoleDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["RoleId"]);
+                var isDisabled = "";
+
+                tbody.append("<tr id='tr" + totalrecords + "'" + isDisabled + "><td align='center'>" + EntitySummary[totalrecords]["ID"] +
+                    "</td><td class='leftalign'>" + EntitySummary[totalrecords]["Name"] + "</td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["UserId"] + "</td>" +
+                    "<td class='leftalign'>" + EntitySummary[totalrecords]["EmailID"] + "</td>" +
+                    //"<td align='center'>" + getUserTypeDropDown + "</td>" +
+                    "<td align='center'>" + GetActiveDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["Activated"]) + "</td>" +
+                    //"<td align='center'>" + GetLockedDropDown(EntitySummary[totalrecords]["ID"], EntitySummary[totalrecords]["Locked"]) + "</td>" +
+                    "<td align='center'>" + getRoleDropDown + "</td></tr>");
+
+                //"<td align='center'><font size='2px'>" + dateFormat(EntitySummary[totalrecords]["UpdatedOn"], "dd-mmm-yyyy hh:MM TT") + "</font></td></tr>");
+
+                $('tr').dblclick(function () {
+
+                    $("#UpdateUserDetails").css("visibility", "visible");
+                    $("#UpdateUserDetails").css("display", "block");
+
+                    if ($(this).parent() != null && $(this).parent()[0] != null && $(this).parent()[0].id != null && $(this).parent()[0].id === "userDetails") {
+                        $("#userDetails tr").removeClass("highlight");
+
+                        var selected = $(this).hasClass("highlight");
+                        if (!selected)
+                            $(this).addClass("highlight");
+                        $("#txtID").val($(this).find("td").eq(0).html());
+                        $("#txtuserid").val(decodeURIComponent($(this).find("td").eq(2).html().replace("amp;", "")));
+                        $("#txtemail").val(decodeURIComponent($(this).find("td").eq(3).html().replace("amp;", "")));
+                        $("#tdOperation").empty();
+                        $("#tdOperation").html("Edit User Details");
+                    }
+                });
+            }
+        }
+
+        function CancelAll() {
+            $("#txtID").val("");
+            $("#txtuserid").val("");
+            $("#txtemail").val("");
+            $("#tdOperation").empty();
+
+            $("#UpdateUserDetails").css("visibility", "hidden");
+            $("#UpdateUserDetails").css("display", "none");
+        }
+
+        function UpdateUser() {
+            
+            showLoader();
+            var txtID = $("#txtID").val();
+            var txtuserid = $("#txtuserid").val();
+            var txtemail = $("#txtemail").val();
+
+            var data = JSON.stringify({ userid: txtuserid, emailid: txtemail, CreatedBy: userName });
+
+            var urlAddUpdate = urlPrefix + "User";
+
+            var method = "POST";
+
+            if (!isNaN(txtID) && txtID != "") {
+                method = "PUT";
+                urlAddUpdate = urlAddUpdate + "/UpdateUser/" + txtID;
+
+                $.ajax({
+                    url: urlAddUpdate,
+                    data: data,
+                    type: method,
+                    contentType: 'application/json; charset=UTF-8',
+                    success: function (response) {
+
+                        if (response.indexOf("Error") == 0) {
+                            showMessageBox(response, "red");
+                        }
+                        else {
+                            showMessageBox(response, "green");
+                            callSuccess();
+                        }
+                        hideLoader();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        hideLoader();
+                        showMessageBox(textStatus + "--" + errorThrown, "red");
+                    }
+                });
+            }
+        }
+
+        function GetRoleDropDown(userID, RoleID) {
+            var optionSelected = "";
+
+            if (RoleID == null) {
+                RoleID = -1;
+            }
+            else if (RoleID == "") {
+                RoleID = -1;
+            }
+
+            if (RoleID == -1) {
+                optionSelected = "<option value='-1' selected='selected'>Select</option>"
+            }
+            else {
+                optionSelected = "<option value='-1'>Select</option>"
+            }
+
+            var userTypeDropDown = "<select onchange='ChangeRole(this," + userID + ")' id=Role" + userID + "')'>";
+
+            userTypeDropDown += optionSelected;
+
+            if (null != RoleResult) {
+                for (var userTypeCount = 0; userTypeCount < RoleResult.length; userTypeCount++) {
+                    if (RoleID == RoleResult[userTypeCount].ID) {
+                        if (RoleResult[userTypeCount].Name == "Admin") {
+                            isAdmin = true;
+                        }
+                        else {
+                            isAdmin = false;
+                        }
+                        userTypeDropDown += "<option value='" + RoleResult[userTypeCount].ID + "' selected='selected'>" + RoleResult[userTypeCount].Name + "</option>"
+                    }
+                    else {
+                        userTypeDropDown += "<option value='" + RoleResult[userTypeCount].ID + "'>" + RoleResult[userTypeCount].Name + "</option>"
+                    }
+                }
+            }
+
+            userTypeDropDown += "</select>";
+
+            return userTypeDropDown;
+        }
+
+        function GetUserTypeDropDown(userID, UserTypeID) {
+            var optionSelected = "";
+
+            if (UserTypeID == null) {
+                UserTypeID = -1;
+            }
+            else if (UserTypeID == "") {
+                UserTypeID = -1;
+            }
+
+            if (UserTypeID == -1) {
+                optionSelected = "<option value='-1' selected='selected'>Select</option>"
+            }
+            else {
+                optionSelected = "<option value='-1'>Select</option>"
+            }
+
+            var userTypeDropDown = "<select onchange='ChangeUserType(this," + userID + ")' id=UserType" + userID + "')'>";
+
+            userTypeDropDown += optionSelected;
+
+            if (null != userTypeResult) {
+                for (var userTypeCount = 0; userTypeCount < userTypeResult.length; userTypeCount++) {
+                    if (UserTypeID == userTypeResult[userTypeCount].ID) {
+                        if (userTypeResult[userTypeCount].Name == "Admin") {
+                            isAdmin = true;
+                        }
+                        else {
+                            isAdmin = false;
+                        }
+                        userTypeDropDown += "<option value='" + userTypeResult[userTypeCount].ID + "' selected='selected'>" + userTypeResult[userTypeCount].Name + "</option>"
+                    }
+                    else {
+                        userTypeDropDown += "<option value='" + userTypeResult[userTypeCount].ID + "'>" + userTypeResult[userTypeCount].Name + "</option>"
+                    }
+                }
+            }
+
+            userTypeDropDown += "</select>";
+
+            return userTypeDropDown;
+        }
+
+        function GetActiveDropDown(userID, selectValue) {
+
+            var trueOption = "<option value='True'>True</option>";
+            var falseOption = "<option value='False'>False</option>";
+
+            if (selectValue) {
+                trueOption = "<option value='True' selected='selected'>True</option>";
+            }
+            else {
+                falseOption = "<option value='False' selected='selected'>False</option>";
+            }
+            var activeDropDown = "<select onchange='ChangeActiveUser(this," + userID + ")' id=Active" + userID + "')'>" + trueOption + falseOption + "</select>";
+
+            return activeDropDown;
+
+        }
+
+        function GetLockedDropDown(userID, selectValue) {
+            var trueOption = "<option value='True'>True</option>";
+            var falseOption = "<option value='False'>False</option>";
+
+            if (selectValue) {
+                trueOption = "<option value='True' selected='selected'>True</option>";
+            }
+            else {
+                falseOption = "<option value='False' selected='selected'>False</option>";
+            }
+            var lockedDropDown = "<select onchange='ChangeLockedUser(this," + userID + ")' id='Locked" + userID + "')'>" + trueOption + falseOption + "</select>";
+
+            return lockedDropDown;
+
+        }
+
+        function ChangeActiveUser(ddlActive, userId) {
+            showLoader();
+            var url = urlPrefix + "User/SetActiveOrInactive/" + userId + "/" + ddlActive.value;
+            ChangeUser(url);
+        }
+
+        function ChangeUserType(ddlUserType, userId) {
+            showLoader();
+            var url = urlPrefix + "User/SetUserType/" + userId + "/" + ddlUserType.value;
+            ChangeUser(url);
+        }
+
+        function ChangeLockedUser(ddlLocked, userId) {
+            showLoader();
+            var url = urlPrefix + "User/SetLockedOrUnlocked/" + userId + "/" + ddlLocked.value;
+
+            ChangeUser(url);
+        }
+
+        function ChangeRole(ddlUserType, userId) {
+            showLoader();
+
+            var userID1 = getLocalStorage("user");
+            var ui = userID1.replace(/[/]/g, '$$');
+
+            var url = urlPrefix + "User/SetRole/" + userId + "/" + ddlUserType.value + "/" + ui;
+            ChangeUser(url);
+        }
+
+        function ChangeUser(url) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                beforeSend: function (request) {
+                    request.readyState = 1;
+                    //request.setRequestHeader('Content-MD5', userId);
+                    request.setRequestHeader("userid", userId);
+                    request.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    request.setRequestHeader('Authorization', "hmac-sha256 " + userId);
+                },
+                success: function (result) {
+                    $("#txtOutput").html("<b>" + result + "</b>");
+                    if (result.indexOf("Error") == 0) {
+                        $("#txtOutput").css("color", "red");
+                    }
+                    else {
+                        $("#txtOutput").css("color", "green");
+                    }
+                    hideLoader();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    hideLoader();
+                    if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                        showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                    }
+                    else {
+                        showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                    }
+                }
+            });
+        }
+
+        function populateRolesForDialog() {
+            var select = document.getElementById("NewUserRole");
+            $(select).empty();
+            var j;
+            for (var i = 0; i < RoleResult.length; ++i) {
+                var option = document.createElement('option');
+                option.value = RoleResult[i].ID;
+                option.text = RoleResult[i].Name;
+                select.appendChild(option);
+                if (RoleResult[i].Name == "Guest")
+                    j = RoleResult[i].ID;
+            }
+            $(select).val(j);
+        }
+
+        function AddUserFromActiveDirectory() {
+            populateRolesForDialog();
+
+            $("#AddUserDialogue").dialog({
+                dialogClass: "no-close block",
+                width: "500px",
+                hight: "250px",
+                modal: true,
+                open: $.proxy(function () {
+                    $(".ui-dialog-titlebar-close").remove();
+                    $(".ui-dialog-titlebar").css("width", "93%");
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                    $(".ui-widget-overlay").css("opacity", "1");
+                }),
+                buttons: [
+                        {
+                            text: "Add User",
+                            click: function () {
+                                showLoader();
+                                var url = urlPrefix + "User/GetUserByUserId/";
+                                var usernameid = $('#newADUserID').val();
+                                var roleID = $('#NewUserRole').val();
+
+                                if (usernameid.length != 0 && roleID.length != 0) {
+                                    $.ajax({
+                                        type: "POST",
+                                        url: url,
+                                        dataType: "json",
+                                        data: { userName: usernameid, adUser: true, roleId: roleID },
+                                        success: function (result) {
+                                            if (null != result) {
+                                                if (result.ID == 0) {
+                                                    alert("User already exist");
+                                                }
+                                                else {
+                                                    GetLoadUrl();
+                                                    alert(result.Name + "\nUser added successfuly");
+                                                }
+                                                $('#newADUserID').val('');
+                                            }
+                                            else {
+                                                alert("User not found");
+                                            }
+                                            hideLoader();
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                                //window.location = "Index.html";
+                                            }
+                                        }
+                                    });
+                                }
+                                else {
+                                    alert("Enter user name");
+                                }
+                            }
+                        },
+                        {
+                            text: "Cancel",
+                            click: function () {
+                                $('#newADUserID').val('');
+                                $(this).dialog("close");
+                            }
+                        }
+
+                ]
+            });
+
+        }
+
+        function callSuccess() {
+            var urlGetAll = urlPrefix + "User/GetAllPaged/" + startingRecordNumber + "/" + pageSize;
+            LoadData(urlGetAll);
+            CancelAll();
+        }
+
+    </script>
+</body>
+</html>
+

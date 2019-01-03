@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        //if (getUrlVars().length < 1) {
+        //    window.location = "index.html?page=Home.html";
+        //}
+        //else {
+        userId = decodeURI(getLocalStorage("user"));
+        //}
+
+        function NavigateTo(page) {
+            window.location = page; // + "?user=" + encodeURI(userId);
+        }
+
+
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest") {
+                $(".GuestClass").hide();
+            }
+            else if (roleId.toLowerCase() == "account manager") {
+                $("#trNewTSR").hide();
+            }
+            else {
+                $(".GuestClass").show();
+                $("#trNewTSR").show();
+            }
+
+            bindUserPopUp();
+            if (roleId == "Admin" || roleId == "admin") {
+                $(".AdminClass").removeAttr('style');
+            }
+
+
+            $(".Dashboard").on("click", function () {
+                if ($('.child_list:visible').length == 0) {
+                    $(".child_list").css("display", "block");
+                }
+                else {
+                    $(".child_list").css("display", "none");
+                }
+            });
+
+            $(".UserLogo").on("click", function () {
+                if ($('.user_list:visible').length == 0) {
+                    $(".user_list").css("display", "block");
+                }
+                else {
+                    $(".user_list").css("display", "none");
+                }
+
+            });
+
+            $(".rightDiv").on("click", function () {
+                hideAllMenu();
+            });
+        });
+
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div id="lblUser" style="display:none;"></div>
+    <div class="leftDiv">
+        <div id="tblMain">
+            <div class="smallRow">
+                <div class="small menu selectedMenu" style="padding:5px 10px;" title="Home" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="#" class="home"></a>
+                </div>
+                <div class="menu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSRDashboard();" title="TSR Dashboard">
+                    <a href="#">TSR Dashboard</a>
+                </div>
+                <div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSODashboard('');" title="TSO Dashboard">
+                    <a href="#">TSO Dashboard</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTASKDashboard('');" title="TASK Dashboard">
+                    <a href="#">TASK Dashboard</a>
+                </div>
+                <div class="menu" id="middel-10" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" title="iMS Analytics">
+                    <a href="https://app.powerbi.com/Redirect?action=OpenApp&appId=a4fd1c0a-0111-4e25-b688-acf4b9fc252e&ctid=cb55116c-763f-45c3-a71f-9241a0b3e1b1" target="_blank">iMS Analytics</a>
+                </div>
+                <div class="GuestClass menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="CreateNewTSR('');" title="Create New TSR">
+                    <a href="#">Create New TSR</a>
+                </div>
+                <div class="menu" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="ExportExcelDump();" title="Export Data">
+                    <a href="#">Export Data</a>
+                </div>
+                <div class="AdminClass menu" style="display:none;" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoMaster();" target="_blank" title="Master Data">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#">Master Data</a>
+                </div>
+                <div class="menu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoWiki();" target="_blank" title="Wiki">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#'>Wiki</a>
+                </div>
+                <div class="menu" id="middel-11" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="LogOff(false);">
+                    <a class="SignOff" title="Sign Off"></a>
+                </div>
+                <div class="small menu" id="middel-8" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <div class="UserLogo" title="User Details">
+                    </div>
+                    <ul class="user_list" style="display:none;">
+                        <li id="userName"></li>
+                        <li id="userRole"></li>
+                    </ul>
+                </div>
+                <div class="small menu" id="middel-9" style="padding:5px 10px;float:right;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="sendEmail();">
+                    <div class="ContactUs" title="ContactUs">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="rightDiv information">
+        <div class="header" style="height:200px;">
+            <div class="headerClass">
+                Welcome to the TSR/TSO Management
+            </div>
+            <div class="imsLogo" style="float:right;width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; float:left;">
+            The TSR/TSO management portal is designed to manage all tasks in a solution centre that is operated in iMS mode and delivers services to customers.
+            The whole service execution process starts with creating TSRs as a break down structure of the corresponding (internal) SoW, breaking down the TSRs into TSOs,
+            executing the requested services in a standardised way, delivering the expected results to the customer and triggering the invoicing. Therefore, it bridges the
+            operational gap between what is planned in the ERP system and the delivery itself.
+            <br />
+            <br />
+        </div>
+        <div style="text-align:justify; float:left; width:45%;margin-right:1.35%;">
+            Please click a button in the menu bar to select the right function. There are two options for further data analysis, i.e. ‘iMS Analytics’ links you to the
+            standard Power BI reports and dashboards defined for iMS projects; ‘export data’ provides you csv-dump files for TSR, TSO, TASK containing all data.
+            <br /><br />
+            Benefits of the iMS approach as indicated in the image are proven by more than 200 projects in our global delivery centres.
+            <br /><br />
+            Please click a button in the menu bar to get the right function, you can download data from export if required, may you require any details on exporting data.
+        <br /> <br />
+            </div>
+        <div style="padding: 0.5vh 1vh; width: 50%; height:33%; text-align: right; float: left;">
+            <img src="../../images/iMS benefits.png" style="width:622px; height:262px; border:1px solid grey;" />
+        </div>
+        <div style="text-align:justify; float:left; width:99%;">
+            In case of any questions, change requests or support needed please contact TTM support team (<a href="mailto:ttm-support@sqs.com" target="_top" style="font-size:20px;">ttm-support@sqs.com</a>).
+            <br /> <br />
+            <label style="font-style:italic; font-size:medium;">TTM Portal version: <font color='blue'> 2.5.7</font> <br />By - SQS Development Team</label>
+        </div>
+    </div>
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+    <script>
+
+    </script>
+</body>
+
+</html>

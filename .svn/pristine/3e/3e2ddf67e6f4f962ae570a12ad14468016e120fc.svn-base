@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Wiki</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Home.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest")
+                $(".GuestClass").hide();
+            else
+                $(".GuestClass").show();
+
+
+            bindUserPopUp();
+
+            if (roleId == "Admin" || roleId == "admin") {
+                $(".AdminClass").removeAttr('style');
+            }
+
+            $(".UserLogo").on("click", function () {
+                if ($('.user_list:visible').length == 0) {
+                    $(".user_list").css("display", "block");
+                }
+                else {
+                    $(".user_list").css("display", "none");
+                }
+            });
+
+            $(".rightDiv").on("click", function () {
+                hideAllMenu();
+            });
+        });
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+
+        .clsheader {
+            float: right;
+            font-size: 20px;
+            color: darkslategrey;
+            font-weight: bold;
+            padding: 13px 45px;
+            float: left;
+            width: 60%;
+            padding: 100px 0px;
+            text-align: left;
+        }
+
+        .adiv {
+            padding: 10px 0px;
+            float: left;
+            width: 99%;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div><div class="leftDiv">
+        <div id="tblMain">
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="top-1">
+                </div>
+                <div class="toomenu " id="top-2">
+                </div>
+                <div class="toomenu" id="top-7">
+                </div>
+                <div class="toomenu" id="top-10">
+                </div>
+                <div class="GuestClass toomenu" id="top-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="top-5">
+                </div>
+                <div class="toomenu" id="top-6">
+                </div>
+                <div class="toomenu" id="top-8" style="width:47px;padding:0;float:right; margin-right:5px;">
+                </div>
+                <div class="toomenu" id="top-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+            <div class="smallRow">
+                <div class="small menu" style="padding:5px 10px;" id="middel-1" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="Home();">
+                    <a href="#" title="Home" class="home"></a>
+                </div>
+                <div class="menu" id="middel-2" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSRDashboard('');" title="TSR Dashboard">
+                    <a href="#">TSR Dashboard</a>
+                </div>
+                <div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTSODashboard('');" title="TSO Dashboard">
+                    <a href="#">TSO Dashboard</a>
+                </div>
+                <div class="menu" id="middel-12" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="GotoTASKDashboard('');" title="TASK Dashboard">
+                    <a href="#">TASK Dashboard</a>
+                </div>
+                <div class="AdminClass menu" id="middel-10" style="display:none;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" title="iMS Analytics">
+                    <a href="http://192.168.96.196:5601" target="_blank">iMS Analytics</a>
+                </div>
+                <!--<td>
+                    <a href="#" onclick="GotoTSODashboard('');" title="TSO Dashboard">TSO Dashboard</a>
+                </td>-->
+                <div class="GuestClass menu" id="middel-3" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="CreateNewTSR('');" title="Create New TSR">
+                    <a href="#">Create New TSR</a>
+                </div>
+                <div class="AdminClass menu" style="display:none;" id="middel-4" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="ExportExcelDump();" title="Export Data">
+                    <a href="#">Export Data</a>
+                </div>
+                <!--<td class="AdminClass" style="display:none;">
+                    <a href="#" onclick="this.href = 'http://192.168.96.196:5601'" target="_blank" title="Delivery Excellence Dashboard">iMS Analytics</a>
+                </td>-->
+                <div class="AdminClass menu" style="display:none;" id="middel-5" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="gotoMaster();" target="_blank" title="Master Data">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#">Master Data</a>
+                </div>
+                <div class="menu selectedMenu" id="middel-6" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" target="_blank" title="Wiki">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#'>Wiki</a>
+                </div>
+                <div class="menu" id="middel-11" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="LogOff(false);">
+                    <a class="SignOff" title="Sign Off"></a>
+                </div>
+                <!--<div class="menu" id="middel-7" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <a href="index.html" title="Sign Off">Sign Off</a>
+                </div>-->
+                <div class="small menu" id="middel-8" style="padding:5px 10px;float:right; margin-right:5px;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);">
+                    <div class="UserLogo" title="User Details">
+                    </div>
+                    <ul class="user_list" style="display:none;">
+                        <li id="userName"></li>
+                        <li id="userRole"></li>
+                    </ul>
+                </div>
+                <div class="small menu" id="middel-9" style="padding:5px 10px;float:right;" onmouseover="menuhighlight(this.id);" onmouseout="menuRemove(this.id);" onclick="sendEmail();">
+                    <div class="ContactUs" title="ContactUs">
+                    </div>
+                </div>
+            </div>
+            <!--<div class="smallRowTopBottom">
+                <div class="toomenu" style="width:47px;padding:0;" id="bottom-1">
+                </div>
+                <div class="toomenu " id="bottom-2">
+                </div>
+                <div class="toomenu" id="bottom-7">
+                </div>
+                <div class="toomenu" id="bottom-10">
+                </div>
+                <div class="GuestClass toomenu" id="bottom-3">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-4">
+                </div>
+                <div class="AdminClass toomenu" style="display:none;" id="bottom-5">
+                </div>
+                <div class="toomenu" id="bottom-6">
+                </div>
+                <div class="toomenu" id="bottom-8" style="width:47px;padding:0;float:right;margin-right:5px;">
+                </div>
+                <div class="toomenu" id="bottom-9" style="width:47px;padding:0;float:right;">
+                </div>
+            </div>-->
+        </div>
+    </div>
+    <div class="rightDiv information scrollDiv" style="text-align:justify;float:left;border:none;padding-left:5%; width:90%;">
+        <div class="header" style="height:150px;text-align:left;">
+            <div class="headerClass" style="padding-top:58px;">
+                Welcome to the iMS Wiki
+
+            </div>
+            <div class="imsLogo" style="float:right; width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; fill;float:left;">
+            <p>Glossary and other TTM documentation is currently as per the SP version, and will be updated soon..</p>
+
+            <p>The iMS Wiki provides the iMS glossary and other useful documentation and links to support iMS engagements.</p>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <p><b>Links</b></p>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Lists/Glossary/AllItems.aspx" target="_blank">Glossary</a>
+            </div>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://services.sqs.com/SitePages/Services%20and%20PractiQs.aspx" target="_blank">PractiQ</a>
+            </div>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <p><b>Training Videos</b></p>
+            <div class="adiv">
+                <a style="font-size:20px;" href="https://media.sqs.com/Videos/Forms/Video/videoplayerpage.aspx?ID=378&FolderCTID=0x0120D520A808006B172A5C9EA154449A975DA0885BE5F3&List=d98d2186-e0fd-4b72-a323-a9e644f6f780&RootFolder=%2FVideos%2FQallisto%20with%20TTMPortal%2FAdditional%20Content&RecSrc=%2FVideos%2FQallisto%20with%20TTMPortal" target="_blank">Learn about TTM portal and Qallisto</a>
+            </div>
+            <p>-------------------------------------------------------------------------------------------------------------------------------------------------------------------</p>
+            <div style="width:55%;">
+                <p><b>Operational handbook & user guides</b></p>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Operational%20Handbook%20for%20TTM%20Portal%20_V1.0.pdf" target="_blank">Operational Handbook for TTM Portal _V1.0.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Qallisto_UserManual.pdf" target="_blank">Qallisto_UserManual.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/Shared%20Documents/Guideline%20Qallisto%20Test%20Prep%20and%20Execution.pdf" target="_blank">Guideline Qallisto Test Prep and Execution.pdf</a>
+                </div>
+            </div>
+            <div style="width:45%;">
+                <p><b>iMS documentation</b></p>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/PublishingImages/Wiki/Home/iMS%20control%20loop_V1-0.pdf" target="_blank">iMS control loop_V1-0.pdf</a>
+                </div>
+                <div class="adiv">
+                    <div class="pdf">
+                    </div>
+                    <a style="font-size:20px;" href="https://group.sqs.com/sites/TSR_TSO/PublishingImages/Wiki/Home/About%20iMS%20logo%20and%20visuals.pdf" target="_blank">About iMS logo and visuals.pdf</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="myfooter">
+        By - SQS Development Team
+    </div>
+</body>
+</html>

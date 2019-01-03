@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Index</title>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link rel="stylesheet" href="/Styles/css.css" />
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <link href="/styles/Master.css" rel="stylesheet" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <script>
+        userId = decodeURIComponent(getUrlVars()["user"]);
+        if (userId != "undefined" && userId !== "") {
+            if (document.getElementById("tblMain") !== null) {
+                document.getElementById("tblMain").style.visibility = 'visible';
+            }
+        }
+        else {
+            window.location = "login.html";
+        }
+    </script>
+    <style>
+        body {
+            font-size: medium;
+        }
+    </style>
+</head>
+<body>
+    <div class="header" style="height:32px; padding-bottom:0px;">
+        <div>
+
+        </div>
+        <div class="topRightLogo UserLogo">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <!--<div class="header">
+        <div>TTM Portal masters</div>
+    </div>-->
+    <table id="tblMain">
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Client.html')">Client</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('ClientRegion.html')">Client Regions</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('CoreService.html')">Core Services</a>
+            </td>
+        </tr>
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Engagement.html')">Engagement</a>
+            </td>            
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('MarketOffering.html')">Market Offering</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('OperationalRisk.html')">Operational Risk</a>
+            </td>         
+        </tr>
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Practice.html')">Practice</a>
+            </td>  
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('ProjectModel.html')">Project Model</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Roles.html')">Roles</a>
+            </td>  
+        </tr>
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('RelevantRepository.html')">Relevant Repositories</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('QGPassed.html')">QGPassed</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('ServiceDeliveryChain.html')">Service Delivery Chain</a>
+            </td>
+        </tr>
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('SolutionCentre.html')">Solution Centre</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('TaskStatus.html')">Task Status</a>
+            </td>
+           <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('TSOStatus.html')">TSO Status</a>
+            </td>
+        </tr>
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('TSRStatus.html')">TSR Status</a>
+            </td>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('UserType.html')">User Type</a>
+            </td>
+             <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Users.html')">Users</a>
+            </td>         
+        </tr> 
+        <tr>
+            <td class="leftMenu">
+                <a href="#" onclick="NavigateTo('Vertical.html')">Vertical</a>
+            </td>  
+            <td class="leftMenu">
+                <a href="Login.html">Logout</a>
+            </td>
+        </tr>       
+    </table>
+    <script>
+        $(document).ready(function () {
+            try {
+                if (getUrlVars().length < 1) {
+                    window.location = "login.html";
+                }
+                else {
+                    userId = decodeURIComponent(getUrlVars()["user"]);
+                    if (userId != "undefined" && userId !== "") {
+                        document.getElementById("tblMain").style.visibility = 'visible';
+                    }
+                    else {
+                        window.location = "login.html";
+                    }
+                }
+            }
+            catch (e) {
+                showMessageBox(e, "red");
+            }
+        });
+
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + userId;
+        }
+    </script>
+</body>
+</html>

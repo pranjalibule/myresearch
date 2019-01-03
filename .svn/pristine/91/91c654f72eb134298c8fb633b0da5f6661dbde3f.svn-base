@@ -1,0 +1,98 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Wiki</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+   <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Home.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest")
+                $(".GuestClass").hide();
+            else
+                $(".GuestClass").show();
+        });
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+
+        .clsheader{
+                float:right;
+                font-size:20px;
+                color:darkslategrey;
+                font-weight:bold;
+                padding:13px 45px;
+                float:left;width:60%;padding:100px 0px; text-align:left;
+            }
+
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:32px; padding-bottom:0px;">
+        <div></div>
+        <div class="topRightLogo UserLogo">
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+      
+    </div>
+    <div class="rightDiv information" style="border-left:none">
+        <div class="header" style="height:250px;">
+            <div class="headerClass" style="font-size:25px">
+                Welcome to the TSR/TSO Management Wikipedia.
+            </div>
+            <div class="imsLogo" style="float:right;width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; fill;float:left;">
+            <b>Coming soon...</b>
+
+            <p>TSR/TSO Management (TTM) </p>
+            <p>Test Service Request (TSR) </p>
+            <p>Test Service Order (TSO) </p>
+            <p>Statement of Work (SoW) </p>
+
+        </div>
+    </div>
+</body>
+</html>

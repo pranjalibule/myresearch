@@ -1,0 +1,109 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>TTM login</title>
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <link rel="stylesheet" href="/Styles/css.css" />
+    <script src="/scripts/jquery-ui.js"></script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+</head>
+<body>
+    <form action="#">
+        <div class="credential">
+            <div style="margin-bottom:25px;width: 100%;"><input type="text" id="username" onkeyup="DoLogin(event)" placeholder="User Name"></div>
+            <div style="margin-bottom:25px;width: 100%;"><input type="password" id="password" onkeyup="DoLogin(event)" placeholder="Password"></div>
+            <div><label id="txtOutput"></label></div>
+            <div class="button" style="width: 100%;text-align:center; margin-top:15px;"><button type="button" onclick="Login()" class="btn_login">Login</button></div><br />
+        </div>
+
+        <!--<div class="credential">
+            <div class="username">User Name:</div>
+            <div><input type="text" id="username" onkeyup="DoLogin(event)"></div>
+            <div class="password">Password:</div>
+            <div><input type="password" id="password" onkeyup="DoLogin(event)"></div>
+            <div><label id="txtOutput"></label></div>
+            <div class="button"><button type="button" onclick="Login()" class="btn_login">Login</button></div>
+        </div>-->
+    </form>
+    <div id="footer"><div class="footer_text">SQS India© 2017 copyright  |  <a href="#">Disclaimer</a></div></div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $('#username').val('');
+            $('#password').val('');
+        });
+        function DoLogin(event)
+        {
+            if (event.which == 13 || event.keyCode == 13) {
+                Login();
+                return true;
+            }
+        }
+
+        function Login() {
+            var page = decodeURIComponent(getUrlVars()["page"]);
+            var txtUsername = $("#username").val();
+            var txtPassword = $("#password").val();
+
+            if (txtUsername == "")
+            {
+                showMessageBox("Enter username", "red");
+                $("#username").focus();
+                return false;
+            }
+            else if (txtPassword == "") {
+                showMessageBox("Enter password", "red");
+                $("#password").focus();
+                return false;
+            }
+
+            var url = urlPrefix + "Login/ValidateLogin";
+
+            var method = "POST";
+
+            var objLoginJSON = JSON.stringify({ userName: txtUsername, password: txtPassword, adUser: true });
+
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json; charset=UTF-8',
+                data: objLoginJSON,
+                success: function (response) {
+                    if (response == null) {
+                        showMessageBox("Invalid Login", "red");
+                        return false;
+                    }
+                    else {
+                        if (response.Name != null && response.Name.indexOf("Error") >= 0) {
+                            showMessageBox(response.Name, "red");
+                            //$("#txtOutput").html("<b>" + response.Name + "</b>");
+                            //$("#txtOutput").css('color', 'red');
+                            return false;
+                        }
+                        else {
+                            //showMessageBox("Invalid Login", "red");
+                            //$("#txtOutput").html("<b>Redirecting...</b>");
+                            //$("#txtOutput").css('color', 'black');
+                            if (page == null || page == "undefined") {
+                                window.location = "index.html?user=" + encodeURIComponent(response.Name);
+                            }
+                            else
+                            {
+                                window.location = page + "?user=" + encodeURIComponent(response.Name);
+                            }
+
+                            return true;
+                        }
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    showMessageBox(textStatus + "--" + errorThrown, "red");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

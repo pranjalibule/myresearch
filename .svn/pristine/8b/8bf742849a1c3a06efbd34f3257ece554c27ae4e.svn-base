@@ -1,0 +1,83 @@
+﻿namespace SQS.nTier.TTM.DataImport
+{
+    internal class TableColumns
+    {
+
+        /// <summary>
+        /// GetExcelColumns
+        /// </summary>
+        /// <param name="tableName">string</param>
+        /// <returns>string</returns>
+        public static string GetExcelColumns(string tableName)
+        {
+            string strTableColumns = string.Empty;
+
+            if (tableName.ToLower() == "tsr")
+            {
+                strTableColumns = TSR.ExcelColumns;
+            }
+            else if (tableName.ToLower() == "tso")
+            {
+                strTableColumns = TSO.ExcelColumns;
+            }
+            else if (tableName.ToLower() == "tasks")
+            {
+                strTableColumns = Tasks.ExcelColumns;
+            }
+
+            return strTableColumns;
+        }
+
+        /// <summary>
+        /// GetTableColumns
+        /// </summary>
+        /// <param name="tableName">string</param>
+        /// <returns>string</returns>
+        public static string GetTableColumns(string tableName)
+        {
+            string strTableColumns = string.Empty;
+
+            if (tableName.ToLower() == "tsr")
+            {
+                strTableColumns = TSR.TableColumns;
+            }
+            else if (tableName.ToLower() == "tso")
+            {
+                strTableColumns = TSO.TableColumns;
+            }
+            else if (tableName.ToLower() == "tasks")
+            {
+                strTableColumns = Tasks.TableColumns;
+            }
+
+            return strTableColumns;
+        }
+
+        /// <summary>
+        /// ProjectType
+        /// </summary>
+        public static class TSR
+        {
+            public static string ExcelColumns = @"[ID],[Title],[Client],[TSR Status],[Engagement Model],[Pricing Model],[Project Model],[Client Region],[Account],[ERP order number],[Solution centre],[Core Service (s)],[Estimated effort],[Planned effort],[Actual effort],[Operational risk],[Start Date],[Actual start date],[Target Completion Date],[Actual completion date],[Planned processing time],[Actual processing time],[Account Manager],[Delivery manager],[Test Manager],[Vertical],[Practice],[Market Offering],[Relevant repositories],[Modified],[Modified By],[Description],[Created By],[Created]";
+            public static string TableColumns = @"[SP_Id],[Title],[ClientId],[TSRStatusID],[EngagementId],[PricingModelId],[ProjectModelID],[ClientRegionId],[Account],[ERPordernumber],[SolutionCentreId],[Estimatedeffort],[Plannedeffort],[OperationalRiskId],[StartDate],[ActualStartDate],[TargetCompletionDate],[ActualCompletionDate],[AccountManagerId],[DeliveryManagerId],[TestManagerId],[VerticalId],[PracticeId],[MarketOfferingId],[CreatedBy],[CreatedOn],[UpdatedBy],[UpdatedOn],[Version],[Description],[ERPOrderDescription]";
+        }
+
+        /// <summary>
+        /// ProjView
+        /// </summary>
+        public static class TSO
+        {
+            public static string ExcelColumns = @"[ID],[Title],[TSO Status],[Related TSR],[Relevant repositories],[Service Delivery Chain],[Core Service],[Operational risk],[Start Date],[Actual start date],[Target Completion Date],[Actual completion date],[Estimated effort],[Planned effort],[Team Lead],[Modified],[Modified By],[Description],[Created By],[Created]";
+            public static string TableColumns = @"";
+        }
+
+        /// <summary>
+        /// ResView
+        /// </summary>
+        public static class Tasks
+        {
+            public static string ExcelColumns = @"[CompanyCode_ResView],[EmpID_ResView],[EmpName_ResView],[EmpGroup_ResView],[CC_ResView],[CCDesc_ResView],[UoM_ResView],[Capacity_Mth_0],[Capacity_Mth_1],[Capacity_Mth_2],[Capacity_Mth_3],[Currency_ResView],[EmpGrade_ResView],[Max_PlndDays],[Vertical_ResView],[SubVertical_ResView],[project_ResView],[ProjType_ResView],[ProjectBillabilityCategory_ResView],[ProjectBillability_ResView],[ProjectProductivityGroup_ResView],[Cap_Mth_0_Rev],[Cap_Mth_1_Rev],[Cap_Mth_2_Rev],[Cap_Mth_3_Rev],[Mth_0_Billability],[Mth_0_Bill],[Mth_0_Int],[Mth_0_Int_NB],[Mth_0_Bnch],[Mth_0_Utl0],[Mth_0_Rev_HC_Plnd],[Mth_0_Rev_HC_Actl],[Mth_0_TS_Bill],[Mth_0_TS_Total],[Mth_0_TS_Missing],[Mth_1_FTE],[Mth_1_Partial_Bill],[Mth_1_Bill],[Mth_1_Int],[Mth_1_Int_NB],[Mth_1_Bnch],[Mth_1_HC],[Mth_1_Rev_HC],[Mth_2_Bill],[Mth_2_Int],[Mth_2_Int_NB],[Mth_2_Bnch],[Mth_2_HC],[Mth_2_Rev_HC],[Mth_3_Bill],[Mth_3_Int],[Mth_3_Int_NB],[Mth_3_Bnch],[mth_3_HC],[Mth_3_Rev_HC], '{0}' AS [FCNo_ResView], [EmpID_ResView] + '' + '{0}' AS [EmpFCKey_ResView], '{1}' AS [MonthYear_ResView]";
+            public static string TableColumns = @"";
+        }
+    }
+}

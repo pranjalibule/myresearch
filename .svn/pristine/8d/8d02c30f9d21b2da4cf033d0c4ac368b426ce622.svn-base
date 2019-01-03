@@ -1,0 +1,557 @@
+﻿var urlPrefix = "http://localhost:10048/api/v1/";
+
+var clientId = 'sqsAuth';
+var userId = '';
+var userName = '';
+var roleId = '';
+var AllInfoUser = '';
+
+function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.replace("#", "").slice(window.location.href.indexOf('?') + 1).split('&');
+    for (var i = 0; i < hashes.length; i++) {
+        hash = hashes[i].split('=');
+        if (hash[0].indexOf(".html") < 0) {
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }
+    }
+    return vars;
+}
+
+function bindUserPopUp() {
+    $(".UserLogo").attr('title', 'Name : ' + AllInfoUser.name + '\n\nRole   : ' + AllInfoUser.role);
+}
+
+$.fn.slideFadeToggle = function (easing, callback) {
+    return this.animate({ opacity: 'toggle', height: 'toggle' }, 'fast', easing, callback);
+};
+
+function CheckUser() {
+    var url = urlPrefix + "User/GetUser";
+
+    var objUserJSON = JSON.stringify({ userName: userId, password: '', adUser: true });
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        contentType: 'application/json; charset=UTF-8',
+        data: objUserJSON,
+        async: false,
+        success: function (result) {
+            if (result != null && parseInt(result.id) > 0) {
+                userName = result.name;
+                roleId = result.role;
+                AllInfoUser = result;
+                bindUserPopUp();
+
+                if (roleId.toLowerCase() == "account manager") {
+                    $("#trNewTSR").hide();
+                }
+                else {
+                    $("#trNewTSR").show();
+                }
+                return userName;
+            }
+            else {
+                showMessageBox("Invalid Login", "red");
+                userName = "";
+                roleId = "";
+                return userName;
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+        }
+    });
+}
+
+function validation(val, validateType) {
+    var isValide = true;
+    if (validateType.toLowerCase() === "length") {
+        if (val.length > 15) {
+            isValide = false;
+        }
+    }
+    else if (validateType.toLowerCase() === "digit") {
+        if (val.length > 10) {
+            isValide = false;
+        }
+    }
+    else if (validateType.toLowerCase() === "date") {
+        var re = new RegExp("^(([0-9])|([0-2][0-9])|([3][0-1]))\-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\-\d{4}$");
+        if (val.match(re)) {
+            isValide = false;
+        }
+    }
+    return isValide;
+}
+
+function showMessageBox(message, color, url, isReload, controlToFocus, isUser) {
+    if ($("#modal-wait").length < 1) {
+        var dig = $('<div id="modal-wait" style="display:none" title="TTM"></div>');
+        $(dig).html('<div style="display:table-cell;padding-left:20px;color:black;text-align:justify;"><p><b>' + message + '<b></p></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "auto",
+            width: "500",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").css("width", "93%");
+                if (typeof isUser != "undefined" && isUser != "" && isUser != null) {
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                }
+                else {
+                    $(".ui-dialog-buttonpane").css("width", "96%");
+                }
+                $(".ui-widget-overlay").css("opacity", "1");
+                $(this).find(".ui-button").blur();
+            }, this),
+            position: { my: "center top", at: "center top+100" },
+            buttons: [{
+                text: "Ok",
+                click: function (event) {
+                    if (url != "" && url != null && typeof url != "undefined" && !isReload) {
+                        window.location = url;
+                    }
+                    else if (isReload) {
+                        location.reload();
+                    }
+                    else if (typeof controlToFocus != "undefined" && controlToFocus != "" && controlToFocus != null) {
+                        $("#" + controlToFocus).focus();
+                    }
+                    $(this).dialog("destroy");
+                }
+            }]
+        });
+    }
+}
+
+function showDeleteConfirm(message, ID) {
+    if ($("#modal-wait").length < 1) {
+        var dig = $('<div id="modal-wait" style="display:none" title="TTM"></div>');
+        $(dig).html('<div style="display:table-cell;padding-left:20px;color:black;text-align:justify;"><p><b>' + message + '<b></p></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "auto",
+            width: "500",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").css("width", "93%");
+                $(".ui-dialog-buttonpane").css("width", "96%");
+                $(".ui-widget-overlay").css("opacity", "1");
+            }, this),
+            position: { my: "center top", at: "center top+100" },
+            buttons: [{
+                text: "Ok",
+                click: function () {
+                    doDelete(ID);
+                    $(this).dialog("destroy");
+                }
+            },
+            {
+                text: "Cancel",
+                icon: "ui-icon-heart",
+                click: function () {
+                    $(this).dialog("destroy");
+                }
+
+            }]
+        });
+    }
+}
+
+function onlyten(e, field) {
+    var val = field.value;
+    if (val.length > 10) {
+        field.value = val.substring(0, 10);
+    }
+}
+
+function showLoader() {
+    setTimeout(function () {
+        $("#WaitCursor").html('<p>Loading....</p><div class="loader"></div>').dialog({
+            dialogClass: 'ui-dialog-notitlebar',
+            height: "300",
+            width: "240",
+            modal: true,
+            closeOnEscape: false,
+            draggable: false,
+            resizable: false,
+            open: $.proxy(function () {
+                $(".ui-dialog-content").css("overflow-x", "hidden");
+                $(".ui-dialog-content").css("margin-left", "25px");
+                $(".ui-dialog-titlebar-close").remove();
+                $(".ui-dialog-titlebar").css("width", "86%");
+                $(".ui-widget-overlay").css("opacity", "1");
+            }, this),
+            position: { my: "center top", at: "center top+100" }
+        });
+    }, 0);
+}
+
+function hideLoader() {
+    setTimeout(function () {
+        try {
+            $("#WaitCursor").dialog("close");
+            $("#WaitCursor").dialog("destroy");
+        } catch (e) {
+
+        }
+    }, 200);
+}
+//debugger;
+var tsrId = getUrlVars()["tsrid"];
+
+var tsoId = getUrlVars()["tsoid"];
+
+function removerowToselect() {
+    var windowURL = window.location.href;
+    windowURL = windowURL.substring(0, windowURL.indexOf("rowToselect") - 1);
+    window.history.pushState(null, null, windowURL);
+}
+
+function GotoTSODashboard() {
+    removerowToselect();
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=undefined";
+}
+
+
+function CreateNewTSR(tsrId) {
+    removerowToselect();
+    if (tsrId == '') {
+        window.location = "TSR.html?user=" + encodeURI(userId);
+    }
+    else {
+        window.location = "TSR.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+    }
+}
+
+function ViewTSO(tsrId) {
+    removerowToselect();
+    window.location = "TSODashboard.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+}
+
+function Home() {
+    removerowToselect();
+    window.location = "Home.html?user=" + encodeURI(userId);
+}
+
+function Wiki() {
+    removerowToselect();
+    window.location.href = "Wiki.html?user=" + encodeURI(userId);
+}
+
+
+function CreateNewTSO(tsoId) {
+    if (tsoId == '') {
+        window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId;
+    }
+    else {
+        window.location = "TSO.html?user=" + encodeURI(userId) + "&tsrid=" + tsrId + "&tsoid=" + tsoId;
+    }
+}
+
+function ViewTasks(tsoId, serviceDeliveryChainId, tsoServiceDeliveryChainId) {
+    window.location = "Tasks.html?user=" + encodeURI(userId) + "&tsoid=" + tsoId + "&serviceDeliveryChainId=" + serviceDeliveryChainId + "&tsoServiceDeliveryChainId=" + tsoServiceDeliveryChainId + "&tsrid=" + tsrId;
+}
+
+function GotoTSRDashboard() {
+    removerowToselect();
+    window.location = "TSRDashboard.html?user=" + encodeURI(userId);
+}
+
+function sendEmail() {
+    window.location = "mailto:ttm-support@sqs.com";
+}
+
+function showHelp() {
+    removerowToselect();
+    window.location = "Help.html?user=" + encodeURI(userId);
+}
+
+function appendTObreadcrumb(name, id, type, isLInk) {
+    $("#breadCrumb").show();
+    var linkClass = "bTitleLink";
+    if (!isLInk) {
+        linkClass = "bTitle";
+    }
+
+    var newLink = $("<div class='ellipsis " + linkClass + "' data-type='" + type + "' data-id='" + id + "' title='" + name + "'>" + name + "</div>").on("click",
+                function () {
+                    var objID = $(this).data("id");
+                    if ($(this).data("type") == "TSR") {
+                        CreateNewTSR(objID);
+                    }
+                    else if ($(this).data("type") == "TSO") {
+                        CreateNewTSO(objID);
+                    }
+                });
+
+    $("#breadCrumb").append(newLink);
+    $("#breadCrumb").append("<div class='bChild'>></div>");
+}
+
+function MasterData() {
+    removerowToselect();
+    window.location = "../Masters/Index.html?user=" + encodeURI(userId) + "'target': '_blank'";
+}
+
+
+function loadDataByRecord() {
+    showLoader();
+    var startingRecordNumber = 0;
+    var pageSize = $("#pagesize option:selected").text();
+    loadPagingData(startingRecordNumber, pageSize);
+    if (startingRecordNumber == 0) {
+        $("#pagedisplay").val(1);
+    }
+}
+
+function GoPrevPage() {
+    removerowToselect();
+    if (parseInt($("#pagedisplay").val()) == 1) {
+        //showMessageBox("Max limit reached !", "red");
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+        return false;
+    }
+    else if (parseInt($("#pagedisplay").val()) <= allpages) {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+     // var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val() - 2) + 1;
+        var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val() - 2);
+        loadPagingData(startingRecordNumber, pageSize);
+        $("#pagedisplay").val(parseInt($("#pagedisplay").val()) - 1);
+    }
+    else {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showMessageBox("Page number is Invalid !", "red");
+        $("#pagedisplay").val(1);
+        return false;
+    }
+
+}
+
+/* Pagination textBox validation for ristrict String & Negetive Value */
+
+$(function () {
+    $("#pagedisplay").keyup(function () {
+        var value = $(this).val();
+        value = value.replace(/^(0*)/, "");
+        $(this).val(value);
+    });
+});
+
+$(function () {
+    $("#pagedisplay").keydown(function (e) {
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+            (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+            (e.keyCode >= 35 && e.keyCode <= 40)) {
+            return;
+        }
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+});
+
+function GoNextPage() {
+    removerowToselect();
+    if (parseInt($("#pagedisplay").val()) == allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        $('#last').attr('disabled', true);
+        $('#next').attr('disabled', true);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else if (parseInt($("#pagedisplay").val()) <= allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+     ////var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val()) + 1;
+        var startingRecordNumber = parseInt(pageSize) * parseInt($("#pagedisplay").val());
+        loadPagingData(startingRecordNumber, pageSize);
+        $("#pagedisplay").val(parseInt($("#pagedisplay").val()) + 1 );
+    }
+    else {
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        showMessageBox("Page number is Invalid !", "red");
+        $("#pagedisplay").val(1);
+        return false;
+    }
+}
+
+function GoFristPage() {
+    removerowToselect();
+    if (parseInt($("#pagedisplay").val()) == 1) {
+        $('#first').attr('disabled', true);
+        $('#prev').attr('disabled', true);
+
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else {
+        $('#last').attr('disabled', false);
+        $('#next').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        var startingRecordNumber = 0;
+        loadPagingData(startingRecordNumber, pageSize);
+        $("#pagedisplay").val(1);
+    }
+}
+
+function GoLastPage() {
+    removerowToselect();
+    if (parseInt($("#pagedisplay").val()) == allpages) {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        $('#last').attr('disabled', true);
+        $('#next').attr('disabled', true);
+        //showMessageBox("Max limit reached !", "red");
+        return false;
+    }
+    else {
+        $('#first').attr('disabled', false);
+        $('#prev').attr('disabled', false);
+
+        showLoader();
+        var pageSize = $("#pagesize option:selected").text();
+        var startingRecordNumber = parseInt(pageSize) * parseInt(allpages - 1) + 1;
+        loadPagingData(startingRecordNumber, pageSize);
+        $("#pagedisplay").val(allpages);
+    }
+}
+
+function showPages(url) {
+    $.ajax({
+        type: "GET",
+        url: url,
+        dataType: "json",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('userid', userId);
+        },
+        async: false,
+        success: function (result) {
+            var totalRecords = parseInt(result);
+            if (isNaN(totalRecords))
+                totalRecords = 0;
+
+            totalRecords = totalRecords / parseInt($("#pagesize option:selected").text());
+            totalRecords = totalRecords.toString();
+
+            var pages = totalRecords;
+            if (totalRecords.indexOf('.') > -1) {
+                var pages = totalRecords.substring(0, totalRecords.indexOf('.'));
+            }
+            if (totalRecords > pages) {
+          ////  pages = parseInt(pages) + 1;
+                pages = parseInt(pages);
+            }
+            allpages = pages;
+            if (isNaN(pages)) {
+                pages = 1;
+            }
+
+            $("#totalpage").text("page of " + pages + " pages.");
+            //hideLoader();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+
+            hideLoader();
+            if (errorThrown == " Unauthorized") {
+                textStatus = "You do not have permission to made any changes in TSR";
+            }
+            showMessageBox(errorThrown, "red");
+            //showMessageBox(jqXHR.responseText + "--" + textStatupo's + "--" + errorThrown, "red");
+        }
+    });
+}
+
+
+function notZero(e, field) {
+    var val = field.value;
+    if (val == 0) {
+        showMessageBox("Week must be greater than 0 !", "red");
+        return false;
+    }
+}
+
+function varFormat(string, arrayofStrings) {
+    for (var k = 0; k < arrayofStrings.length; k++) {
+        string = string.replace("{" + k + "}", arrayofStrings[k])
+    }
+    return string
+}
+
+function checkClose(e, field) {
+    //On-hold ,  In progress ,  Created  ,   Closed  ,  Cancelled
+    var defalutMsg = "You can not change the status from {0} to {1} !";
+    var newval = $("#" + field.id + " option:selected").text().toLowerCase();
+    var newValId = $("#" + field.id + " option:selected").val();
+    var oldVal = $("#" + field.id + " option[value='" + field.aOldValue + "']").text().toLowerCase();
+    var oldValId = $("#" + field.id + " option[value='" + field.aOldValue + "']").val();
+    if (newval == "closed" && oldVal == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "in progress" || oldVal == "on-hold" || oldVal == "closed" || oldVal == "cancelled") && newval == "created") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "in progress") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else if ((oldVal == "closed" || oldVal == "cancelled") && newval == "on-hold") {
+        showMessageBox(varFormat(defalutMsg, [oldVal, newval]), "red");
+        $("#" + field.id).val(oldValId);
+        return false;
+    }
+    else {
+        $("#" + field.id).val(newValId);
+        return true;
+    }
+    
+}
+
+function highLightrow(objrowId, tableID) {
+    if (typeof objrowId != "undefined" && objrowId != "" && objrowId != null) {
+        $('#' + tableID + ' > tbody  > tr').each(function () {
+            var id = $(this).find("a.accordion-section-title").attr("id");
+            if (typeof id != "undefined") {
+                if (id.indexOf(objrowId) >= 0) {
+                    $(this).addClass("rowSelect");
+                }
+            }
+        });
+    }
+}

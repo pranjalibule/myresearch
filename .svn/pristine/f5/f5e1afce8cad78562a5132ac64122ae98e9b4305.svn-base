@@ -1,0 +1,373 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <meta charset="utf-8" />
+    <script src="/scripts/dateformt.js"></script>
+    <script src="/scripts/jquery-3.1.1.min.js"></script>
+    <script src="/scripts/common.js"></script>
+    <script src="/scripts/jquery-ui.js"></script>
+    <link href="/styles/TTM.css" rel="stylesheet" />
+    <script>
+        if (getUrlVars().length < 1) {
+            window.location = "index.html?page=Home.html";
+        }
+        else {
+            userId = decodeURI(getUrlVars()["user"]);
+        }
+
+        function NavigateTo(page) {
+            window.location = page + "?user=" + encodeURI(userId);
+        }
+     
+
+        CheckUser();
+        $(document).ready(function () {
+            $("#lblUser").text(userName);
+            if (roleId == "Guest" || roleId == "guest") {
+                $(".GuestClass").hide();
+            }
+            else if (roleId.toLowerCase() == "account manager") {
+                $("#trNewTSR").hide();
+            }
+            else {
+                $(".GuestClass").show();
+                $("#trNewTSR").show();
+            }
+            if (roleId == "Admin" || roleId == "admin") {
+                $(".AdminClass").show();
+            }
+            else
+                $(".AdminClass").hide();
+            bindUserPopUp();
+        });       
+
+    </script>
+    <link rel="stylesheet" href="/styles/jquery-ui.css" />
+    <style>
+        .highlight {
+            background-color: lightblue;
+        }
+
+        .ui-autocomplete {
+            height: 200px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .field {
+            width: 55% !important;
+        }
+
+        .width25imp {
+            width: 26% !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="WaitCursor" style="display:none" title="TTM"></div>
+    <div class="header" style="height:3.5vh; padding-bottom:0px;">
+        <div>
+
+        </div>        
+        <div class="topRightLogo UserLogo" >
+        </div>
+        <div class="topRightLogo ContactUs" onclick="sendEmail();">
+        </div>
+        <div class="topRightLogo Help" onclick="showHelp();">
+        </div>        
+    </div>
+    <div class="userInfo">
+        <div id="lblUser"></div>
+    </div>
+    <div class="leftDiv" style="height:820px;padding-top:11px;">
+        <table id="tblMain">
+            <tr>
+                <td class="leftMenuSmallselectPortal">
+                    <a href="#">Home</a>
+                </td>
+            </tr>
+            <!--<tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="CreateNewTSO('');">Create New TSO</a>
+                </td>
+            </tr>-->
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSRDashboard();">TSR Dashboard</a>
+                </td>
+            </tr>           
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="#" onclick="GotoTSODashboard('');">TSO Dashboard</a>
+                </td>
+            </tr>
+            <tr id="trNewTSR">
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="CreateNewTSR('');">Create New TSR</a>
+                </td>
+            </tr>           
+            <tr>
+                <td class="leftMenuSmallPortal GuestClass">
+                    <a href="#" onclick="ExportExcelDump('');">Export Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal AdminClass">
+                    <!--<a href="#" onclick="MasterData()">Master Data</a>-->
+                    <a href="#" onclick="this.href='../Masters/Index.html?user=' + encodeURI(userId)" target="_blank">Master Data</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <!--<a href="Wiki.html" target="_blank" >Wiki</a>-->
+                    <a href='#' onclick="this.href='Wiki.html?user='+ encodeURI(userId)" target="_blank">Wiki</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="leftMenuSmallPortal">
+                    <a href="index.html">Sign Off</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="rightDiv information">
+        <div class="header" style="height:250px;">
+            <div class="headerClass">
+                Welcome to the TSR/TSO Management
+            </div>
+            <div class="imsLogo" style="float:right;width:200px;">
+            </div>
+        </div>
+        <div style="text-align:justify; fill;float:left;">
+            The TSR/TSO management portal is designed to manage all tasks in a solution Centre that is operated in iMS mode and delivers services to customers.
+            The whole service execution process starts with creating the TSR as a break down structure of the corresponding SoW (SoW; the contract),
+            breaking down the TSRs into TSOs, executing the requested services, delivering the results to the customer and triggering the invoicing.
+            Therefore, it bridges the operational gap between a statement of work incoming from a customer and planned in SQS ERP system and the invoicing for
+            such a SoW.
+            <br /> <br />
+            Please click on the buttons shown left to navigate  to the relevant lists , Export Data is restricted to admin ,may you require any details on exporting data.
+            Please contact TTM support team (<a href="mailto:ttm-support@sqs.com" target="_top" style="font-size:20px;">ttm-support@sqs.com</a>).
+        </div>
+    </div>
+
+    <div id="ExportExcel" title="Export to CSV" style="display:none">
+        <table cellpadding="5" class="tsoPage">
+            <tr>
+                <td class="smallTiletd width22imp">
+                    Select
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <select id="TypeOfExport" name="TypeOfExport" style="width:250px">
+                        <option value="TSR"> TSR</option>
+                        <option value="TSO"> TSO</option>
+                        <option value="Tasks"> Tasks</option>
+                    </select>
+                </td>
+            </tr>
+            <!-- <tr>
+                <td class="smallTiletd width28imp">
+                    Select from date
+                </td>
+                <td class="seprator">:</td>
+                <td class="field width28imp">
+                    <input id="newADUserID" type="text" size="29" autofocus />
+                </td>
+            </tr>-->
+        </table>
+    </div>
+    <script>
+        function ExportExcelDump() {
+            $("#ExportExcel").dialog({
+                dialogClass: "no-close block",
+                width: "500px",
+                hight: "250px",
+                modal: true,
+                open: $.proxy(function () {
+                    $(".ui-dialog-titlebar-close").remove();
+                    $(".ui-dialog-titlebar").css("width", "93%");
+                    $(".ui-dialog-buttonpane").css("width", "86%");
+                    $(".ui-widget-overlay").css("opacity", "1");
+                }),
+                buttons: [
+                        {
+                            text: "Export to csv",
+                            click: function () {
+                                var url;
+                                showLoader();
+                                var elt = document.getElementById("TypeOfExport");
+                                if (elt.value === "TSR") {
+                                    var url = urlPrefix + "TSR/GetTSRDump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSR Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "TSO") {
+                                    url = urlPrefix + "TSO/GetTSODump/";
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        success: function (result) {
+                                            var filename = "iMS TSO Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                                else if (elt.value === "Tasks") {
+                                    var txtStartDate = $('#txtStartDate').val()
+                                    var txtEndDate = $('#txtEndDate').val()
+                                    url = urlPrefix + "TSO/GetServiceDeliveryChainTasks/";
+                                    tdata = { startDate: txtStartDate, endDate: txtEndDate };
+                                    $.ajax({
+                                        method: 'GET',
+                                        url: url,
+                                        responseType: 'json',
+                                        data: tdata,
+                                        success: function (result) {
+                                            var filename = "iMS TASK Dashboard India.csv";
+                                            var contentType = "application/octet-stream";
+                                            try {
+                                                var blob = new Blob([result], { type: contentType });
+                                                //Check if user is using IE
+                                                var ua = window.navigator.userAgent;
+                                                var msie = ua.indexOf("MSIE ");
+
+                                                if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
+                                                    window.navigator.msSaveBlob(blob, filename);
+                                                    //alert('Please click on save to save the file');                                            
+                                                }
+                                                else  // If another browser, return 0
+                                                {
+                                                    //Create a url to the blob
+                                                    var url = window.URL.createObjectURL(blob);
+                                                    var linkElement = document.createElement('a');
+                                                    linkElement.setAttribute('href', url);
+                                                    linkElement.setAttribute("download", filename);
+
+                                                    //Force a download
+                                                    var clickEvent = new MouseEvent("click", {
+                                                        "view": window,
+                                                        "bubbles": true,
+                                                        "cancelable": false
+                                                    });
+                                                    linkElement.dispatchEvent(clickEvent);
+                                                }
+                                            } catch (ex) {
+                                                console.log(ex);
+                                            }
+                                            $(".ui-dialog-content").dialog('destroy');
+                                        },
+                                        error: function (jqXHR, textStatus, errorThrown) {
+                                            hideLoader();
+                                            if (jqXHR != null && jqXHR.responseJSON != null && jqXHR.responseJSON.message != "" && jqXHR.responseJSON.message == "The request date is incorrect - check your system clock.") {
+                                                showMessageBox("Session timed out.\nRedirecting to login page...", "red", "Index.html", false);
+                                            }
+                                            else {
+                                                showMessageBox(jqXHR.responseText + "--" + textStatus + "--" + errorThrown, "red");
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        {
+                            text: "Cancel",
+                            click: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+
+                ]
+            });
+        }
+    </script>
+</body>
+
+</html>

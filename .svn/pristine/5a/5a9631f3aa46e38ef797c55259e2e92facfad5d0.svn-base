@@ -1,0 +1,507 @@
+﻿
+/******************************************************************************
+ *                          © 2017 SQS India                            *
+ *                          All Rights Reserved.                              *
+ *                                                                            *
+ ******************************************************************************
+ *
+ * Modification History:
+ * 
+ * Tushar Bharambe - 12th June 2018 Created the class
+ *******************************************************************************/
+
+namespace SQS.nTier.TTM.WebAPI.Controllers
+{
+    using BAL;
+    using Common;
+    using DAL;
+    using DTO;
+    using GenericFramework;
+    using GenericFramework.Utility;
+    using Newtonsoft.Json;
+    using System;
+    using System.Collections.Generic;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using System.Web.Http.Results;
+
+    /// <summary>
+    /// ProductivityInputController
+    /// </summary>
+    [RoutePrefix("api")]
+    public class ProductivityInputController : ApiController
+    {
+        #region Private Functions
+
+        /// <summary>
+        /// GetProductivityInputById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>ProductivityInput</returns>
+        private ProductivityInputDTO GetProductivityInputById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            ProductivityInputDTO objProductivityInputDTO = null;
+
+            try
+            {
+                ProductivityInput objProductivityInput = objBusinessLayer.ProductivityInputRepository.GetByID(id);
+                if (null != objProductivityInput)
+                {
+                    objProductivityInputDTO = new ProductivityInputDTO();
+                    objProductivityInputDTO = Conversions.ToDTO<ProductivityInputDTO, ProductivityInput>(objProductivityInput);
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objProductivityInputDTO;
+        }
+
+
+        /// <summary>
+        /// GetProductivityInputNameById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>ProductivityInput</returns>
+        public string GetProductivityInputNameById(int id)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            string pmName = "";
+            try
+            {
+                ProductivityInput objProductivityInput = objBusinessLayer.ProductivityInputRepository.GetByID(id);
+                if (null != objProductivityInput)
+                {
+                    ProductivityInputDTO objInputDTO = new ProductivityInputDTO();
+                    objInputDTO = Conversions.ToDTO<ProductivityInputDTO, ProductivityInput>(objProductivityInput);
+                    pmName = objInputDTO.Name;
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return pmName;
+        }
+
+        /// <summary>
+        /// GetAllProductivityInput
+        /// </summary>
+        /// <returns>IList<ProductivityInput>></returns>
+        private IList<ProductivityInputDTO> GetAllProductivityInput(int startingRecordNumber, int pageSize, out int totalRecords)
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<ProductivityInputDTO> objPInputDTOList = null;
+            try
+            {
+                IList<ProductivityInput> objPInputList = objBusinessLayer.ProductivityInputRepository.GetAll(startingRecordNumber, pageSize, x => x.ID, false, out totalRecords);
+                if (objPInputList != null && objPInputList.Count > 0)
+                {
+                    objPInputDTOList = new List<ProductivityInputDTO>();
+
+                    foreach (ProductivityInput objInput in objPInputList)
+                    {
+                        ProductivityInputDTO objPInputDTO = new ProductivityInputDTO();
+                        objPInputDTO = Conversions.ToDTO<ProductivityInputDTO, ProductivityInput>(objInput);
+
+                        objPInputDTOList.Add(objPInputDTO);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objPInputDTOList;
+        }
+
+        /// <summary>
+        /// Function to add new ProductivityInput
+        /// </summary>
+        /// <param name="objProductivityInputDTO">ProductivityInputDTO</param>
+        /// <returns>string</returns>
+        private string AddNewProductivityInput(ProductivityInputDTO objProductivityInputDTO)
+        {
+            string returnMessage = string.Empty;
+
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            try
+            {
+                bool result = CheckNameExists(objProductivityInputDTO.Name);
+                if (result == true)
+                {
+
+                    ProductivityInput objPInput = Conversions.ToEntity<ProductivityInputDTO, ProductivityInput>(objProductivityInputDTO);
+                    objBusinessLayer.ProductivityInputRepository.Add(objPInput);
+
+                    returnMessage = "Productivity Input added successfully.";
+                }
+                else
+                {
+                    returnMessage = "This " + objProductivityInputDTO.Name + " record already exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return returnMessage;
+        }
+        private bool CheckNameExists(string Name)
+        {
+            LoginSession ls = new LoginSession();
+            ls.LoginName = "Admin";
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+            var CheckNameExists = objBusinessLayer.ProductivityInputRepository.GetSingle(x => x.Name == Name);
+            if (CheckNameExists == null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Function to update ProductivityInput 
+        /// </summary>
+        /// <param name="objProductivityInputDTO">ProductivityInputDTO</param>
+        /// <returns>string</returns>
+        private string ModifyProductivityInput(int ID, ProductivityInputDTO objProductivityInputDTO)
+        {
+
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ProductivityInputDTO objPInputDTOById = this.GetProductivityInputById(ID);
+
+                if (objPInputDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+                    bool result = CheckNameExists(objProductivityInputDTO.Name);
+                    if (result == true)
+                    {
+                        objPInputDTOById.Name = objProductivityInputDTO.Name;
+                        objPInputDTOById.Description = objProductivityInputDTO.Description;
+                        returnMessage = "Project Model updated successfully.";
+                    }
+                    else
+                    {
+                        objPInputDTOById.Description = objProductivityInputDTO.Description;
+                        returnMessage = "This " + objProductivityInputDTO.Name + " record already exists.";
+                    }
+                    ProductivityInput objPInput = Conversions.ToEntity<ProductivityInputDTO, ProductivityInput>(objPInputDTOById);
+                    objBusinessLayer.ProductivityInputRepository.Update(objPInput);
+                }
+                else
+                {
+                    returnMessage = "Productivity Input do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        /// <summary>
+        /// RemoveProductivityInput
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>string</returns>
+        private string RemoveProductivityInput(int ID)
+        {
+            string returnMessage = string.Empty;
+            LoginSession ls = null;
+            IBusinessLayer objBusinessLayer = null;
+            try
+            {
+                ProductivityInputDTO objProductivityInputDTOById = this.GetProductivityInputById(ID);
+
+                if (objProductivityInputDTOById != null)
+                {
+                    ls = new LoginSession();
+                    ls.LoginName = "Admin";
+
+                    objBusinessLayer = new BusinessLayer(ls);
+
+                    ProductivityInput objPInput = Conversions.ToEntity<ProductivityInputDTO, ProductivityInput>(objProductivityInputDTOById);
+                    objBusinessLayer.ProductivityInputRepository.Delete(objPInput);
+                    returnMessage = "Productivity Input deleted successfully.";
+
+                }
+                else
+                {
+                    returnMessage = "Productivity Input do not exists.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.InnerException.InnerException.Message));
+                if (ex.InnerException.InnerException.Message.Contains("REFERENCE constraint"))
+                    throw new Exception("Specified project model mapped with TSR / TSO.");
+                else
+                    throw;
+            }
+            finally
+            {
+                ls = null;
+                if (null != objBusinessLayer)
+                    objBusinessLayer.Dispose();
+            }
+            return returnMessage;
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// GetProductivityInputIDNameList
+        /// </summary>
+        /// <returns>IList<IDName></returns>
+        internal IList<IDName> GetProductivityInputIDNameList()
+        {
+            LoginSession ls = new LoginSession();
+
+            IBusinessLayer objBusinessLayer = new BusinessLayer(ls);
+
+            IList<IDName> objProductivityInputList = null;
+            try
+            {
+                objProductivityInputList = objBusinessLayer.ProductivityInputRepository.GetPartial<IDName>(x => new IDName { ID = x.ID, Name = x.Name });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            finally
+            {
+                ls = null;
+                objBusinessLayer.Dispose();
+            }
+
+            return objProductivityInputList;
+        }
+
+        #endregion
+
+
+
+        [HttpGet, Route("v1/ProductivityInput/GetAllIDName")]
+        [ResponseType(typeof(IList<IDName>))]
+        public JsonResult<IList<IDName>> GetAllIDName()
+        {
+            IList<IDName> objProductivityInputList = null;
+
+            try
+            {
+                objProductivityInputList = this.GetProductivityInputIDNameList();
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objProductivityInputList, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+
+        /// <summary>
+        /// GetById
+        /// </summary>
+        /// <param name="id">int</param>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/ProductivityInput/GetById/{id}")]
+        [ResponseType(typeof(ProductivityInput))]
+        public JsonResult<ProductivityInputDTO> GetById(int id)
+        {
+            JsonResult<ProductivityInputDTO> result = null;
+            ProductivityInputDTO objProductivityInputDTO;
+
+            try
+            {
+                objProductivityInputDTO = this.GetProductivityInputById(id);
+
+                result = Json(objProductivityInputDTO, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return result;
+        }
+
+
+        /// <summary>
+        /// GetAllPaged
+        /// </summary>
+        /// <returns>IHttpActionResult></returns>
+        [HttpGet, Route("v1/ProductivityInput/GetAllPaged/{startingRecordNumber}/{pageSize}")]
+        [ResponseType(typeof(DataCollection))]
+        public JsonResult<DataCollection> GetAllPaged(int startingRecordNumber, int pageSize)
+        {
+            int totalRecords = 0;
+            IList<ProductivityInputDTO> objProductivityInputDTOList = this.GetAllProductivityInput(startingRecordNumber, pageSize, out totalRecords);
+
+            DataCollection objDataCollection;
+
+            try
+            {
+                objDataCollection = new DataCollection { TotalRecords = totalRecords, EntitySummary = new List<IBaseObject>() };
+                if (null != objProductivityInputDTOList)
+                {
+                    foreach (ProductivityInputDTO objPInput in objProductivityInputDTOList)
+                    {
+                        objDataCollection.EntitySummary.Add(objPInput);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TTMLogger.Logger.LogError(String.Format("Error - {0}", ex.Message));
+                throw;
+            }
+            return Json(objDataCollection, new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+        }
+
+        /// <summary>
+        /// CreateProductivityInput
+        /// </summary>
+        /// <param name="ProductivityInputDTO">ProductivityInputDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [HttpPost, Route("v1/ProductivityInput/CreateProductivityInput")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> CreateProductivityInput([FromBody]ProductivityInputDTO ProductivityInputDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.AddNewProductivityInput(ProductivityInputDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// ProductivityInput
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <param name="ProductivityInputDTO">ProductivityInputDTO</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpPut, Route("v1/ProductivityInput/UpdateProductivityInput/{ID}")]
+        [ResponseType(typeof(string))]
+        public JsonResult<string> UpdateProductivityInput(int ID, [FromBody]ProductivityInputDTO ProductivityInputDTO)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+                result = Json(this.ModifyProductivityInput(ID, ProductivityInputDTO), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// DeleteProductivityInput
+        /// </summary>
+        /// <param name="ID">int</param>
+        /// <returns>JsonResult<string></returns>
+        [ResponseType(typeof(string))]
+        [HttpDelete, Route("v1/ProductivityInput/DeleteProductivityInput/{ID}")]
+        public JsonResult<string> DeleteProductivityInput(int ID)
+        {
+            JsonResult<string> result = Json(string.Empty);
+            try
+            {
+
+                result = Json(this.RemoveProductivityInput(ID), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+            catch (Exception ex)
+            {
+                result = Json(String.Format("Error - {0}", ex.Message), new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing">bool</param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+        }
+
+    }
+}
